@@ -1058,7 +1058,9 @@ pub fn is_modifier(evt: &KeyEvent) -> bool {
 }
 
 pub fn check_software_update() {
-    if is_custom_client() {
+    // Do not offer upstream RustDesk binaries to Seven Desk users.
+    // Enable branded updates only after providing a Seven Desk update feed.
+    if is_custom_client() || get_app_name() == "SevenDesk" {
         return;
     }
     let opt = LocalConfig::get_option(keys::OPTION_ENABLE_CHECK_UPDATE);
