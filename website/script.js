@@ -43,154 +43,116 @@
     });
   });
 
-  const labels = { windows: 'Windows', macos: 'macOS', linux: 'Linux', android: 'Android' };
-  const status = document.getElementById('download-status');
-  const autoButtons = Array.from(document.querySelectorAll('[data-auto-download]'));
+  const labels = Object.freeze({ windows: 'Windows', macos: 'macOS', linux: 'Linux', android: 'Android' });
+  const icons = Object.freeze({
+    windows: '/assets/windows.svg?v=2',
+    macos: '/assets/macos.svg?v=2',
+    linux: '/assets/linux.svg',
+    android: '/assets/android.svg?v=2',
+  });
+  const downloadButton = document.querySelector('[data-auto-download]');
+  const osIcon = document.querySelector('[data-os-icon]');
+  const fallbackIcon = document.querySelector('.download-fallback-icon');
   const nameSlots = document.querySelectorAll('[data-os-name]');
   const platformCards = Array.from(document.querySelectorAll('[data-platform]'));
+  let selectedPlatform = null;
+  let detectedPlatform = null;
+  let detectedArch = 'x64';
 
   function identifyOS() {
+    const ua = (navigator.userAgent || '').toLowerCase();
     const platform = (navigator.userAgentData?.platform || navigator.platform || '').toLowerCase();
-    const agent = (navigator.userAgent || '').toLowerCase();
-    if (/android/.test(agent) || /android/.test(platform)) return 'android';
-    if (/iphone|ipad|ipod/.test(agent) || /iphone|ipad|ipod/.test(platform)) return null;
-    if (/win/.test(platform) || /windows/.test(agent)) return 'windows';
-    if (/mac/.test(platform) || /macintosh/.test(agent)) return 'macos';
-    if (/linux/.test(platform) || /linux/.test(agent) || /x11/.test(platform)) return 'linux';
+    if (/android/.test(ua) || /android/.test(platform)) return 'android';
+    // iOS has no native Seven Desk build at present.
+    if (/iphone|ipad|ipod/.test(ua) || /iphone|ipad|ipod/.test(platform)) return null;
+    if (/win/.test(platform) || /windows/.test(ua)) return 'windows';
+    if (/mac/.test(platform) || /macintosh/.test(ua)) return 'macos';
+    if (/linux/.test(platform) || /linux/.test(ua) || /x11/.test(platform)) return 'linux';
     return null;
   }
 
-  async function identifyArchitecture() {
-    try {
-      if (navigator.userAgentData?.getHighEntropyValues) {
-        // Entropy hints may stall behind privacy policies or browser prompts.
-        // Never block the download button indefinitely on their response.
-        const hints = await Promise.race([
-          navigator.userAgentData.getHighEntropyValues(['architecture', 'bitness', 'platform']),
-          new Promise(resolve => setTimeout(() => resolve({}), 700)),
-        ]);
-        const architecture = String(hints.architecture || '').toLowerCase();
-        if (/arm/.test(architecture)) return 'arm64';
-        if (/x86|amd64/.test(architecture)) return hints.bitness === '32' ? 'x86' : 'x64';
-      }
-    } catch (_) {
-      // Restricted browser hints should never disable the download action.
-    }
+  function fastArchGuess() {
     const ua = navigator.userAgent || '';
     if (/arm64|aarch64/i.test(ua)) return 'arm64';
-    if (/win32|i686/i.test(ua) && !/win64|x64|wow64/i.test(ua)) return 'x86';
+    // "Win32" is often reported even by 64-bit Windows browsers.
+    if (/\bi686\b|\bi386\b/i.test(ua) && !/x64|win64|wow64/i.test(ua)) return 'x86';
     return 'x64';
   }
 
-  function defaultArchitecture(platform, detectedArch) {
-    if (platform === 'android') return 'universal';
-    if (platform === 'windows' && detectedArch === 'x86') return 'x86';
-    if (detectedArch === 'arm64') return 'arm64';
-    return 'x64';
-  }
-
-  function buildHref(platform, architecture) {
-    return '/api/download?platform=' + encodeURIComponent(platform)
-      + '&arch=' + encodeURIComponent(architecture);
-  }
-
-  function setStatus(message) {
-    if (status) status.textContent = message;
-  }
-
-  async function initDownloads() {
-    const detectedOS = identifyOS();
-    // Report the detected operating system before awaiting CPU hints or network requests.
-    // If JavaScript fails completely, the HTML still provides usable manual downloads.
-    setStatus(detectedOS
-      ? 'Sistema detectado: ' + labels[detectedOS] + '. Escolha o download abaixo.'
-      : 'Escolha abaixo o sistema operacional para baixar o Seven Desk.');
-    const detectedArch = await identifyArchitecture();
-
-    if (!detectedOS) {
-      for (const link of autoButtons) {
-        link.href = '#plataformas';
-        link.setAttribute('aria-label', 'Escolher a plataforma para baixar Seven Desk');
-      }
-      nameSlots.forEach(slot => { slot.textContent = 'seu sistema'; });
-      setStatus('Escolha abaixo o sistema operacional para baixar uma versão disponível.');
-    } else {
-      const label = labels[detectedOS];
-      const arch = defaultArchitecture(detectedOS, detectedArch);
-      const href = buildHref(detectedOS, arch);
-      autoButtons.forEach(link => {
-        link.href = href;
-        link.setAttribute('aria-label', 'Baixar Seven Desk para ' + label);
-      });
-      nameSlots.forEach(slot => { slot.textContent = label; });
-      setStatus('Sistema detectado: ' + label + '. Consultando a versão disponível…');
-      const card = platformCards.find(item => item.dataset.platform === detectedOS);
-      if (card) card.classList.add('platform-selected');
-    }
-
-    for (const card of platformCards) {
-      const platform = card.dataset.platform;
-      const arch = platform === 'android' ? 'universal'
-        : platform === detectedOS ? defaultArchitecture(platform, detectedArch) : 'x64';
-      card.href = buildHref(platform, arch);
-    }
-
+  async function detectArchHints() {
+    if (!navigator.userAgentData?.getHighEntropyValues) return detectedArch;
     try {
-      const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 6500);
-      let response;
-      try {
-        response = await fetch('/api/download?format=manifest', {
-          headers: { 'Accept': 'application/json' },
-          signal: controller.signal,
-        });
-      } finally {
-        clearTimeout(timeout);
-      }
-      if (!response.ok) throw new Error('Download catalog unavailable');
-      const manifest = await response.json();
-      if (!manifest || !manifest.devices || typeof manifest.devices !== 'object') throw new Error('Invalid catalog');
-
-      for (const card of platformCards) {
-        const platform = card.dataset.platform;
-        const architecture = platform === 'android' ? 'universal'
-          : platform === detectedOS ? defaultArchitecture(platform, detectedArch) : 'x64';
-        const release = manifest.devices[platform]?.[architecture];
-        if (release?.version) {
-          card.title = 'Baixar ' + release.filename + ' (' + release.version + ')';
-        } else {
-          card.href = 'https://github.com/gabriell211/Seven-Desk/releases';
-          card.title = 'Ver outras compilações no GitHub';
-        }
-      }
-
-      if (detectedOS) {
-        const architecture = defaultArchitecture(detectedOS, detectedArch);
-        const release = manifest.devices[detectedOS]?.[architecture];
-        if (release?.version) {
-          const older = manifest.latestRelease && manifest.latestRelease !== release.version;
-          setStatus('Sistema detectado: ' + labels[detectedOS] + ' · ' + release.version
-            + (older ? ' (versão anterior disponível enquanto a nova compila)' : ' (última versão disponível)')
-            + ' · ' + release.filename);
-        } else {
-          setStatus('Ainda não existe um instalador disponível para ' + labels[detectedOS]
-            + '. Consulte as outras versões abaixo.');
-          autoButtons.forEach(link => {
-            link.href = '#plataformas';
-            link.setAttribute('aria-label', 'Ver outras versões Seven Desk');
-          });
-        }
-      }
+      const hints = await Promise.race([
+        navigator.userAgentData.getHighEntropyValues(['architecture', 'bitness']),
+        new Promise(resolve => setTimeout(() => resolve(null), 700)),
+      ]);
+      if (!hints) return detectedArch;
+      const arch = String(hints.architecture || '').toLowerCase();
+      if (/arm/.test(arch)) return 'arm64';
+      if (/x86|amd64/.test(arch)) return hints.bitness === '32' ? 'x86' : 'x64';
     } catch (_) {
-      if (detectedOS) {
-        setStatus('Sistema detectado: ' + labels[detectedOS]
-          + '. O download consultará o arquivo mais recente disponível no GitHub.');
-      }
+      // Privacy-restricted browsers still have the normal platform selector.
+    }
+    return detectedArch;
+  }
+
+  function packageArchitecture(platform) {
+    if (platform === 'android') return 'universal';
+    if (platform === detectedPlatform) return detectedArch;
+    // Users on other operating systems can select an architecture on Releases.
+    return 'x64';
+  }
+
+  function selectPlatform(platform, revealButton = false) {
+    selectedPlatform = Object.hasOwn(labels, platform) ? platform : null;
+    if (downloadButton) {
+      const label = selectedPlatform ? labels[selectedPlatform] : 'seu sistema';
+      downloadButton.href = selectedPlatform
+        ? '/api/download?platform=' + encodeURIComponent(selectedPlatform) + '&arch='
+          + encodeURIComponent(packageArchitecture(selectedPlatform))
+        : '#plataformas';
+      downloadButton.setAttribute('aria-label', selectedPlatform
+        ? 'Baixar Seven Desk para ' + label
+        : 'Escolher plataforma para baixar Seven Desk');
+    }
+    nameSlots.forEach(el => {
+      el.textContent = selectedPlatform ? labels[selectedPlatform] : 'seu sistema';
+    });
+    if (osIcon) {
+      osIcon.hidden = !selectedPlatform;
+      if (selectedPlatform) osIcon.src = icons[selectedPlatform];
+    }
+    if (fallbackIcon) fallbackIcon.hidden = Boolean(selectedPlatform);
+    platformCards.forEach(card => {
+      const active = card.dataset.platform === selectedPlatform;
+      card.classList.toggle('platform-selected', active);
+      card.setAttribute('aria-pressed', String(active));
+    });
+    if (revealButton && downloadButton) {
+      const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      downloadButton.scrollIntoView({ behavior: reducedMotion ? 'auto' : 'smooth', block: 'center' });
+      downloadButton.focus({ preventScroll: true });
     }
   }
 
-  // Always surface a useful status if the client hits an unexpected runtime error.
-  void initDownloads().catch(() => {
-    setStatus('Selecione abaixo a plataforma desejada para baixar o Seven Desk.');
-  });
+  function initializeDownloads() {
+    detectedPlatform = identifyOS();
+    detectedArch = fastArchGuess();
+    selectPlatform(detectedPlatform);
+
+    // Platform tiles only change the one download action; they do not start downloads.
+    platformCards.forEach(card => {
+      card.addEventListener('click', () => {
+        selectPlatform(card.dataset.platform, true);
+      });
+    });
+
+    void detectArchHints().then(arch => {
+      detectedArch = arch;
+      // Recalculate only if the visitor has not switched to a different platform.
+      if (selectedPlatform === detectedPlatform) selectPlatform(selectedPlatform);
+    });
+  }
+
+  initializeDownloads();
 })();
