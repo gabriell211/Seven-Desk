@@ -125,6 +125,7 @@ jobs:
         with:
           prerelease: true
           tag_name: ${{ env.TAG_NAME }}
+          name: sevendesk
           files: |
             rustdesk.sbom.json
 
@@ -575,6 +576,7 @@ jobs:
         with:
           prerelease: true
           tag_name: ${{ env.TAG_NAME }}
+          name: sevendesk
           files: |
             ./SignOutput/rustdesk-*.msi
             ./SignOutput/rustdesk-*.exe
@@ -789,6 +791,7 @@ jobs:
         with:
           prerelease: true
           tag_name: ${{ env.TAG_NAME }}
+          name: sevendesk
           files: |
             ./SignOutput/rustdesk-*.exe
 
@@ -1200,6 +1203,7 @@ jobs:
         with:
           prerelease: true
           tag_name: ${{ env.TAG_NAME }}
+          name: sevendesk
           files: |
             rustdesk*-${{ matrix.job.arch }}.dmg
 
@@ -1310,6 +1314,7 @@ jobs:
           prerelease: true
           fail_on_unmatched_files: true
           tag_name: ${{ env.TAG_NAME }}
+          name: sevendesk
           files: |
             ./artifacts/rustdesk-${{ env.VERSION }}-x86_64.exe
             ./artifacts/rustdesk-${{ env.VERSION }}-x86_64.msi
@@ -1327,6 +1332,7 @@ jobs:
           prerelease: true
           fail_on_unmatched_files: true
           tag_name: ${{ env.TAG_NAME }}
+          name: sevendesk
           files: ./rustdesk-update.json.sig
 
       # Clients discover the release through metadata, so publish it only after every referenced asset.
@@ -1336,6 +1342,7 @@ jobs:
           prerelease: true
           fail_on_unmatched_files: true
           tag_name: ${{ env.TAG_NAME }}
+          name: sevendesk
           files: ./rustdesk-update.json
 
   publish_unsigned:
@@ -1422,6 +1429,7 @@ jobs:
         with:
           prerelease: true
           tag_name: ${{ env.TAG_NAME }}
+          name: sevendesk
           files: rustdesk-${{ env.VERSION }}-unsigned.tar.gz
 
   build-rustdesk-android:
@@ -1705,6 +1713,7 @@ jobs:
         with:
           prerelease: true
           tag_name: ${{ env.TAG_NAME }}
+          name: sevendesk
           files: |
             ${{steps.sign-rustdesk.outputs.signedReleaseFile}}
 
@@ -1714,6 +1723,7 @@ jobs:
         with:
           prerelease: true
           tag_name: ${{ env.TAG_NAME }}
+          name: sevendesk
           files: |
             signed-apk/rustdesk-${{ env.VERSION }}-${{ matrix.job.arch }}.apk
 
@@ -1890,6 +1900,7 @@ jobs:
         with:
           prerelease: true
           tag_name: ${{ env.TAG_NAME }}
+          name: sevendesk
           files: |
             ${{steps.sign-rustdesk.outputs.signedReleaseFile}}
 
@@ -1899,6 +1910,7 @@ jobs:
         with:
           prerelease: true
           tag_name: ${{ env.TAG_NAME }}
+          name: sevendesk
           files: |
             signed-apk/rustdesk-${{ env.VERSION }}-universal${{ env.suffix }}.apk
 
@@ -2207,6 +2219,7 @@ jobs:
         with:
           prerelease: true
           tag_name: ${{ env.TAG_NAME }}
+          name: sevendesk
           files: |
             rustdesk-*.deb
             rustdesk-*.rpm
@@ -2243,6 +2256,7 @@ jobs:
         with:
           prerelease: true
           tag_name: ${{ env.TAG_NAME }}
+          name: sevendesk
           files: |
             res/rustdesk-${{ env.VERSION }}*.zst
 
@@ -2558,6 +2572,7 @@ jobs:
         with:
           prerelease: true
           tag_name: ${{ env.TAG_NAME }}
+          name: sevendesk
           files: |
             ${{ env.DRM_DEB }}
 
@@ -2803,6 +2818,7 @@ jobs:
         with:
           prerelease: true
           tag_name: ${{ env.TAG_NAME }}
+          name: sevendesk
           files: |
             rustdesk-${{ env.VERSION }}-${{ matrix.job.arch }}-sciter.deb
 
@@ -2853,7 +2869,7 @@ jobs:
           sudo pip3 install git+https://github.com/rustdesk-org/appimage-builder.git
           # run appimage-builder
           pushd appimage
-          ./build-apprun.sh ${{ matrix.job.arch }}
+          bash ./build-apprun.sh ${{ matrix.job.arch }}
           sudo appimage-builder --skip-tests --recipe ./AppImageBuilder-${{ matrix.job.arch }}.yml
           cmp AppDir/AppRun appimage-build/AppRun/v2.0.0/AppRun-Release-${{ matrix.job.arch }}
 
@@ -2863,6 +2879,7 @@ jobs:
         with:
           prerelease: true
           tag_name: ${{ env.TAG_NAME }}
+          name: sevendesk
           files: |
             ./appimage/rustdesk-${{ env.VERSION }}-*.AppImage
 
@@ -2948,6 +2965,7 @@ jobs:
         with:
           prerelease: true
           tag_name: ${{ env.TAG_NAME }}
+          name: sevendesk
           files: |
             flatpak/rustdesk-${{ env.VERSION }}-${{ matrix.job.arch }}${{ matrix.job.suffix }}.flatpak
 
@@ -3033,5 +3051,6 @@ jobs:
         with:
           prerelease: true
           tag_name: ${{ env.TAG_NAME }}
+          name: sevendesk
           files: |
             flutter/build/rustdesk-${{ env.VERSION }}-${{ env.RELEASE_NAME }}.tar.gz
