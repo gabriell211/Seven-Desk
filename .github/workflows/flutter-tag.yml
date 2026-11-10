@@ -33,6 +33,7 @@ jobs:
         run: |
           python3 -m py_compile build.py
           python3 -m unittest discover -s tests -p 'test_debian_maintainer_script_permissions.py' -v
+          python3 -m unittest discover -s tests -p 'test_mfx_dispatch_patch.py' -v
 
   run-flutter-tag-build:
     needs: preflight-release
@@ -40,5 +41,5 @@ jobs:
     secrets: inherit
     with:
       upload-artifact: true
-      upload-tag: ${{ github.ref == 'refs/heads/main' && 'v1.5.3-3' || github.ref_name }}
+      upload-tag: ${{ github.ref == 'refs/heads/main' && 'v1.5.3-4' || github.ref_name }}
       publish-update-metadata: ${{ github.repository == 'rustdesk/rustdesk' }}
