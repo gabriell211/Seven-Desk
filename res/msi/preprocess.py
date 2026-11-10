@@ -81,7 +81,10 @@ def make_parser():
         help='Connection type, e.g. "incoming", "outgoing". Default is empty, means incoming-outgoing',
     )
     parser.add_argument(
-        "--app-name", type=str, default="RustDesk", help="The app name."
+        "--app-name", type=str, default="RustDesk", help="The executable and service name."
+    )
+    parser.add_argument(
+        "--display-name", type=str, default="", help="Product and shortcut label shown in Windows."
     )
     parser.add_argument(
         "-v", "--version", type=str, default="", help="The app version."
@@ -250,6 +253,7 @@ def gen_pre_vars(args, dist_dir):
             f'{indent}<?define Version="{g_version}" ?>\n',
             f'{indent}<?define Manufacturer="{args.manufacturer}" ?>\n',
             f'{indent}<?define Product="{args.app_name}" ?>\n',
+            f'{indent}<?define ProductDisplayName="{args.display_name or args.app_name}" ?>\n',
             f'{indent}<?define Description="{args.app_name} Installer" ?>\n',
             f'{indent}<?define ProductLower="{args.app_name.lower()}" ?>\n',
             f'{indent}<?define RegKeyRoot=".$(var.ProductLower)" ?>\n',
@@ -568,4 +572,4 @@ if __name__ == "__main__":
     if not gen_custom_dialog_bitmaps():
         sys.exit(-1)
 
-    replace_app_name_in_langs(args.app_name)
+    replace_app_name_in_langs(args.display_name or args.app_name)
