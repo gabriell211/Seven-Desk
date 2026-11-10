@@ -3872,10 +3872,11 @@ fn get_msi_uninstall_subkey(product_code: &str) -> ResultType<String> {
 }
 
 fn get_reg_msi_key(subkey: &str, is_msi: Option<bool>) -> ResultType<Option<String>> {
-    // Only proceed if it's a custom client and MSI is installed.
-    // `is_msi.unwrap_or(true)` is intentional: subsequent code validates the registry,
-    // hence no early return is required upon MSI detection failure.
-    if !(crate::common::is_custom_client() && is_msi.unwrap_or(true)) {
+    // MSI installs of the first-party SevenDesk build also need product-code
+    // tracking for safe updates, even though they are not custom-client builds.
+    // `is_msi.unwrap_or(true)` keeps the existing registry validation behavior.
+    let is_branded_msi = crate::get_app_name() == "SevenDesk";
+    if !((crate::common::is_custom_client() || is_branded_msi) && is_msi.unwrap_or(true)) {
         return Ok(None);
     }
 
