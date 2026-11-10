@@ -63,7 +63,12 @@
   async function identifyArchitecture() {
     try {
       if (navigator.userAgentData?.getHighEntropyValues) {
-        const hints = await navigator.userAgentData.getHighEntropyValues(['architecture', 'bitness', 'platform']);
+        // Entropy hints may stall behind privacy policies or browser prompts.
+        // Never block the download button indefinitely on their response.
+        const hints = await Promise.race([
+          navigator.userAgentData.getHighEntropyValues(['architecture', 'bitness', 'platform']),
+          new Promise(resolve => setTimeout(() => resolve({}), 700)),
+        ]);
         const architecture = String(hints.architecture || '').toLowerCase();
         if (/arm/.test(architecture)) return 'arm64';
         if (/x86|amd64/.test(architecture)) return hints.bitness === '32' ? 'x86' : 'x64';
@@ -95,6 +100,11 @@
 
   async function initDownloads() {
     const detectedOS = identifyOS();
+    // Report the detected operating system before awaiting CPU hints or network requests.
+    // If JavaScript fails completely, the HTML still provides usable manual downloads.
+    setStatus(detectedOS
+      ? 'Sistema detectado: ' + labels[detectedOS] + '. Escolha o download abaixo.'
+      : 'Escolha abaixo o sistema operacional para baixar o Seven Desk.');
     const detectedArch = await identifyArchitecture();
 
     if (!detectedOS) {
@@ -126,9 +136,17 @@
     }
 
     try {
-      const response = await fetch('/api/download?format=manifest', {
-        headers: { 'Accept': 'application/json' },
-      });
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 6500);
+      let response;
+      try {
+        response = await fetch('/api/download?format=manifest', {
+          headers: { 'Accept': 'application/json' },
+          signal: controller.signal,
+        });
+      } finally {
+        clearTimeout(timeout);
+      }
       if (!response.ok) throw new Error('Download catalog unavailable');
       const manifest = await response.json();
       if (!manifest || !manifest.devices || typeof manifest.devices !== 'object') throw new Error('Invalid catalog');
@@ -171,5 +189,8 @@
     }
   }
 
-  void initDownloads();
+  // Always surface a useful status if the client hits an unexpected runtime error.
+  void initDownloads().catch(() => {
+    setStatus('Selecione abaixo a plataforma desejada para baixar o Seven Desk.');
+  });
 })();
