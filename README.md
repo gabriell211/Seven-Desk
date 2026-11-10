@@ -1,65 +1,45 @@
 <p align="center">
-  <img src="res/icon.png" alt="SevenDesk - Your remote desktop" width="240"><br>
-  <a href="#raw-steps-to-build">Build</a> •
-  <a href="#how-to-build-with-docker">Docker</a> •
-  <a href="#file-structure">Structure</a> •
-  <a href="#screenshots">Screenshots</a><br>
+  <img src="res/icon.png" alt="SevenDesk - Seu desktop remoto" width="240"><br>
+  <a href="#passos-básicos-para-compilar">Compilar</a> •
+  <a href="#como-compilar-com-o-docker">Docker</a> •
+  <a href="#estrutura-de-arquivos">Estrutura</a> •
+  <a href="#capturas-de-tela">Capturas de tela</a> •
+  <a href="#contribuir">Contribuir</a><br>
   [<a href="docs/README-UA.md">Українська</a>] | [<a href="docs/README-CS.md">česky</a>] | [<a href="docs/README-ZH.md">中文</a>] | [<a href="docs/README-HU.md">Magyar</a>] | [<a href="docs/README-ES.md">Español</a>] | [<a href="docs/README-FA.md">فارسی</a>] | [<a href="docs/README-FR.md">Français</a>] | [<a href="docs/README-DE.md">Deutsch</a>] | [<a href="docs/README-PL.md">Polski</a>] | [<a href="docs/README-ID.md">Indonesian</a>] | [<a href="docs/README-FI.md">Suomi</a>] | [<a href="docs/README-ML.md">മലയാളം</a>] | [<a href="docs/README-JP.md">日本語</a>] | [<a href="docs/README-NL.md">Nederlands</a>] | [<a href="docs/README-IT.md">Italiano</a>] | [<a href="docs/README-RU.md">Русский</a>] | [<a href="docs/README-PTPT.md">Português (Portugal)</a>] | [<a href="docs/README-PTBR.md">Português (Brasil)</a>] | [<a href="docs/README-EO.md">Esperanto</a>] | [<a href="docs/README-KR.md">한국어</a>] | [<a href="docs/README-AR.md">العربي</a>] | [<a href="docs/README-VN.md">Tiếng Việt</a>] | [<a href="docs/README-DA.md">Dansk</a>] | [<a href="docs/README-GR.md">Ελληνικά</a>] | [<a href="docs/README-TR.md">Türkçe</a>] | [<a href="docs/README-NO.md">Norsk</a>] | [<a href="docs/README-RO.md">Română</a>]<br>
-  <b>We need your help to translate this README, <a href="https://github.com/rustdesk/rustdesk/tree/master/src/lang">SevenDesk UI</a> and <a href="https://github.com/rustdesk/doc.rustdesk.com">SevenDesk Doc</a> to your native language</b>
+  <b>Ajude a aprimorar o SevenDesk: <a href="https://github.com/gabriell211/Seven-Desk">acesse o repositório</a>, contribua com o projeto ou compartilhe sugestões.</b>
 </p>
 
-> [!Caution]
-> **Misuse Disclaimer:** <br>
-> The developers of SevenDesk do not condone or support any unethical or illegal use of this software. Misuse, such as unauthorized access, control or invasion of privacy, is strictly against our guidelines. The authors are not responsible for any misuse of the application.
+> [!CAUTION]
+> **Use com responsabilidade:** acesse somente dispositivos que você possui ou para os quais recebeu autorização. O acesso não autorizado, o controle sem consentimento ou a invasão de privacidade não são aceitáveis. Proteja suas credenciais e encerre as sessões quando não estiverem mais em uso.
 
+Conecte-se a outros dispositivos e ofereça suporte remoto com o SevenDesk. O aplicativo é escrito em Rust, funciona em diferentes plataformas e permite que você mantenha o controle do seu ambiente e da configuração dos servidores de conexão e retransmissão.
 
-Chat with us: [Twitter](https://twitter.com/rustdesk) | [Reddit](https://www.reddit.com/r/rustdesk) | [YouTube](https://www.youtube.com/@rustdesk)
+## Downloads
 
-[![SevenDesk Server Pro](https://img.shields.io/badge/SevenDesk%20Server%20Pro-Advanced%20Features-blue)](https://rustdesk.com/pricing.html)
+Consulte a página de [versões do SevenDesk](https://github.com/gabriell211/Seven-Desk/releases) para verificar se há instaladores disponíveis. Os [workflows de CI e compilação](https://github.com/gabriell211/Seven-Desk/tree/main/.github/workflows) mostram os processos usados para cada plataforma.
 
-Yet another remote desktop solution, written in Rust. Works out of the box with no configuration required. You have full control of your data, with no concerns about security. You can use our rendezvous/relay server, [set up your own](https://rustdesk.com/server), or [write your own rendezvous/relay server](https://github.com/rustdesk/rustdesk-server-demo).
+## Dependências
 
-![image](https://user-images.githubusercontent.com/71636191/171661982-430285f0-2e12-4b1d-9957-4a58e375304d.png)
+As versões para desktop usam Flutter ou Sciter (descontinuado) como interface gráfica. As instruções abaixo são voltadas à versão Sciter. Para conhecer o processo de compilação da versão Flutter, consulte os [workflows do SevenDesk](https://github.com/gabriell211/Seven-Desk/tree/main/.github/workflows).
 
-SevenDesk welcomes contribution from everyone. See [CONTRIBUTING.md](docs/CONTRIBUTING.md) for help getting started.
-
-[**FAQ**](https://github.com/rustdesk/rustdesk/wiki/FAQ)
-
-[**BINARY DOWNLOAD**](https://github.com/rustdesk/rustdesk/releases)
-
-[**NIGHTLY BUILD**](https://github.com/rustdesk/rustdesk/releases/tag/nightly)
-
-[<img src="https://f-droid.org/badge/get-it-on.png"
-    alt="Get it on F-Droid"
-    height="80">](https://f-droid.org/en/packages/com.carriez.flutter_hbb)
-[<img src="https://flathub.org/api/badge?svg&locale=en"
-    alt="Get it on Flathub"
-    height="80">](https://flathub.org/apps/com.rustdesk.RustDesk)
-
-## Dependencies
-
-Desktop versions use Flutter or Sciter (deprecated) for GUI. This tutorial is for Sciter only, since it is easier and more friendly to start. Check out our [CI](https://github.com/rustdesk/rustdesk/blob/master/.github/workflows/flutter-build.yml) for building the Flutter version.
-
-Please download Sciter dynamic library yourself.
+Baixe manualmente a biblioteca dinâmica do Sciter para sua plataforma:
 
 [Windows](https://raw.githubusercontent.com/c-smile/sciter-sdk/master/bin.win/x64/sciter.dll) |
 [Linux](https://raw.githubusercontent.com/c-smile/sciter-sdk/master/bin.lnx/x64/libsciter-gtk.so) |
 [macOS](https://raw.githubusercontent.com/c-smile/sciter-sdk/master/bin.osx/libsciter.dylib)
 
-## Raw Steps to build
+## Passos básicos para compilar
 
-- Prepare your Rust development env and C++ build env
+- Prepare os ambientes de desenvolvimento do Rust e de compilação do C++.
 
-- Install [vcpkg](https://github.com/microsoft/vcpkg), and set `VCPKG_ROOT` env variable correctly
+- Instale o [vcpkg](https://github.com/microsoft/vcpkg) e configure corretamente a variável de ambiente `VCPKG_ROOT`.
 
-  - Windows: vcpkg install libvpx:x64-windows-static libyuv:x64-windows-static opus:x64-windows-static aom:x64-windows-static
-  - Linux/macOS: vcpkg install libvpx libyuv opus aom
+  - Windows: `vcpkg install libvpx:x64-windows-static libyuv:x64-windows-static opus:x64-windows-static aom:x64-windows-static`
+  - Linux/macOS: `vcpkg install libvpx libyuv opus aom`
 
-- run `cargo run`
+- Execute `cargo run`.
 
-## [Build](https://rustdesk.com/docs/en/dev/build/)
-
-## How to Build on Linux
+## Como compilar no Linux
 
 ### Ubuntu 18 (Debian 10)
 
@@ -87,7 +67,7 @@ sudo yum -y install gcc-c++ git curl wget nasm yasm gcc gtk3-devel clang libxcb-
 sudo pacman -Syu --needed unzip git cmake gcc curl wget yasm nasm zip make pkg-config clang gtk3 xdotool libxcb libxfixes alsa-lib pipewire
 ```
 
-### Install vcpkg
+### Instalar o vcpkg
 
 ```sh
 git clone https://github.com/microsoft/vcpkg
@@ -99,7 +79,7 @@ export VCPKG_ROOT=$HOME/vcpkg
 vcpkg/vcpkg install libvpx libyuv opus aom
 ```
 
-### Fix libvpx (For Fedora)
+### Corrigir o libvpx (Fedora)
 
 ```sh
 cd vcpkg/buildtrees/libvpx/src
@@ -112,71 +92,70 @@ cp libvpx.a $HOME/vcpkg/installed/x64-linux/lib/
 cd
 ```
 
-### Build
+### Compilar
 
 ```sh
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 source $HOME/.cargo/env
-git clone --recurse-submodules https://github.com/rustdesk/rustdesk
-cd rustdesk
+git clone --recurse-submodules https://github.com/gabriell211/Seven-Desk.git
+cd Seven-Desk
 mkdir -p target/debug
 wget https://raw.githubusercontent.com/c-smile/sciter-sdk/master/bin.lnx/x64/libsciter-gtk.so
 mv libsciter-gtk.so target/debug
 VCPKG_ROOT=$HOME/vcpkg cargo run
 ```
 
-## How to build with Docker
+## Como compilar com o Docker
 
-Begin by cloning the repository and building the Docker container:
+Clone o repositório e crie a imagem Docker:
 
 ```sh
-git clone https://github.com/rustdesk/rustdesk
-cd rustdesk
+git clone https://github.com/gabriell211/Seven-Desk.git
+cd Seven-Desk
 git submodule update --init --recursive
-docker build -t "rustdesk-builder" .
+docker build -t "sevendesk-builder" .
 ```
 
-Then, each time you need to build the application, run the following command:
+Depois, sempre que quiser compilar o aplicativo, execute:
 
 ```sh
-docker run --rm -it -v $PWD:/home/user/rustdesk -v rustdesk-git-cache:/home/user/.cargo/git -v rustdesk-registry-cache:/home/user/.cargo/registry -e PUID="$(id -u)" -e PGID="$(id -g)" rustdesk-builder
+docker run --rm -it -v $PWD:/home/user/rustdesk -v rustdesk-git-cache:/home/user/.cargo/git -v rustdesk-registry-cache:/home/user/.cargo/registry -e PUID="$(id -u)" -e PGID="$(id -g)" sevendesk-builder
 ```
 
-Note that the first build may take longer before dependencies are cached, subsequent builds will be faster. Additionally, if you need to specify different arguments to the build command, you may do so at the end of the command in the `<OPTIONAL-ARGS>` position. For instance, if you wanted to build an optimized release version, you would run the command above followed by `--release`. The resulting executable will be available in the target folder on your system, and can be run with:
+A primeira compilação pode demorar mais enquanto as dependências são armazenadas em cache. As seguintes tendem a ser mais rápidas. Se precisar passar outros argumentos ao comando de compilação, adicione-os na posição `<ARGUMENTOS-OPCIONAIS>`. Por exemplo, para gerar uma versão otimizada de lançamento, acrescente `--release` ao comando. O executável ficará disponível na pasta `target`:
 
 ```sh
 target/debug/rustdesk
 ```
 
-Or, if you're running a release executable:
+Ou, para executar a versão de lançamento:
 
 ```sh
 target/release/rustdesk
 ```
 
-Please ensure that you run these commands from the root of the SevenDesk repository, or the application may not find the required resources. Also note that other cargo subcommands such as `install` or `run` are not currently supported via this method as they would install or run the program inside the container instead of the host.
+Execute esses comandos a partir da raiz do repositório SevenDesk; caso contrário, o aplicativo pode não encontrar os recursos necessários. Outros subcomandos do Cargo, como `install` ou `run`, não são compatíveis com esse método, pois instalariam ou executariam o programa dentro do contêiner, em vez de no sistema hospedeiro.
 
-## File Structure
+## Estrutura de arquivos
 
-- **[libs/hbb_common](https://github.com/rustdesk/rustdesk/tree/master/libs/hbb_common)**: video codec, config, tcp/udp wrapper, and some other utility functions shared with the server
-- **[libs/base](https://github.com/rustdesk/rustdesk/tree/master/libs/base)**: protobuf, fs functions for file transfer, keyboard and platform code used only by this app
-- **[libs/scrap](https://github.com/rustdesk/rustdesk/tree/master/libs/scrap)**: screen capture
-- **[libs/enigo](https://github.com/rustdesk/rustdesk/tree/master/libs/enigo)**: platform specific keyboard/mouse control
-- **[libs/clipboard](https://github.com/rustdesk/rustdesk/tree/master/libs/clipboard)**: file copy and paste implementation for Windows, Linux, macOS.
-- **[src/ui](https://github.com/rustdesk/rustdesk/tree/master/src/ui)**: obsolete Sciter UI (deprecated)
-- **[src/server](https://github.com/rustdesk/rustdesk/tree/master/src/server)**: audio/clipboard/input/video services, and network connections
-- **[src/client.rs](https://github.com/rustdesk/rustdesk/tree/master/src/client.rs)**: start a peer connection
-- **[src/rendezvous_mediator.rs](https://github.com/rustdesk/rustdesk/tree/master/src/rendezvous_mediator.rs)**: Communicate with [SevenDesk-server](https://github.com/rustdesk/rustdesk-server), wait for remote direct (TCP hole punching) or relayed connection
-- **[src/platform](https://github.com/rustdesk/rustdesk/tree/master/src/platform)**: platform specific code
-- **[flutter](https://github.com/rustdesk/rustdesk/tree/master/flutter)**: Flutter code for desktop and mobile
+- **[`libs/hbb_common`](libs/hbb_common/)**: codec de vídeo, configuração, comunicação TCP/UDP e funções utilitárias compartilhadas com o servidor.
+- **[`libs/base`](libs/base/)**: protobuf, funções de sistema de arquivos para transferência de arquivos, teclado e código de plataforma usados pelo aplicativo.
+- **[`libs/scrap`](libs/scrap/)**: captura de tela.
+- **[`libs/enigo`](libs/enigo/)**: controle de teclado e mouse específico para cada plataforma.
+- **[`libs/clipboard`](libs/clipboard/)**: implementação de copiar e colar arquivos no Windows, Linux e macOS.
+- **[`src/ui`](src/ui/)**: interface antiga em Sciter (descontinuada).
+- **[`src/server`](src/server/)**: serviços de áudio, área de transferência, entrada, vídeo e conexões de rede.
+- **[`src/client.rs`](src/client.rs)**: inicia uma conexão entre dispositivos.
+- **[`src/rendezvous_mediator.rs`](src/rendezvous_mediator.rs)**: comunica-se com o servidor de conexão, aguardando uma conexão remota direta (TCP hole punching) ou retransmitida.
+- **[`src/platform`](src/platform/)**: código específico para cada plataforma.
+- **[`flutter`](flutter/)**: código Flutter para desktop e dispositivos móveis.
 
-## Screenshots
+## Capturas de tela
 
-![Connection Manager](https://github.com/rustdesk/rustdesk/assets/28412477/db82d4e7-c4bc-4823-8e6f-6af7eadf7651)
+As capturas de tela específicas do SevenDesk serão adicionadas aqui.
 
-![Connected to a Windows PC](https://github.com/rustdesk/rustdesk/assets/28412477/9baa91e9-3362-4d06-aa1a-7518edcbd7ea)
+## Contribuir
 
-![File Transfer](https://github.com/rustdesk/rustdesk/assets/28412477/39511ad3-aa9a-4f8c-8947-1cce286a46ad)
+Contribuições são bem-vindas. Consulte as [orientações para contribuir](docs/CONTRIBUTING.md) ou abra uma [issue](https://github.com/gabriell211/Seven-Desk/issues) para relatar um problema ou sugerir melhorias.
 
-![TCP Tunneling](https://github.com/rustdesk/rustdesk/assets/28412477/78e8708f-e87e-4570-8373-1360033ea6c5)
 
