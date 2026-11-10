@@ -44,3 +44,25 @@
 }
 .hero-subnote .note-icons span img{width:17px;height:17px;display:block;opacity:1}
 .hero-download-status{min-height:21px}
+
+/* One primary download action; OS tiles choose its target without downloading. */
+.download-os-icon{width:21px;height:21px;display:block;object-fit:contain;flex-shrink:0}
+.download-fallback-icon{width:21px;height:21px;flex-shrink:0}
+[hidden]{display:none!important}
+.platform-grid .platform-card{
+  width:100%;
+  appearance:none;
+  -webkit-appearance:none;
+  font-family:inherit;
+  text-align:left;
+  color:inherit;
+  cursor:pointer;
+}
+.platform-grid .platform-card:focus-visible{
+  outline:3px solid #80d9ff;
+  outline-offset:3px;
+}
+.platform-grid .platform-card[aria-pressed="true"]{
+  background:rgba(59,171,255,.2);
+  border-color:rgba(140,221,255,.7);
+}
