@@ -68,3 +68,12 @@
 
 /* Keep the OS name aligned with the single leading platform icon. */
 .download-button-label{display:inline-block;white-space:nowrap}
+
+/* Purpose-built vector icons: consistent weight, geometry and alignment. */
+.feature-icon svg{
+  width:25px;
+  height:25px;
+  display:block;
+  flex:none;
+  stroke:currentColor;
+}
