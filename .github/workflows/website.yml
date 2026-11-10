@@ -28,4 +28,4 @@ jobs:
           node --check website/api/download.js
           node --check website/script.js
       - name: Run download resolver tests
-        run: node --test website/tests/download.test.cjs
+        run: node --test website/tests/*.test.cjs
