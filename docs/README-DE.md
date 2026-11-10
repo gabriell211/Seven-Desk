@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="../res/logo-header.svg" alt="SevenDesk - Dein Remote-Desktop"><br>
+  <img src="../res/icon.png" alt="SevenDesk - Dein Remote-Desktop" width="240"><br>
   <a href="#grobe-schritte-zum-kompilieren">Kompilieren</a> •
   <a href="#auf-docker-kompilieren">Docker</a> •
   <a href="#dateistruktur">Dateistruktur</a> •

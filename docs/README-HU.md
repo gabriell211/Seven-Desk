@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="../res/logo-header.svg" alt="SevenDesk - Your remote desktop"><br>
+  <img src="../res/icon.png" alt="SevenDesk - Your remote desktop" width="240"><br>
   <a href="#ingyenes-publikus-szerverek">Szerverek</a> •
   <a href="#építési-pontok">Építés</a> •
   <a href="#hogyan-éptís-dockerrel">Docker</a> •

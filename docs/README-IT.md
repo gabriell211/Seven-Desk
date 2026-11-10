@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="../res/logo-header.svg" alt="SevenDesk - il tuo desktop remoto"><br>
+  <img src="../res/icon.png" alt="SevenDesk - il tuo desktop remoto" width="240"><br>
   <a href="#server-pubblici-gratuiti">Server</a> •
   <a href="#passaggi-per-la-compilazione">Compilazione</a> •
   <a href="#come-compilare-con-docker">Docker</a> •

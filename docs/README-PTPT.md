@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="../res/logo-header.svg" alt="SevenDesk - O seu ambiente de trabalho remoto"><br>
+  <img src="../res/icon.png" alt="SevenDesk - O seu ambiente de trabalho remoto" width="240"><br>
   <a href="#compilar">Compilar</a> •
   <a href="#como-compilar-com-o-docker">Docker</a> •
   <a href="#estrutura-de-ficheiros">Estrutura</a> •

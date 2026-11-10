@@ -1,6 +1,6 @@
 
 <p align="center">
-  <img src="../res/logo-header.svg" alt="SevenDesk - Uzak masaüstü uygulamanız"><br>
+  <img src="../res/icon.png" alt="SevenDesk - Uzak masaüstü uygulamanız" width="240"><br>
   <a href="#free-public-servers">Sunucular</a> •
   <a href="#raw-steps-to-build">Derleme</a> •
   <a href="#how-to-build-with-docker">Docker ile Derleme</a> •

@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="../res/logo-header.svg" alt="SevenDesk - Ваш удаленый рабочий стол"><br>
+  <img src="../res/icon.png" alt="SevenDesk - Ваш удаленый рабочий стол" width="240"><br>
   <a href="#первичные-шаги-для-сборки">Первичные шаги для сборки</a> •
   <a href="#как-собрать-с-помощью-Docker">Как собрать с помощью Docker</a> •
   <a href="#структура-файлов">Структура файлов</a> •
