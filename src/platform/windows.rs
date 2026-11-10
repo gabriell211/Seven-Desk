@@ -3397,11 +3397,12 @@ pub fn uninstall_service(show_new_window: bool, _: bool) -> bool {
         "
     chcp 65001
     {remove_service}
-    if exist \"%PROGRAMDATA%\\Microsoft\\Windows\\Start Menu\\Programs\\Startup\\{app_name} Tray.lnk\" del /f /q \"%PROGRAMDATA%\\Microsoft\\Windows\\Start Menu\\Programs\\Startup\\{app_name} Tray.lnk\"
+    if exist \"%PROGRAMDATA%\\Microsoft\\Windows\\Start Menu\\Programs\\Startup\\{display_name} Tray.lnk\" del /f /q \"%PROGRAMDATA%\\Microsoft\\Windows\\Start Menu\\Programs\\Startup\\{display_name} Tray.lnk\"
     taskkill /F /IM {broker_exe}
     taskkill /F /IM {app_name}.exe{filter}
     ",
         app_name = crate::get_app_name(),
+        display_name = display_app_name(&crate::get_app_name()),
         broker_exe = WIN_TOPMOST_INJECTED_PROCESS_EXE,
     );
     if let Err(err) = run_cmds(cmds, false, "uninstall") {
@@ -3514,7 +3515,6 @@ fn get_directory_size_kb(path: &str) -> u64 {
 
 pub fn update_me(debug: bool) -> ResultType<()> {
     let app_name = crate::get_app_name();
-    let display_name = display_app_name(&app_name);
     let src_exe = std::env::current_exe()?.to_string_lossy().to_string();
     let (subkey, path, _, exe) = get_install_info();
     let is_installed = std::fs::metadata(&exe).is_ok();
@@ -3861,7 +3861,6 @@ fn is_msi_uninstall_entry_in_view(subkey: &str, wow: bool, app_name: &str) -> Re
 
 fn get_msi_uninstall_subkey(product_code: &str) -> ResultType<String> {
     let app_name = crate::get_app_name();
-    let display_name = display_app_name(&app_name);
     let subkey = get_subkey(product_code, false);
     if is_msi_uninstall_entry_in_view(&subkey, false, &app_name)? {
         return Ok(subkey);
@@ -4042,7 +4041,6 @@ pub fn handle_service_control() -> Option<std::process::ExitCode> {
 
 fn service_control_command(operation: &str, exe: &str, installed_now: bool) -> ResultType<String> {
     let app_name = crate::get_app_name();
-    let display_name = display_app_name(&app_name);
     let is_create = matches!(operation, "create-service" | "create-service-with-rollback");
     let legacy = match operation {
         "create-service" | "create-service-with-rollback" => get_create_service(exe),
@@ -4107,7 +4105,7 @@ fn get_create_service(exe: &str) -> String {
     if stop {
         format!("
 if exist \"%PROGRAMDATA%\\Microsoft\\Windows\\Start Menu\\Programs\\Startup\\{display_name} Tray.lnk\" del /f /q \"%PROGRAMDATA%\\Microsoft\\Windows\\Start Menu\\Programs\\Startup\\{display_name} Tray.lnk\"
-", app_name = crate::get_app_name())
+", display_name = display_app_name(&crate::get_app_name()))
     } else {
         let exe = escape_nested_cmd_ampersands(exe);
         format!("
