@@ -52,7 +52,6 @@
   });
   const downloadButton = document.querySelector('[data-auto-download]');
   const osIcon = document.querySelector('[data-os-icon]');
-  const fallbackIcon = document.querySelector('.download-fallback-icon');
   const nameSlots = document.querySelectorAll('[data-os-name]');
   const platformCards = Array.from(document.querySelectorAll('[data-platform]'));
   let selectedPlatform = null;
@@ -122,7 +121,6 @@
       osIcon.hidden = !selectedPlatform;
       if (selectedPlatform) osIcon.src = icons[selectedPlatform];
     }
-    if (fallbackIcon) fallbackIcon.hidden = Boolean(selectedPlatform);
     platformCards.forEach(card => {
       const active = card.dataset.platform === selectedPlatform;
       card.classList.toggle('platform-selected', active);
