@@ -747,7 +747,7 @@ def build_flutter_deb(version, features):
     system2('mkdir -p tmpdeb/usr/share/icons/hicolor/scalable/apps/')
     system2('mkdir -p tmpdeb/usr/share/applications/')
     system2('mkdir -p tmpdeb/usr/share/polkit-1/actions')
-    system2('rm tmpdeb/usr/bin/rustdesk || true')
+    system2('rm -f tmpdeb/usr/bin/rustdesk')
     system2(
         f'cp -r {flutter_build_dir}/* tmpdeb/usr/share/rustdesk/')
     system2(
@@ -779,6 +779,7 @@ def build_flutter_deb(version, features):
     if ships_so:
         retarget_control_to_drm_variant()
     system2('cp -a ../res/DEBIAN/* tmpdeb/DEBIAN/')
+    ensure_debian_maintainer_scripts_executable()
     md5_file_folder("tmpdeb/")
     system2('dpkg-deb -b tmpdeb rustdesk.deb;')
 
@@ -920,6 +921,7 @@ def build_deb_from_folder(version, binary_folder, want_drm=False):
     if want_drm:
         retarget_control_to_drm_variant()
     system2('cp -a ../res/DEBIAN/* tmpdeb/DEBIAN/')
+    ensure_debian_maintainer_scripts_executable()
     md5_file_folder("tmpdeb/")
     system2('dpkg-deb -b tmpdeb rustdesk.deb;')
 
@@ -1165,6 +1167,7 @@ def main():
                 system2(
                     'cp res/rustdesk-link.desktop tmpdeb/usr/share/applications/rustdesk-link.desktop')
                 os.system('cp -a DEBIAN/* tmpdeb/DEBIAN/')
+                ensure_debian_maintainer_scripts_executable()
                 system2('strip tmpdeb/usr/bin/rustdesk')
                 system2('mkdir -p tmpdeb/usr/share/rustdesk')
                 system2('mv tmpdeb/usr/bin/rustdesk tmpdeb/usr/share/rustdesk/')
@@ -1172,6 +1175,19 @@ def main():
                 md5_file_folder("tmpdeb/")
                 system2('dpkg-deb -b tmpdeb rustdesk.deb; /bin/rm -rf tmpdeb/')
                 os.rename('rustdesk.deb', 'rustdesk-%s.deb' % version)
+
+
+
+def ensure_debian_maintainer_scripts_executable():
+    """dpkg-deb requires executable maintainer scripts even if Git checked them out as 0644."""
+    control_dir = Path('tmpdeb/DEBIAN')
+    for name in ('preinst', 'postinst', 'prerm', 'postrm', 'config'):
+        script = control_dir / name
+        if script.is_symlink():
+            raise RuntimeError(f'Refusing symlink in Debian control scripts: {script}')
+        if script.is_file():
+            script.chmod(0o755)
+
 
 
 def md5_file(fn):
