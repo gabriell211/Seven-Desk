@@ -47,7 +47,6 @@
 
 /* One primary download action; OS tiles choose its target without downloading. */
 .download-os-icon{width:21px;height:21px;display:block;object-fit:contain;flex-shrink:0}
-.download-fallback-icon{width:21px;height:21px;flex-shrink:0}
 [hidden]{display:none!important}
 .platform-grid .platform-card{
   width:100%;
@@ -66,3 +65,6 @@
   background:rgba(59,171,255,.2);
   border-color:rgba(140,221,255,.7);
 }
+
+/* Keep the OS name aligned with the single leading platform icon. */
+.download-button-label{display:inline-block;white-space:nowrap}
