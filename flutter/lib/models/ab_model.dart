@@ -31,6 +31,7 @@ bool filterAbTagByIntersection() {
 
 const _personalAddressBookName = "My address book";
 const _legacyAddressBookName = "Legacy address book";
+const _localAddressBookKey = 'seven-desk-local-address-book-v1';
 
 const kUntagged = "Untagged";
 
@@ -86,7 +87,7 @@ class AbModel {
     if (desktopType == DesktopType.main) {
       Timer.periodic(Duration(milliseconds: 500), (timer) async {
         if (_timerCounter++ % 6 == 0) {
-          if (!gFFI.userModel.isLogin) return;
+          if (!isWindows && !gFFI.userModel.isLogin) return;
           if (!listInitialized) return;
           if (!current.initialized || !current.canWrite()) return;
           _syncFromRecent();
@@ -97,12 +98,37 @@ class AbModel {
 
   reset() async {
     print("reset ab model");
+    if (isWindows && current is LocalAb) {
+      await (current as LocalAb).waitForWrites();
+    }
     addressbooks.clear();
     _currentName.value = '';
     _listPullError.value = '';
     _pulledOnce = false;
-    await bind.mainClearAb();
     listInitialized = false;
+    if (isWindows) {
+      await _loadLocalAb();
+    } else {
+      await bind.mainClearAb();
+    }
+  }
+
+  Future<void> _loadLocalAb({bool quiet = false, bool reload = false}) async {
+    final existing = addressbooks[_legacyAddressBookName];
+    final ab = existing is LocalAb ? existing : LocalAb();
+    if (existing is! LocalAb) {
+      addressbooks.clear();
+      addressbooks[_legacyAddressBookName] = ab;
+    }
+    _currentName.value = _legacyAddressBookName;
+    legacyMode.value = true;
+    listInitialized = true;
+    if (!ab.initialized || reload) {
+      await ab.waitForWrites();
+      await ab.pullAb(quiet: quiet);
+      _callbackPeerUpdate();
+      _refreshTab();
+    }
   }
 
   void clearPullErrors() {
@@ -120,6 +146,10 @@ class AbModel {
   Future<void> pullAb(
       {required ForcePullAb? force, required bool quiet}) async {
     if (bind.isDisableAb()) return;
+    if (isWindows) {
+      await _loadLocalAb(quiet: quiet, reload: force != null);
+      return;
+    }
     if (!gFFI.userModel.isLogin) return;
     if (gFFI.userModel.networkError.isNotEmpty) return;
     if (_pulling) return;
@@ -602,6 +632,7 @@ class AbModel {
 
 // #region cache
   _saveCache() {
+    if (isWindows) return;
     try {
       var ab_entries = _serializeCache();
       Map<String, dynamic> m = <String, dynamic>{
@@ -639,6 +670,10 @@ class AbModel {
   }
 
   Future<void> loadCache() async {
+    if (isWindows) {
+      await _loadLocalAb();
+      return;
+    }
     try {
       if (_cacheLoadOnceFlag || currentAbLoading.value) return;
       _cacheLoadOnceFlag = true;
@@ -819,6 +854,9 @@ class AbModel {
   }
 
   String translatedName(String name) {
+    if (isWindows && name == _legacyAddressBookName) {
+      return translate(_personalAddressBookName);
+    }
     if (name == _personalAddressBookName || name == _legacyAddressBookName) {
       return translate(name);
     } else {
@@ -1354,6 +1392,100 @@ class LegacyAb extends BaseAb {
     for (var t in tagsWithoutColor) {
       tagColors[t] = str2color2(t, existing: tagColors.values.toList()).value;
     }
+  }
+}
+
+class LocalAb extends LegacyAb {
+  Future<void> _pendingWrite = Future<void>.value();
+  int _writeRevision = 0;
+
+  Future<void> waitForWrites() => _pendingWrite;
+
+  @override
+  Future<String?> addPeers(List<Map<String, dynamic>> ps) async {
+    final result = await super.addPeers(ps);
+    return result == 'Failed to push to server'
+        ? (pushError.value.isEmpty ? translate('Failed') : pushError.value)
+        : result;
+  }
+
+  @override
+  Future<bool> pullAbImpl({quiet = false}) async {
+    try {
+      final saved = bind.getLocalFlutterOption(k: _localAddressBookKey);
+      if (saved.isEmpty) {
+        tags.clear();
+        tagColors.clear();
+        peers.clear();
+      } else {
+        final data = jsonDecode(saved);
+        if (data is! Map<String, dynamic>) {
+          throw const FormatException('Invalid local address book');
+        }
+        _deserialize(data);
+      }
+      return true;
+    } catch (e) {
+      if (!quiet) {
+        pullError.value = e.toString();
+      }
+      debugPrint('load local address book: $e');
+      return false;
+    }
+  }
+
+  @override
+  Future<bool> pushAb(
+      {bool toastIfFail = true, bool toastIfSucc = true}) async {
+    final revision = ++_writeRevision;
+    try {
+      final data = {
+        'tags': tags.toList(),
+        'tag_colors': jsonEncode(tagColors),
+        'peers': peers.map((peer) {
+          return {
+            ...peer.toCustomJson(includingHash: false),
+            'note': peer.note,
+          };
+        }).toList(),
+      };
+      final snapshot = jsonEncode(data);
+      final write = _pendingWrite.then<void>((_) async {
+        await bind.setLocalFlutterOption(k: _localAddressBookKey, v: snapshot);
+      });
+      _pendingWrite = write.then<void>((_) {}, onError: (Object _) {});
+      await write;
+      peers.refresh();
+      if (revision == _writeRevision) {
+        pushError.value = '';
+      }
+      if (toastIfSucc) {
+        showToast(translate('Successful'));
+      }
+      return true;
+    } catch (e) {
+      if (revision == _writeRevision) {
+        await _pendingWrite;
+        if (revision == _writeRevision) {
+          await pullAb(quiet: true);
+          gFFI.abModel._callbackPeerUpdate();
+          gFFI.abModel._refreshTab();
+          pushError.value = e.toString();
+        }
+      }
+      if (toastIfFail) {
+        BotToast.showText(contentColor: Colors.red, text: e.toString());
+      }
+      return false;
+    }
+  }
+
+  @override
+  Future<bool> changeNote({required String id, required String note}) async {
+    final peer = peers.firstWhereOrNull((peer) => peer.id == id);
+    if (peer == null) return false;
+    peer.note = note;
+    return pushAb();
   }
 }
 

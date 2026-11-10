@@ -92,10 +92,14 @@ int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
       app_name = std::wstring(app_name_buffer);
     }
   }
+  std::wstring display_app_name = app_name;
+  if (app_name == L"RustDesk" || app_name == L"SevenDesk") {
+    display_app_name = L"Seven Desk";
+  }
 
   // Uri links dispatch
-  HWND hwnd = ::FindWindowW(getWindowClassName(), app_name.c_str());
-  if (hwnd == NULL && app_name == L"RustDesk") {
+  HWND hwnd = ::FindWindowW(getWindowClassName(), display_app_name.c_str());
+  if (hwnd == NULL && display_app_name == L"Seven Desk") {
     hwnd = ::FindWindowW(getWindowClassName(), L"SevenDesk");
   }
   if (hwnd != NULL) {
@@ -176,11 +180,11 @@ int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
 
   std::wstring window_title;
   if (is_cm_page) {
-    window_title = app_name + L" - Connection Manager";
+    window_title = display_app_name + L" - Connection Manager";
   } else if (is_install_page) {
-    window_title = app_name + L" - Install";
+    window_title = display_app_name + L" - Install";
   } else {
-    window_title = app_name;
+    window_title = display_app_name;
   }
   if (!window.CreateAndShow(window_title, origin, size, !is_cm_page)) {
       return EXIT_FAILURE;

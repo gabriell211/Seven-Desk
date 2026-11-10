@@ -39,11 +39,11 @@ class _AddressBookState extends State<AddressBook> {
 
   @override
   Widget build(BuildContext context) => Obx(() {
-        if (!gFFI.userModel.isLogin) {
+        if (!isWindows && !gFFI.userModel.isLogin) {
           return Center(
               child: ElevatedButton(
                   onPressed: loginDialog, child: Text(translate("Login"))));
-        } else if (gFFI.userModel.networkError.isNotEmpty) {
+        } else if (!isWindows && gFFI.userModel.networkError.isNotEmpty) {
           return netWorkErrorWidget();
         } else {
           return Column(
@@ -702,7 +702,10 @@ class _AddressBookState extends State<AddressBook> {
               return;
             }
           }
-          gFFI.abModel.addTags(tags);
+          if (!await gFFI.abModel.addTags(tags)) {
+            setState(() => isInProgress = false);
+            return;
+          }
           // final currentPeers
         }
         close();

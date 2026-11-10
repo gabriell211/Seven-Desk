@@ -1094,7 +1094,8 @@ class RecentPeerCard extends BasePeerCard {
       menuItems.add(_rmFavAction(peer.id, () async {}));
     }
 
-    if (gFFI.userModel.userName.isNotEmpty) {
+    if (!bind.isDisableAb() &&
+        (isWindows || gFFI.userModel.userName.isNotEmpty)) {
       menuItems.add(_addToAb(peer));
     }
 
@@ -1134,7 +1135,8 @@ class FavoritePeerCard extends BasePeerCard {
       await bind.mainLoadFavPeers();
     }));
 
-    if (gFFI.userModel.userName.isNotEmpty) {
+    if (!bind.isDisableAb() &&
+        (isWindows || gFFI.userModel.userName.isNotEmpty)) {
       menuItems.add(_addToAb(peer));
     }
 
@@ -1174,7 +1176,8 @@ class DiscoveredPeerCard extends BasePeerCard {
       menuItems.add(_rmFavAction(peer.id, () async {}));
     }
 
-    if (gFFI.userModel.userName.isNotEmpty) {
+    if (!bind.isDisableAb() &&
+        (isWindows || gFFI.userModel.userName.isNotEmpty)) {
       menuItems.add(_addToAb(peer));
     }
 
@@ -1294,7 +1297,9 @@ class AddressBookPeerCard extends BasePeerCard {
 
   MenuEntryBase<String> _existIn() {
     final names = gFFI.abModel.idExistIn(peer.id);
-    final text = names.join(', ');
+    final text = isWindows
+        ? names.map(gFFI.abModel.translatedName).join(', ')
+        : names.join(', ');
     return MenuEntryButton<String>(
       childBuilder: (TextStyle? style) => Text(
         translate('Exist in'),

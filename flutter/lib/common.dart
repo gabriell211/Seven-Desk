@@ -3862,14 +3862,7 @@ class _LogoState extends State<_Logo> {
 Widget loadLogo() => const _Logo();
 
 Widget loadIcon(double size) {
-  return Image.asset('assets/icon.png',
-      width: size,
-      height: size,
-      errorBuilder: (ctx, error, stackTrace) => SvgPicture.asset(
-            'assets/icon.svg',
-            width: size,
-            height: size,
-          ));
+  return Image.asset('assets/icon.png', width: size, height: size);
 }
 
 var imcomingOnlyHomeSize = Size(280, 300);
@@ -4232,7 +4225,8 @@ String get appName {
   return _appName;
 }
 
-String get appDisplayName => appName == 'RustDesk' ? 'SevenDesk' : appName;
+String get appDisplayName =>
+    (appName == 'RustDesk' || appName == 'SevenDesk') ? 'Seven Desk' : appName;
 
 String getConnectionText(bool secure, bool direct, String streamType) {
   String connectionText;
