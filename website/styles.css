@@ -77,3 +77,7 @@
   flex:none;
   stroke:currentColor;
 }
+
+/* Semantic people/team icon in the hero benefits strip. */
+.hero-microbar .micro-icon{display:inline-flex;align-items:center;justify-content:center;flex:0 0 21px}
+.hero-microbar .micro-icon svg{display:block;width:21px;height:21px;stroke:currentColor}
