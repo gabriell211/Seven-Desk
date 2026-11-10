@@ -1,0 +1,31 @@
+name: Seven Desk Website
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "website/**"
+      - ".github/workflows/website.yml"
+  pull_request:
+    paths:
+      - "website/**"
+      - ".github/workflows/website.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  website-checks:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout project
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+      - name: Validate JavaScript syntax
+        run: |
+          node --version
+          node --check website/api/download.js
+          node --check website/script.js
+      - name: Run download resolver tests
+        run: node --test website/tests/download.test.cjs
