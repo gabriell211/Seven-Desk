@@ -3,7 +3,7 @@ name: Flutter Tag Build
 on:
   workflow_dispatch:
   push:
-    # Hotfix release on main after correcting Android build script execution.
+    # Publish a branded Windows installer after the Seven Desk packaging correction.
     branches:
       - main
     paths:
@@ -34,6 +34,7 @@ jobs:
           python3 -m py_compile build.py
           python3 -m unittest discover -s tests -p 'test_debian_maintainer_script_permissions.py' -v
           python3 -m unittest discover -s tests -p 'test_mfx_dispatch_patch.py' -v
+          python3 -m unittest discover -s tests -p 'test_windows_sevendesk_branding.py' -v
 
   run-flutter-tag-build:
     needs: preflight-release
@@ -41,5 +42,5 @@ jobs:
     secrets: inherit
     with:
       upload-artifact: true
-      upload-tag: ${{ github.ref == 'refs/heads/main' && 'v1.5.3-4' || github.ref_name }}
+      upload-tag: ${{ github.ref == 'refs/heads/main' && 'v1.5.3-5' || github.ref_name }}
       publish-update-metadata: ${{ github.repository == 'rustdesk/rustdesk' }}
