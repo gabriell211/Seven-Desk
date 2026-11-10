@@ -3,7 +3,7 @@ name: Flutter Tag Build
 on:
   workflow_dispatch:
   push:
-    # One-time first Seven Desk release: this file change on main starts the build.
+    # Hotfix release on main after correcting Android build script execution.
     branches:
       - main
     paths:
@@ -24,5 +24,5 @@ jobs:
     secrets: inherit
     with:
       upload-artifact: true
-      upload-tag: ${{ github.ref == 'refs/heads/main' && 'v1.5.3' || github.ref_name }}
+      upload-tag: ${{ github.ref == 'refs/heads/main' && 'v1.5.3-1' || github.ref_name }}
       publish-update-metadata: ${{ github.repository == 'rustdesk/rustdesk' }}
