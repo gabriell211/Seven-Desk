@@ -1110,7 +1110,7 @@ jobs:
             sed -i -e "s/MACOSX_DEPLOYMENT_TARGET = [0-9]*.[0-9]*;/MACOSX_DEPLOYMENT_TARGET = ${MIN_MACOS_VERSION};/" flutter/macos/Runner.xcodeproj/project.pbxproj
             echo "MACOSX_DEPLOYMENT_TARGET=${MIN_MACOS_VERSION}" >> "$GITHUB_ENV"
           fi
-          ./build.py --flutter --hwcodec --unix-file-copy-paste ${{ matrix.job.extra-build-args }}
+          python3 ./build.py --flutter --hwcodec --unix-file-copy-paste ${{ matrix.job.extra-build-args }}
 
       - name: Test verified updates
         if: env.PUBLISH_UPDATE_METADATA == 'true'
@@ -1125,7 +1125,7 @@ jobs:
         run: |
           # The build's own features, so the tests see the code that ships. MACOSX_DEPLOYMENT_TARGET
           # comes from the build step's export.
-          FEATURES=$(./build.py --flutter --hwcodec --unix-file-copy-paste ${{ matrix.job.extra-build-args }} --print-features)
+          FEATURES=$(python3 ./build.py --flutter --hwcodec --unix-file-copy-paste ${{ matrix.job.extra-build-args }} --print-features)
           cargo test --locked --release --lib --features "$FEATURES"
           # Opt-in, and its macOS tests run nowhere else.
           cargo test --locked --release -p clipboard --features unix-file-copy-paste
@@ -2787,7 +2787,7 @@ jobs:
             mv ./target/release/rustdesk ./Release/rustdesk
             wget -O ./Release/libsciter-gtk.so https://github.com/c-smile/sciter-sdk/raw/master/bin.lnx/${{ matrix.job.sciter_arch }}/libsciter-gtk.so
             export DEB_ARCH=${{ matrix.job.deb_arch }}
-            ./build.py --package ./Release
+            python3 ./build.py --package ./Release
 
       - name: Rename rustdesk
         shell: bash
