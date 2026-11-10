@@ -19,6 +19,11 @@ test('OS icon replaces arrow inside the one download CTA', () => {
   assert.match(html, /class="download-os-icon"[^>]*data-os-icon/);
   assert.match(js, /osIcon\.src = icons\[selectedPlatform\]/);
   assert.match(js, /downloadButton\.href = selectedPlatform/);
+  const button = html.match(/<a id="download-principal"[\s\S]*?<\/a>/)?.[0];
+  assert.ok(button, 'primary download button exists');
+  assert.doesNotMatch(button, /download-fallback-icon|↗|↘|<svg/);
+  assert.match(button, /class="download-button-label"/);
+  assert.doesNotMatch(js, /download-fallback-icon/);
 });
 
 test('other platforms are selectors, not duplicate download links', () => {
