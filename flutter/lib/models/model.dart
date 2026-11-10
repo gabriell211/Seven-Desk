@@ -28,6 +28,7 @@ import 'package:flutter_hbb/models/desktop_render_texture.dart';
 import 'package:flutter_hbb/models/terminal_model.dart';
 import 'package:flutter_hbb/common/shared_state.dart';
 import 'package:flutter_hbb/utils/multi_window_manager.dart';
+import 'package:flutter_hbb/utils/remote_display_defaults.dart';
 import 'package:flutter_hbb/utils/http_service.dart' as http;
 import 'package:tuple/tuple.dart';
 import 'package:image/image.dart' as img2;
@@ -2257,7 +2258,7 @@ class CanvasModel with ChangeNotifier {
   double _scrollX = 0.0;
   // scroll offset y percent
   double _scrollY = 0.0;
-  ScrollStyle _scrollStyle = ScrollStyle.scrollauto;
+  ScrollStyle _scrollStyle = ScrollStyle.scrollbar;
   // edge scroll mode: trigger scrolling when the cursor is close to the edge of the view
   int _edgeScrollEdgeThickness = 100;
   // tracks whether edge scroll should be active, prevents spurious
@@ -2476,7 +2477,7 @@ class CanvasModel with ChangeNotifier {
     final style = await bind.sessionGetScrollStyle(sessionId: sessionId);
 
     _scrollStyle =
-        style != null ? ScrollStyle.fromString(style) : ScrollStyle.scrollauto;
+        style != null ? ScrollStyle.fromString(style) : ScrollStyle.scrollbar;
 
     if (_scrollStyle != ScrollStyle.scrollauto) {
       // Scrollbar and Scroll Edge share controllers and retain their positions.
@@ -4333,6 +4334,7 @@ class FFI {
       ffiModel.resetRestartReconnectState();
       dialogManager.dismissAll();
       try {
+        await _migrateSevenDeskRemoteDisplayDefaults();
         await canvasModel.updateViewStyle();
         await canvasModel.updateScrollStyle();
         await canvasModel.initializeEdgeScrollEdgeThickness();
@@ -4342,6 +4344,40 @@ class FFI {
       } finally {
         _applyPendingMonitorRestore();
       }
+    }
+  }
+
+  /// Upgrade each existing peer once without overriding later manual choices.
+  Future<void> _migrateSevenDeskRemoteDisplayDefaults() async {
+    if (!isDesktop || connType != ConnType.defaultConn) return;
+
+    try {
+      final migrated = await bind.sessionGetFlutterOption(
+          sessionId: sessionId, k: kSevenDeskDisplayDefaultsMigrationKey);
+      if (migrated == 'Y') return;
+
+      final viewStyle = await bind.sessionGetViewStyle(sessionId: sessionId);
+      final scrollStyle = await bind.sessionGetScrollStyle(sessionId: sessionId);
+      if (viewStyle == null || scrollStyle == null) return;
+
+      final updatedViewStyle = migratedRemoteViewStyle(viewStyle);
+      final updatedScrollStyle = migratedRemoteScrollStyle(scrollStyle);
+
+      if (updatedViewStyle != null) {
+        await bind.sessionSetViewStyle(
+            sessionId: sessionId, value: updatedViewStyle);
+      }
+      if (updatedScrollStyle != null) {
+        await bind.sessionSetScrollStyle(
+            sessionId: sessionId, value: updatedScrollStyle);
+      }
+      await bind.sessionSetFlutterOption(
+          sessionId: sessionId,
+          k: kSevenDeskDisplayDefaultsMigrationKey,
+          v: 'Y');
+    } catch (e) {
+      // A migration failure must not interrupt remote-screen rendering.
+      debugPrint('Unable to migrate remote display defaults for $id: $e');
     }
   }
 

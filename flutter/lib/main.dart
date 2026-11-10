@@ -25,6 +25,7 @@ import 'package:window_manager/window_manager.dart';
 
 import 'common.dart';
 import 'consts.dart';
+import 'utils/remote_display_defaults.dart';
 import 'mobile/pages/home_page.dart';
 import 'mobile/pages/server_page.dart';
 import 'mobile/widgets/deploy_dialog.dart';
@@ -133,6 +134,7 @@ Future<void> initEnv(String appType) async {
 void runMainApp(bool startService) async {
   // register uni links
   await initEnv(kAppTypeMain);
+  await _initializeSevenDeskDisplayDefaults();
   checkUpdate();
   // trigger connection status updater
   await bind.mainCheckConnectStatus();
@@ -171,6 +173,28 @@ void runMainApp(bool startService) async {
     // Do not use `windowManager.setResizable()` here.
     setResizable(!bind.isIncomingOnly());
   });
+}
+
+/// Set Seven Desk defaults only once, then respect later user choices.
+Future<void> _initializeSevenDeskDisplayDefaults() async {
+  if (!isDesktop) return;
+
+  try {
+    if (bind.mainGetUserDefaultOption(
+            key: kSevenDeskDisplayDefaultsMigrationKey) ==
+        'Y') {
+      return;
+    }
+
+    await bind.mainSetUserDefaultOption(
+        key: kOptionViewStyle, value: kRemoteViewStyleAdaptive);
+    await bind.mainSetUserDefaultOption(
+        key: kOptionScrollStyle, value: kRemoteScrollStyleBar);
+    await bind.mainSetUserDefaultOption(
+        key: kSevenDeskDisplayDefaultsMigrationKey, value: 'Y');
+  } catch (e) {
+    debugPrint('Unable to initialize Seven Desk display defaults: $e');
+  }
 }
 
 void runMobileApp() async {
