@@ -1,4 +1,5 @@
 <p align="center">
+  <a href="https://seven-desk-site.vercel.app/"><strong>Website oficial do Seven Desk</strong></a> · <a href="https://seven-desk-site.vercel.app/#plataformas">Downloads</a><br><br>
   <img src="res/icon.png" alt="SevenDesk - Seu desktop remoto" width="240"><br>
   <a href="#passos-básicos-para-compilar">Compilar</a> •
   <a href="#como-compilar-com-o-docker">Docker</a> •
