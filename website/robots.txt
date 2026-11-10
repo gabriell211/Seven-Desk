@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://seven-desk-site.vercel.app/sitemap.xml
