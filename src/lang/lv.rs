@@ -826,5 +826,7 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("install-directory-not-empty-tip", "Izvēlētā mape nav tukša. Instalēšana var izdzēst esošos datus. Apsveriet iespēju izvēlēties citu mapi."),
         ("Request approval", "Pieprasīt apstiprinājumu"),
         ("Forever", "Uz visiem laikiem"),
+        ("Session toolbar photo", ""),
+        ("Could not use this photo. Select a JPG, PNG or WebP up to 12 MB and 32 megapixels.", ""),
     ].iter().cloned().collect();
 }

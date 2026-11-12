@@ -826,5 +826,7 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("install-directory-not-empty-tip", "A pasta selecionada não está vazia. A instalação pode eliminar dados existentes. Considere escolher outra pasta."),
         ("Request approval", "Solicitar aprovação"),
         ("Forever", "Para sempre"),
+        ("Session toolbar photo", "Fotografia na barra da sessão"),
+        ("Could not use this photo. Select a JPG, PNG or WebP up to 12 MB and 32 megapixels.", "Não foi possível usar esta fotografia. Selecione um JPG, PNG ou WebP até 12 MB e 32 megapíxeis."),
     ].iter().cloned().collect();
 }
