@@ -26,7 +26,9 @@ void main() {
   }) =>
       config.apply(
         readOption: (name) async => options[name] ?? '',
-        writeOption: (name, value) async => options[name] = value,
+        writeOption: (name, value) async {
+          options[name] = value;
+        },
         hasAccountToken: accountToken,
         settingsDisabled: disabledSettings,
         isCustomClient: customClient,
