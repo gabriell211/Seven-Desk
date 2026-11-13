@@ -27,6 +27,7 @@ function displaySession(session) {
   el('account-signed-in').hidden = !user;
   el('account-signed-out').hidden = !!user;
   el('account-user').textContent = user?.email || '';
+  el('account-plan-actions').hidden = !user;
   if (!user) el('account-subscription').textContent = '';
 }
 
@@ -34,7 +35,7 @@ async function refresh() {
   const { data, error } = await auth.getSession();
   if (error) throw error;
   displaySession(data);
-  if (data?.user) await loadSubscription();
+  if (data?.user) await Promise.all([loadSubscription(), loadCheckoutAvailability()]);
 }
 
 async function loadSubscription() {
@@ -55,6 +56,50 @@ async function loadSubscription() {
       subscription.status === 'paid' ? `Período de acesso até ${formatted}.` : 'Período de acesso encerrado.';
   } catch { target.textContent = 'Não foi possível consultar o período de teste.'; }
 }
+
+const paymentButtons = [...document.querySelectorAll('[data-plan]')];
+
+async function loadCheckoutAvailability() {
+  const notice = el('account-checkout-notice');
+  paymentButtons.forEach(button => { button.disabled = true; });
+  notice.textContent = 'Pagamento indisponível durante a preparação do sistema.';
+  try {
+    const response = await fetch('/api/billing-status', { cache: 'no-store' });
+    if (!response.ok) return;
+    const data = await response.json();
+    if (data?.checkoutAvailable !== true) return;
+    paymentButtons.forEach(button => { button.disabled = false; });
+    notice.textContent = 'Escolha um plano para abrir o pagamento seguro.';
+  } catch { /* Unavailable is the safe default. */ }
+}
+
+async function startCheckout(plan) {
+  const notice = el('account-checkout-notice');
+  paymentButtons.forEach(button => { button.disabled = true; });
+  notice.textContent = 'Preparando seu pagamento...';
+  try {
+    const { data, error } = await auth.getSession();
+    const token = data?.session?.token;
+    if (error || typeof token !== 'string' || token.split('.').length !== 3) throw new Error('Not authenticated');
+    const response = await fetch('/api/checkout', {
+      method: 'POST',
+      cache: 'no-store',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ plan }),
+    });
+    if (!response.ok) throw new Error('Checkout unavailable');
+    const { url: link } = await response.json();
+    const url = new URL(link);
+    if (url.protocol !== 'https:' ||
+        !['checkout.infinitepay.io', 'checkout.infinitepay.com.br'].includes(url.hostname) ||
+        url.username || url.password || url.port) throw new Error('Untrusted checkout URL');
+    window.location.assign(url.href);
+  } catch {
+    notice.textContent = 'Não foi possível iniciar o pagamento. Tente novamente mais tarde.';
+    await loadCheckoutAvailability();
+  }
+}
+paymentButtons.forEach(button => button.addEventListener('click', () => startCheckout(button.dataset.plan)));
 
 el('show-login').addEventListener('click', () => setMode(false));
 el('show-signup').addEventListener('click', () => setMode(true));
