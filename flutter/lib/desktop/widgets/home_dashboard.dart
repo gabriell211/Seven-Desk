@@ -246,9 +246,9 @@ class HomeDashboard extends StatelessWidget {
               !bind.isDisableSettings() &&
               DesktopSettingPage.tabKeys.contains(SettingsTabKey.safety))
             Padding(
-              padding: EdgeInsets.fromLTRB(wide ? 14 : 8, 4, wide ? 14 : 8, 12),
+              padding: EdgeInsets.fromLTRB(wide ? 36 : 8, 4, wide ? 30 : 8, 14),
               child: Tooltip(
-                message: translate('Security'),
+                message: 'Configurações de segurança',
                 child: OutlinedButton(
                   onPressed: () =>
                       DesktopSettingPage.switch2page(SettingsTabKey.safety),
@@ -256,19 +256,43 @@ class HomeDashboard extends StatelessWidget {
                     foregroundColor: HomeDashboardTheme.green,
                     side: const BorderSide(color: HomeDashboardTheme.border),
                     backgroundColor: const Color(0xFF231638),
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    minimumSize: const Size(0, 42),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 12, vertical: 12),
+                    minimumSize: const Size(0, 68),
                     shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12)),
+                        borderRadius: BorderRadius.circular(14)),
                   ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Icon(Icons.verified_user_outlined, size: 20),
+                      const Icon(Icons.verified_user_outlined, size: 29),
                       if (wide) ...[
-                        const SizedBox(width: 10),
-                        Text(translate('Security'),
-                            style: const TextStyle(color: Colors.white)),
+                        const SizedBox(width: 12),
+                        const Expanded(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('Conexão Segura',
+                                  style: TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.w600)),
+                              Text('TLS + Criptografia',
+                                  style: TextStyle(
+                                      color: HomeDashboardTheme.muted,
+                                      fontSize: 12)),
+                            ],
+                          ),
+                        ),
+                        Obx(() => Icon(Icons.circle,
+                            size: 10,
+                            color: stateGlobal.svcStatus.value ==
+                                        SvcStatus.ready &&
+                                    !Get.find<RxBool>(
+                                            tag: 'stop-service')
+                                        .value
+                                ? HomeDashboardTheme.green
+                                : HomeDashboardTheme.muted)),
                       ],
                     ],
                   ),
@@ -277,7 +301,7 @@ class HomeDashboard extends StatelessWidget {
             ),
           if (wide)
             const SizedBox(
-              height: 54,
+              height: 78,
               child: CustomPaint(painter: _SidebarRibbon()),
             ),
         ],
@@ -295,7 +319,15 @@ class HomeDashboard extends StatelessWidget {
 
   Widget _navigationItem(HomeDashboardSection item, bool wide) {
     final selected = item == section;
-    final label = translate(item.label);
+    final label = switch (item) {
+      HomeDashboardSection.home => 'Início',
+      HomeDashboardSection.computers => 'Computadores',
+      HomeDashboardSection.contacts => 'Contatos',
+      HomeDashboardSection.groups => 'Grupos',
+      HomeDashboardSection.transfer => 'Transferência',
+      HomeDashboardSection.sessions => 'Logs & Sessões',
+      HomeDashboardSection.settings => 'Configurações',
+    };
     return Padding(
       padding: const EdgeInsets.only(bottom: 7),
       child: Semantics(
