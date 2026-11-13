@@ -24,7 +24,7 @@ use lazy_static::lazy_static;
 use serde::{Deserialize, Serialize};
 
 use base::platform::linux::{WaylandDisplayInfo, CMD_SH};
-use hbb_common::{anyhow::anyhow, bail, config, serde_json, tokio, ResultType};
+use hbb_common::{anyhow::anyhow, bail, config, serde_json, ResultType};
 
 use super::capturable::PixelProvider;
 use super::capturable::{Capturable, Recorder};

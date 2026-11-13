@@ -139,6 +139,7 @@ pub fn create_http_client_with_url(url: &str) -> SyncClient {
     )
 }
 
+#[allow(dead_code)] // Reserved HTTP entry point; keep strict TLS validation intact.
 pub fn create_http_client_with_url_strict(url: &str) -> ResultType<SyncClient> {
     let parsed_url = url::Url::parse(url)?;
     if parsed_url.scheme() != "https" {
@@ -257,6 +258,7 @@ fn create_http_client_with_url_(
     client
 }
 
+#[allow(dead_code)] // Reserved HTTP entry point; keep strict TLS validation intact.
 pub async fn create_http_client_async_with_url(url: &str) -> AsyncClient {
     let proxy_conf = Config::get_socks();
     let tls_url = get_url_for_tls(url, &proxy_conf);
@@ -275,6 +277,7 @@ pub async fn create_http_client_async_with_url(url: &str) -> AsyncClient {
     .await
 }
 
+#[allow(dead_code)] // Reserved HTTP entry point; keep strict TLS validation intact.
 pub async fn create_http_client_async_with_url_strict(url: &str) -> ResultType<AsyncClient> {
     let parsed_url = url::Url::parse(url)?;
     if parsed_url.scheme() != "https" {
@@ -302,6 +305,7 @@ pub async fn create_http_client_async_with_url_strict(url: &str) -> ResultType<A
     .await)
 }
 
+#[allow(dead_code)] // Preserved for optional async HTTP clients.
 #[async_recursion]
 async fn create_http_client_async_with_url_(
     url: &str,

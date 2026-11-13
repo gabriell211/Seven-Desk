@@ -28,6 +28,8 @@ pub struct xdo_search_t {
     _private: [u8; 0],
 }
 
+// Keep the C API type spelling for libxdo consumers.
+#[allow(non_camel_case_types)]
 pub type useconds_t = c_uint;
 
 pub const CURRENTWINDOW: Window = 0;
