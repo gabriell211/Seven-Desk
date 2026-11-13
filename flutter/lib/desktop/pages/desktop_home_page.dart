@@ -104,12 +104,12 @@ class _DesktopHomePageState extends State<DesktopHomePage>
         final canEdit = !bind.isDisableSettings() &&
             DesktopSettingPage.tabKeys.contains(SettingsTabKey.safety);
         final id = _dashboardCredential(
-          label: 'Your ID',
+          label: 'Seu ID',
           controller: model.serverId,
           actions: canEdit ? [buildPopupMenu(context)] : const [],
         );
         final password = _dashboardCredential(
-          label: 'One-time Password',
+          label: 'Senha de uso único',
           controller: model.serverPasswd,
           canCopy: showPassword,
           actions: [
@@ -132,29 +132,61 @@ class _DesktopHomePageState extends State<DesktopHomePage>
           decoration: HomeDashboardTheme.panel,
           child: LayoutBuilder(
             builder: (context, constraints) {
-              final wide = constraints.maxWidth >= 680;
-              final sideBySide = constraints.maxWidth >= 470;
-              return Padding(
-                padding: EdgeInsets.symmetric(
-                    horizontal: wide ? 23 : 14, vertical: wide ? 18 : 12),
-                child: sideBySide
-                    ? Row(
-                        children: [
-                          if (wide) ...[
-                            const HomeDashboardLogo(size: 68),
-                            const SizedBox(width: 28),
-                          ],
-                          Expanded(child: id),
-                          const SizedBox(
-                            height: 56,
-                            child: VerticalDivider(width: 24),
+              final wide = constraints.maxWidth >= 760;
+              final sideBySide = constraints.maxWidth >= 560;
+              if (!sideBySide) {
+                return Padding(
+                  padding: const EdgeInsets.all(18),
+                  child: Column(
+                    children: [id, const Divider(height: 18), password],
+                  ),
+                );
+              }
+              return SizedBox(
+                height: wide ? 150 : 134,
+                child: Row(
+                  children: [
+                    if (wide) ...[
+                      Container(
+                        width: 182,
+                        height: double.infinity,
+                        decoration: const BoxDecoration(
+                          borderRadius: BorderRadius.only(
+                            topLeft: Radius.circular(17),
+                            bottomLeft: Radius.circular(17),
                           ),
-                          Expanded(child: password),
-                        ],
-                      )
-                    : Column(
-                        children: [id, const Divider(height: 14), password],
+                          gradient: LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [
+                              Color(0xFF6224BB),
+                              Color(0xFF201130),
+                              Color(0xFF191127),
+                            ],
+                          ),
+                        ),
+                        child: const Center(child: HomeDashboardLogo(size: 86)),
                       ),
+                      const SizedBox(width: 22),
+                    ],
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 14),
+                        child: id,
+                      ),
+                    ),
+                    const SizedBox(
+                      height: 83,
+                      child: VerticalDivider(width: 28),
+                    ),
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(14, 0, 21, 0),
+                        child: password,
+                      ),
+                    ),
+                  ],
+                ),
               );
             },
           ),
@@ -182,7 +214,7 @@ class _DesktopHomePageState extends State<DesktopHomePage>
             Text(
               translate(label),
               style: const TextStyle(
-                  fontSize: 14, color: HomeDashboardTheme.muted),
+                  fontSize: 16, color: Colors.white),
             ),
             Row(
               children: [
@@ -193,7 +225,7 @@ class _DesktopHomePageState extends State<DesktopHomePage>
                     minFontSize: 13,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
-                        fontSize: 32, fontWeight: FontWeight.w700),
+                        fontSize: 38, fontWeight: FontWeight.w700),
                   ),
                 ),
                 ...actions,
