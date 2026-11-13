@@ -9,6 +9,7 @@ const isResetPage = window.location.pathname === '/redefinir-senha';
 const resetToken = isResetPage ? params.get('token') : null;
 let auth;
 let signup = window.location.pathname === '/cadastro';
+let verificationEmail = '';
 let availability = {loginEnabled:false, registrationEnabled:false, recoveryEnabled:false};
 
 // One-time reset tokens should not remain visible in browser history/referrers.
@@ -30,6 +31,7 @@ function setMode(create) {
   el('account-signed-out').hidden = false;
   el('account-recovery-form').hidden = true;
   el('account-reset-form').hidden = true;
+  el('account-verification-form').hidden = true;
   form.hidden = false;
   el('account-tabs').hidden = false;
   el('show-login').setAttribute('aria-pressed', String(!create));
@@ -57,6 +59,7 @@ function setRecoveryMode(reset) {
   el('account-tabs').hidden = true;
   el('account-recovery-form').hidden = reset;
   el('account-reset-form').hidden = !reset;
+  el('account-verification-form').hidden = true;
   const available = availability.recoveryEnabled;
   el(reset ? 'reset-submit' : 'recovery-submit').disabled = !available;
   el('account-title').textContent = reset ? 'Redefina sua senha' : 'Recupere seu acesso';
@@ -71,6 +74,20 @@ function setRecoveryMode(reset) {
     status('Link de redefinição inválido ou expirado. Solicite outro.', true);
   } else status('');
 }
+function setVerificationMode(email) {
+  verificationEmail = email;
+  el('account-signed-out').hidden = false;
+  form.hidden = true;
+  el('account-tabs').hidden = true;
+  el('account-recovery-form').hidden = true;
+  el('account-reset-form').hidden = true;
+  el('account-verification-form').hidden = false;
+  el('account-title').textContent = 'Verifique seu e-mail';
+  el('account-intro').textContent = 'Digite o código de 6 dígitos enviado para o endereço cadastrado. O código expira em 15 minutos.';
+  showServiceMessage('');
+  status('');
+}
+
 function displaySession(session) {
   const user = session?.user;
   el('account-signed-in').hidden = !user;
@@ -165,9 +182,13 @@ form.addEventListener('submit', async event=>{
     if (response.error) throw response.error;
     el('account-password').value = '';
     if (signup) {
-      status('Cadastro recebido. Verifique seu e-mail antes de acessar sua conta.');
-      setMode(false);
-      status('Cadastro recebido. Verifique seu e-mail antes de acessar sua conta.');
+      if (response.data?.user && response.data.user.emailVerified === false) {
+        setVerificationMode(email);
+        status('Cadastro recebido. Informe o código enviado ao seu e-mail.');
+      } else {
+        setMode(false);
+        status('Cadastro recebido. Entre com suas credenciais.');
+      }
     } else {
       await refresh();
       status('Entrada realizada.');
@@ -178,6 +199,43 @@ form.addEventListener('submit', async event=>{
     button.disabled = signup ? !availability.registrationEnabled : !availability.loginEnabled;
   }
 });
+el('account-verification-form').addEventListener('submit', async event=>{
+  event.preventDefault();
+  const code = el('verification-code').value.trim();
+  if (!/^[0-9]{6}$/.test(code) || !verificationEmail || !availability.registrationEnabled) {
+    status('Informe um código válido de seis dígitos.', true);
+    return;
+  }
+  const button = el('verify-email-submit');
+  button.disabled = true;
+  try {
+    const {error} = await auth.emailOtp.verifyEmail({email:verificationEmail, otp:code});
+    if (error) throw error;
+    el('verification-code').value = '';
+    const session = await auth.getSession();
+    if (session.data?.user?.emailVerified === true) {
+      await refresh();
+      status('E-mail confirmado com sucesso.');
+    } else {
+      setMode(false);
+      status('E-mail confirmado. Entre em sua conta.');
+    }
+  } catch {
+    status('Código incorreto ou expirado. Solicite outro e tente novamente.', true);
+  } finally {button.disabled=false;}
+});
+el('verification-resend').addEventListener('click', async ()=>{
+  if (!verificationEmail || !availability.registrationEnabled) return;
+  const button=el('verification-resend');button.disabled=true;
+  try {
+    const {error} = await auth.sendVerificationEmail({email:verificationEmail, callbackURL:window.location.origin+'/entrar'});
+    if (error) throw error;
+    status('Novo código solicitado. Confira seu e-mail.');
+  } catch {
+    status('Não foi possível reenviar o código. Tente novamente mais tarde.',true);
+  } finally {button.disabled=false;}
+});
+
 el('account-recovery-form').addEventListener('submit', async event=>{
   event.preventDefault();
   if (!availability.recoveryEnabled) return;
