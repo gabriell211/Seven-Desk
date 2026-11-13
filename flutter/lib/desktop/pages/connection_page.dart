@@ -61,41 +61,55 @@ class _OnlineStatusWidgetState extends State<OnlineStatusWidget> {
   Widget build(BuildContext context) {
     if (widget.dashboard) {
       return SizedBox(
-        height: 43,
+        height: 58,
         child: Obx(() {
           final stopped = _svcStopped.value;
           final status = stateGlobal.svcStatus.value;
           final ready = !stopped && status == SvcStatus.ready;
           final sessions = stateGlobal.videoConnCount.value;
-          return Row(
-            children: [
-              Icon(Icons.circle,
-                  size: 10,
-                  color: ready
-                      ? HomeDashboardTheme.green
-                      : stopped || status == SvcStatus.connecting
-                          ? kColorWarn
-                          : const Color(0xFFF07888)),
-              const SizedBox(width: 9),
-              Expanded(
-                child: Text(
-                  ready ? translate('Ready for connections') : _statusMessage,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+          return LayoutBuilder(
+            builder: (context, constraints) => Row(
+              children: [
+                Icon(Icons.circle,
+                    size: 13,
+                    color: ready
+                        ? HomeDashboardTheme.green
+                        : stopped || status == SvcStatus.connecting
+                            ? kColorWarn
+                            : const Color(0xFFF07888)),
+                const SizedBox(width: 13),
+                Expanded(
+                  child: Text(
+                    ready ? 'Conectado à rede' : _statusMessage,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(fontSize: 15),
+                  ),
                 ),
-              ),
-              if (stopped)
-                TextButton(
-                  onPressed: () => start_service(true),
-                  child: Text(translate('Start service')),
-                )
-              else if (sessions > 0)
-                Text(
-                  translate('{} video sessions')
-                      .replaceAll('{}', sessions.toString()),
-                  style: const TextStyle(color: HomeDashboardTheme.muted),
-                ),
-            ],
+                if (stopped)
+                  TextButton(
+                    onPressed: () => start_service(true),
+                    child: Text(translate('Start service')),
+                  )
+                else if (sessions > 0)
+                  Text(
+                    '$sessions sessões ativas',
+                    style: const TextStyle(color: HomeDashboardTheme.muted),
+                  ),
+                if (constraints.maxWidth >= 660) ...[
+                  const SizedBox(width: 28),
+                  const Icon(Icons.bolt_outlined,
+                      color: HomeDashboardTheme.purple, size: 22),
+                  const SizedBox(width: 5),
+                  const Text('P2P'),
+                  const SizedBox(width: 25),
+                  const Icon(Icons.dns_outlined,
+                      color: HomeDashboardTheme.purple, size: 22),
+                  const SizedBox(width: 7),
+                  const Text('Relay (Backup)'),
+                ],
+              ],
+            ),
           );
         }),
       );
@@ -499,7 +513,7 @@ class _ConnectionPageState extends State<ConnectionPage>
               focusNode: fieldFocusNode,
               style: TextStyle(
                 fontFamily: 'WorkSans',
-                fontSize: dashboard ? 17 : 22,
+                fontSize: dashboard ? 20 : 22,
                 height: 1.4,
               ),
               maxLines: 1,
@@ -520,7 +534,7 @@ class _ConnectionPageState extends State<ConnectionPage>
                       : translate('Enter Remote ID'),
                   isDense: dashboard ? true : null,
                   contentPadding: EdgeInsets.symmetric(
-                      horizontal: 15, vertical: dashboard ? 10 : 13)),
+                      horizontal: 18, vertical: dashboard ? 16 : 13)),
               controller: fieldTextEditingController,
               inputFormatters: [IDTextInputFormatter()],
               onChanged: (v) {
@@ -598,11 +612,11 @@ class _ConnectionPageState extends State<ConnectionPage>
       onPressed: _submitRemoteId,
       style: dashboard
           ? ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF7630E4),
+              backgroundColor: const Color(0xFF842DEB),
               foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 16),
+              padding: const EdgeInsets.symmetric(horizontal: 27),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(12),
               ),
             )
           : null,
@@ -611,8 +625,10 @@ class _ConnectionPageState extends State<ConnectionPage>
               mainAxisSize: MainAxisSize.min,
               children: [
                 const Icon(Icons.swap_horiz_rounded, size: 21),
-                const SizedBox(width: 7),
-                Text(translate(isTransfer ? 'Transfer file' : 'Connect')),
+                const SizedBox(width: 9),
+                Text(translate(isTransfer ? 'Transfer file' : 'Connect'),
+                    style: const TextStyle(fontSize: 17,
+                        fontWeight: FontWeight.w600)),
               ],
             )
           : Text(translate('Connect')),
@@ -668,33 +684,33 @@ class _ConnectionPageState extends State<ConnectionPage>
       return DecoratedBox(
         decoration: HomeDashboardTheme.panel,
         child: Padding(
-          padding: const EdgeInsets.all(14),
+          padding: const EdgeInsets.all(25),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
                 children: [
-                  const Icon(Icons.desktop_windows_outlined, size: 22),
+                  const Icon(Icons.desktop_windows_outlined, size: 27),
                   const SizedBox(width: 10),
                   Expanded(
                     child: Text(
-                      translate(isTransfer
-                          ? 'Transfer file'
-                          : 'Control Remote Desktop'),
+                      isTransfer
+                          ? 'Transferência de arquivos'
+                          : 'Controlar um Computador Remoto',
                       style: const TextStyle(
-                          fontSize: 18, fontWeight: FontWeight.w700),
+                          fontSize: 21, fontWeight: FontWeight.w700),
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 9),
+              const SizedBox(height: 18),
               LayoutBuilder(
                 builder: (context, constraints) => constraints.maxWidth >= 420
                     ? Row(
                         children: [
                           Expanded(child: input),
                           const SizedBox(width: 12),
-                          actions(44),
+                          actions(58),
                         ],
                       )
                     : Column(
@@ -702,7 +718,7 @@ class _ConnectionPageState extends State<ConnectionPage>
                         children: [
                           input,
                           const SizedBox(height: 8),
-                          actions(40),
+                          actions(48),
                         ],
                       ),
               ),
