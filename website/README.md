@@ -21,7 +21,7 @@ A página principal é estática. Para compilar a área experimental de contas, 
 
 ## Planos em desenvolvimento
 
-A seção de planos apresenta R$ 39,90 por usuário/mês ou R$ 400 por usuário/ano, com computadores ilimitados. A renovação planejada é feita pelo cliente, sem cobrança automática. Os botões ficam desativados até que cadastro, pagamento e autorização do aplicativo estejam integrados e testados.
+A seção de planos apresenta um mês grátis a partir do cadastro, seguido por R$ 39,90 por usuário/mês ou R$ 400 por usuário/ano, com computadores ilimitados. A renovação planejada é feita pelo cliente, sem cobrança automática. Os botões ficam desativados até que cadastro, pagamento e autorização do aplicativo estejam integrados e testados. A regra do mês grátis é calculada na cobrança a partir da data da conta, mas ainda precisa ser aplicada pelo servidor de acesso remoto.
 
 `lib/infinitepay.js` prepara links e consulta a confirmação junto à InfinitePay; `lib/billing.js` contém a lógica transacional de crédito por usuário. `db/001_billing.sql` define as tabelas para uma branch com Neon Auth. As rotas `api/checkout.js` e `api/infinitepay-webhook.js` estão desabilitadas por padrão, com chaves de ativação separadas (`SEVEN_BILLING_ENABLED` e `SEVEN_WEBHOOK_ENABLED`). A página de retorno não confirma pagamentos por si só. Ainda é necessário implementar a autorização no servidor de acesso remoto, estornos, reprocessamento e monitoramento de falhas antes de habilitar vendas.
 

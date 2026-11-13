@@ -15,6 +15,20 @@ async function createOrder(pool, userId, plan) {
   return orderId;
 }
 
+// Trial starts when the identity is created, even if the user never signs in.
+// No write is needed, so logging in repeatedly cannot restart the free month.
+async function getEntitlement(pool, userId) {
+  const result = await pool.query(
+    `SELECT u."createdAt" + interval '1 month' AS trial_ends_at,
+            GREATEST(u."createdAt" + interval '1 month', COALESCE(s.paid_through, u."createdAt" + interval '1 month')) AS access_ends_at,
+            CASE WHEN now() < u."createdAt" + interval '1 month' THEN 'trial'
+                 WHEN s.paid_through > now() THEN 'paid' ELSE 'expired' END AS status
+       FROM neon_auth."user" u LEFT JOIN seven_desk_subscriptions s ON s.user_id = u.id
+      WHERE u.id = $1`, [userId],
+  );
+  return result.rows[0] || null;
+}
+
 // A webhook is only a notification. Credit access after confirmation with InfinitePay.
 async function reconcilePayment(pool, event, { handle, apiKey, fetchImpl } = {}) {
   const { orderId, transactionId, slug } = event;
@@ -45,14 +59,16 @@ async function reconcilePayment(pool, event, { handle, apiKey, fetchImpl } = {})
       await client.query('ROLLBACK');
       return locked.transaction_nsu === transactionId && locked.invoice_slug === slug;
     }
-    await client.query('SELECT id FROM neon_auth."user" WHERE id = $1 FOR UPDATE', [locked.user_id]);
+    const account = await client.query('SELECT "createdAt" AS created_at FROM neon_auth."user" WHERE id = $1 FOR UPDATE', [locked.user_id]);
+    if (!account.rows[0]) throw new Error('Account unavailable');
     const interval = locked.plan === 'monthly' ? '1 month' : '1 year';
     await client.query(
-      `INSERT INTO seven_desk_subscriptions (user_id, paid_through) VALUES ($1, now() + $2::interval)
+      `INSERT INTO seven_desk_subscriptions (user_id, paid_through)
+       VALUES ($1, GREATEST(now(), $3::timestamptz + interval '1 month') + $2::interval)
        ON CONFLICT (user_id) DO UPDATE SET
-         paid_through = GREATEST(seven_desk_subscriptions.paid_through, now()) + $2::interval,
+         paid_through = GREATEST(seven_desk_subscriptions.paid_through, now(), $3::timestamptz + interval '1 month') + $2::interval,
          updated_at = now()`,
-      [locked.user_id, interval],
+      [locked.user_id, interval, account.rows[0].created_at],
     );
     await client.query(
       `UPDATE seven_desk_payment_orders SET state = 'paid', transaction_nsu = $2,
@@ -70,4 +86,4 @@ async function reconcilePayment(pool, event, { handle, apiKey, fetchImpl } = {})
   }
 }
 
-module.exports = { createOrder, reconcilePayment };
+module.exports = { createOrder, reconcilePayment, getEntitlement };
