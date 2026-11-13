@@ -2,7 +2,7 @@
 
 Site institucional estático em português do Brasil para o Seven Desk.
 
-**Produção:** https://seven-desk-site.vercel.app/
+**Produção:** https://www.sevendesk.tech/
 
 ## Estrutura
 
@@ -12,6 +12,10 @@ Site institucional estático em português do Brasil para o Seven Desk.
 - `privacidade.html` e `licencas.html`: transparência, atribuições e privacidade do site.
 - `favicon.svg`: identidade do site.
 - `vercel.json`: cabeçalhos de segurança e URLs limpas.
+
+## Domínio e DNS
+
+A Vercel serve o site em `www.sevendesk.tech` (CNAME `7a02be585b4d78b4.vercel-dns-017.com`). O domínio raiz `sevendesk.tech` permanece apontando para o servidor de acesso remoto em `187.53.111.184`, por isso o painel da Vercel pode informar que o apex está mal configurado. **Não alterar o A/AAAA do apex para resolver o alerta**, pois isso pode interromper conexões remotas. Redirecionamento HTTPS do apex para www exige configuração no servidor que atende o domínio raiz, ou migração de todos os endpoints remotos para um subdomínio próprio.
 
 ## Publicação
 
