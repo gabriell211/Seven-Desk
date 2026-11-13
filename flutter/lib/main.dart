@@ -181,6 +181,14 @@ void runMainApp(bool startService) async {
     }
     // Restore the location of the main window before window hide or show.
     await restoreWindowPosition(WindowType.Main);
+    if (useHomeDashboard && !kUseCompatibleUiMode && !isMacOS) {
+      try {
+        // Run after position restoration so saved window frames cannot undo it.
+        await windowManager.maximize();
+      } catch (error) {
+        debugPrint('Could not maximize Seven Desk at startup: $error');
+      }
+    }
     // Check the startup argument, if we successfully handle the argument, we keep the main window hidden.
     final handledByUniLinks = await initUniLinks();
     debugPrint("handled by uni links: $handledByUniLinks");
