@@ -828,5 +828,17 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("Forever", "Para sempre"),
         ("Session toolbar photo", "Fotografia na barra da sessão"),
         ("Could not use this photo. Select a JPG, PNG or WebP up to 12 MB and 32 megapixels.", "Não foi possível usar esta fotografia. Selecione um JPG, PNG ou WebP até 12 MB e 32 megapíxeis."),
+        ("Computers", ""),
+        ("Contacts", ""),
+        ("Groups", ""),
+        ("Secure remote access", ""),
+        ("Welcome to", ""),
+        ("Connect to and manage your remote computers.", ""),
+        ("Your ID", ""),
+        ("Ready for connections", ""),
+        ("Sessions", ""),
+        ("Online", ""),
+        ("Offline", ""),
+        ("{} video sessions", ""),
     ].iter().cloned().collect();
 }

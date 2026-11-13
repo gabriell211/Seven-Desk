@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:math' as math;
 
 import 'package:bot_toast/bot_toast.dart';
 import 'package:desktop_multi_window/desktop_multi_window.dart';
@@ -15,6 +16,7 @@ import 'package:flutter_hbb/desktop/screen/desktop_view_camera_screen.dart';
 import 'package:flutter_hbb/desktop/screen/desktop_port_forward_screen.dart';
 import 'package:flutter_hbb/desktop/screen/desktop_remote_screen.dart';
 import 'package:flutter_hbb/desktop/screen/desktop_terminal_screen.dart';
+import 'package:flutter_hbb/desktop/widgets/home_dashboard.dart';
 import 'package:flutter_hbb/desktop/widgets/refresh_wrapper.dart';
 import 'package:flutter_hbb/models/state_model.dart';
 import 'package:flutter_hbb/utils/multi_window_manager.dart';
@@ -22,6 +24,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:get/get.dart';
 import 'package:provider/provider.dart';
 import 'package:window_manager/window_manager.dart';
+import 'package:window_size/window_size.dart' as window_size;
 
 import 'common.dart';
 import 'consts.dart';
@@ -157,6 +160,25 @@ void runMainApp(bool startService) async {
   WindowOptions windowOptions = getHiddenTitleBarWindowOptions(
       isMainWindow: true, alwaysOnTop: alwaysOnTop);
   windowManager.waitUntilReadyToShow(windowOptions, () async {
+    if (useHomeDashboard &&
+        bind.getLocalFlutterOption(k: windowFramePrefix + WindowType.Main.name)
+            .isEmpty) {
+      try {
+        final screens = await window_size.getScreenList();
+        if (screens.isNotEmpty) {
+          final frame = screens.first.visibleFrame.size;
+          if (frame.width > 80 && frame.height > 80) {
+            await windowManager.setSize(Size(
+              math.min(frame.width, 1160.0),
+              math.min(frame.height - 32, 740.0),
+            ));
+            if (isMacOS) await windowManager.center();
+          }
+        }
+      } catch (error) {
+        debugPrint('Could not resize the first Seven Desk window: $error');
+      }
+    }
     // Restore the location of the main window before window hide or show.
     await restoreWindowPosition(WindowType.Main);
     // Check the startup argument, if we successfully handle the argument, we keep the main window hidden.

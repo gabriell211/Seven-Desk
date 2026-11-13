@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_hbb/common/widgets/dialog.dart';
 import 'package:flutter_hbb/consts.dart';
+import 'package:flutter_hbb/desktop/widgets/home_dashboard.dart';
 import 'package:flutter_hbb/models/peer_tab_model.dart';
 import 'package:flutter_hbb/models/state_model.dart';
 import 'package:get/get.dart';
@@ -96,6 +97,10 @@ class _PeerCardState extends State<_PeerCard>
 
   Widget _buildLandscape() {
     final peer = super.widget.peer;
+    if (HomeDashboardTheme.of(context) &&
+        peerCardUiType.value == PeerUiType.grid) {
+      return gestureDetector(child: _buildDashboardCard(peer));
+    }
     var deco = Rx<BoxDecoration?>(
       BoxDecoration(
         border: Border.all(color: Colors.transparent, width: _borderWidth),
@@ -127,6 +132,137 @@ class _PeerCardState extends State<_PeerCard>
           child: Obx(() => peerCardUiType.value == PeerUiType.grid
               ? _buildPeerCard(context, peer, deco)
               : _buildPeerTile(context, peer, deco))),
+    );
+  }
+
+  Widget _buildDashboardCard(Peer peer) {
+    final model = context.watch<PeerTabModel>();
+    hideUsernameOnCard ??=
+        bind.mainGetBuildinOption(key: kHideUsernameOnCard) == 'Y';
+    final name = hideUsernameOnCard == true
+        ? peer.hostname
+        : [peer.username, peer.hostname]
+            .where((part) => part.isNotEmpty)
+            .join('@');
+    final title = peer.alias.isEmpty ? formatID(peer.id) : peer.alias;
+    final platform = peer.platform;
+    final online = peer.online;
+    final windows = platform == kPeerPlatformWindows;
+    final selected = model.isPeerSelected(peer.id);
+    return Material(
+      color: const Color(0xFF131B32),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(
+          color:
+              selected ? HomeDashboardTheme.purple : HomeDashboardTheme.border,
+          width: 2,
+        ),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          CustomPaint(painter: _DeviceCardBackground(windows: windows)),
+          Align(
+            alignment: const Alignment(0, -.5),
+            child: platform.isEmpty
+                ? const Icon(Icons.desktop_windows_outlined, size: 45)
+                : getPlatformImage(platform, size: 48),
+          ),
+          Positioned(
+            top: 11,
+            left: 12,
+            child: Tooltip(
+              message: translate(online ? 'Online' : 'Offline'),
+              child: Icon(Icons.circle,
+                  size: 12,
+                  color: online ? HomeDashboardTheme.green : Colors.white38),
+            ),
+          ),
+          if (_shouldBuildPasswordIcon(peer))
+            const Positioned(
+              top: 11,
+              left: 32,
+              child: Icon(Icons.key, size: 13, color: Colors.white70),
+            ),
+          Positioned(
+            right: 7,
+            top: 6,
+            child: checkBoxOrActionMoreLandscape(peer, isTile: false),
+          ),
+          Positioned(
+            bottom: 7,
+            left: 12,
+            right: 6,
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.only(bottom: 2),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Tooltip(
+                          message: title,
+                          child: Text(title,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 16)),
+                        ),
+                        if (name.isNotEmpty)
+                          Tooltip(
+                            message: name,
+                            child: Text(name,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                    color: HomeDashboardTheme.muted,
+                                    fontSize: 12)),
+                          ),
+                        if (_showNote(peer))
+                          Text(peer.note,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                  color: HomeDashboardTheme.muted,
+                                  fontSize: 11)),
+                      ],
+                    ),
+                  ),
+                ),
+                if (!model.multiSelectionMode) ...[
+                  _dashboardCardAction(
+                    'Connect',
+                    Icons.desktop_windows_outlined,
+                    () => widget.connect(context, peer.id),
+                  ),
+                  _dashboardCardAction(
+                    'Transfer file',
+                    Icons.folder_outlined,
+                    () => connectInPeerTab(context, peer, widget.tab,
+                        isFileTransfer: true),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _dashboardCardAction(
+      String label, IconData icon, VoidCallback action) {
+    return IconButton(
+      tooltip: translate(label),
+      icon: Icon(icon, size: 19),
+      color: Colors.white,
+      constraints: const BoxConstraints.tightFor(width: 34, height: 34),
+      padding: EdgeInsets.zero,
+      onPressed: action,
     );
   }
 
@@ -535,6 +671,81 @@ class _PeerCardState extends State<_PeerCard>
 
   @override
   bool get wantKeepAlive => true;
+}
+
+class _DeviceCardBackground extends CustomPainter {
+  const _DeviceCardBackground({required this.windows});
+
+  final bool windows;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final rect = Offset.zero & size;
+    canvas.drawRect(
+      rect,
+      Paint()
+        ..shader = RadialGradient(
+          center: const Alignment(0, -.8),
+          radius: .85,
+          colors: windows
+              ? const [Color(0xFF1266B0), Color(0xFF10192E)]
+              : const [Color(0xFF4E287E), Color(0xFF151529)],
+        ).createShader(rect),
+    );
+    for (var layer = 0; layer < 4; layer++) {
+      final offset = layer * size.height * .075;
+      final ribbon = Path()
+        ..moveTo(0, size.height * .98 + offset)
+        ..cubicTo(
+          size.width * .24,
+          size.height * .49 + offset,
+          size.width * .52,
+          size.height * .83 - offset,
+          size.width * .65,
+          size.height * .26 + offset,
+        )
+        ..cubicTo(
+          size.width * .77,
+          -size.height * .21 + offset,
+          size.width * 1.03,
+          size.height * .42 + offset,
+          size.width,
+          size.height * .63 + offset,
+        );
+      canvas.drawPath(
+        ribbon,
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = size.height * .11
+          ..shader = LinearGradient(
+            colors: windows
+                ? const [
+                    Color(0x001B79DB),
+                    Color(0x55269DFF),
+                    Color(0x002B76B9)
+                  ]
+                : const [
+                    Color(0x006B36DC),
+                    Color(0x448543F5),
+                    Color(0x00571B96)
+                  ],
+          ).createShader(rect),
+      );
+    }
+    canvas.drawRect(
+      rect,
+      Paint()
+        ..shader = const LinearGradient(
+          begin: Alignment.center,
+          end: Alignment.bottomCenter,
+          colors: [Color(0x0010192E), Color(0xFF101728)],
+        ).createShader(rect),
+    );
+  }
+
+  @override
+  bool shouldRepaint(_DeviceCardBackground oldDelegate) =>
+      oldDelegate.windows != windows;
 }
 
 abstract class BasePeerCard extends StatelessWidget {
