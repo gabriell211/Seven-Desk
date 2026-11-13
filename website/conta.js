@@ -170,7 +170,16 @@ form.addEventListener('submit', async event=>{
     const response = signup
       ? await auth.signUp.email({name,email,password})
       : await auth.signIn.email({email,password});
-    if (response.error) throw response.error;
+    if (response.error) {
+      const code = String(response.error.code || '').toUpperCase();
+      if (!signup && (code === 'EMAIL_NOT_VERIFIED' || code === 'EMAIL_VERIFICATION_REQUIRED')) {
+        el('account-password').value = '';
+        setVerificationMode(email);
+        status('Confirme o e-mail da sua conta. Digite o código recebido ou solicite um novo.');
+        return;
+      }
+      throw response.error;
+    }
     el('account-password').value = '';
     if (signup) {
       if (response.data?.user?.emailVerified !== true) {
@@ -219,7 +228,7 @@ el('verification-resend').addEventListener('click', async ()=>{
   if (!verificationEmail || !availability.registrationEnabled) return;
   const button=el('verification-resend');button.disabled=true;
   try {
-    const {error} = await auth.sendVerificationEmail({email:verificationEmail, callbackURL:window.location.origin+'/entrar'});
+    const {error} = await auth.emailOtp.sendVerificationOtp({email:verificationEmail, type:'email-verification'});
     if (error) throw error;
     status('Novo código solicitado. Confira seu e-mail.');
   } catch {
