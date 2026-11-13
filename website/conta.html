@@ -32,6 +32,11 @@
       <div id="account-signed-in" hidden>
         <p>Conectado como <strong id="account-user"></strong>.</p>
         <p id="account-subscription" class="account-intro" aria-live="polite"></p>
+        <div id="account-plan-actions" class="account-plan-actions" hidden>
+          <p id="account-checkout-notice" class="account-intro" aria-live="polite">Verificando pagamentos...</p>
+          <button type="button" class="account-submit" data-plan="monthly" disabled>Plano mensal — R$ 39,90</button>
+          <button type="button" class="account-submit" data-plan="yearly" disabled>Plano anual — R$ 400,00</button>
+        </div>
         <button id="account-signout" class="account-submit" type="button">Sair</button>
       </div>
     </section>
