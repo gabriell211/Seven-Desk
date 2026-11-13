@@ -64,5 +64,12 @@
       "source": "/redefinir-senha",
       "destination": "/conta.html"
     }
+  ],
+  "redirects": [
+    {
+      "source": "/favicon.ico",
+      "destination": "/favicon.svg",
+      "permanent": true
+    }
   ]
 }
