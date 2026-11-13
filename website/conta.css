@@ -1,5 +1,5 @@
 body.account-page{min-height:100vh;background:radial-gradient(ellipse at 12% 14%,#251239 0,transparent 42%),linear-gradient(125deg,#0c0a19,#181027 63%,#0e0b1d);color:#f6f0ff;font-family:'DM Sans',system-ui,sans-serif;display:flex;flex-direction:column}
-.account-header{width:min(1120px,calc(100% - 44px));margin:auto auto 0;min-height:100px;display:flex;justify-content:space-between;align-items:center;gap:20px}
+.account-header{width:min(1120px,calc(100% - 44px));margin:0 auto;min-height:100px;display:flex;justify-content:space-between;align-items:center;gap:20px}
 .account-brand{display:inline-flex;align-items:center;gap:13px;font-size:24px;font-weight:800;letter-spacing:-.06em;color:#fff;text-decoration:none}.account-brand img{width:46px;height:46px;display:block}.account-brand strong{color:#ba64fd}
 .account-header nav{display:flex;align-items:center;gap:24px;font-size:13px;font-weight:700;color:#cbc1df}
 .account-header nav a:hover{color:#d7a7ff}
