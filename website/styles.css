@@ -114,3 +114,49 @@
 @media(max-width:1100px) and (min-width:981px){.desktop-nav{gap:15px}.desktop-nav a{font-size:12px}.account-nav{gap:6px}.account-nav a{padding:10px 11px}}
 @media(max-width:980px){.account-nav{margin-left:auto}.account-nav-register{display:none}}
 @media(max-width:480px){.account-nav-login{display:none}}
+
+
+/* Seven Desk brand v2: shared visual tokens with Flutter HomeDashboardTheme. */
+:root{--navy:#0c0a19;--navy2:#171326;--blue:#ba64fd;--sky:#c575ff;--ink:#f4efff;--muted:#c3bdd4;--line:#403752;--bg:#0c0a19;--soft:#171326;--shadow:0 22px 70px rgba(6,3,13,.38);color-scheme:dark;color:#f4efff}
+body{background:#0c0a19;color:#f4efff}
+a:focus-visible,button:focus-visible,summary:focus-visible{outline-color:#c575ff}
+.announcement{background:#160b29;color:#e6d8ff}.announcement a{color:#d9acff}
+.site-header{background:rgba(14,11,28,.97);border-color:#403752}.brand>span{color:#f9f5ff}.brand-accent{color:#ba64fd}.brand small{color:#b8acce}
+.desktop-nav a,.header-ghost{color:#d4cbe2}.desktop-nav a:hover,.header-ghost:hover{color:#dbadff}
+.btn-primary,.account-nav-register{background:linear-gradient(115deg,#922cfa,#5623b9);color:#fff;border-color:#a659f5;box-shadow:0 13px 28px rgba(128,39,232,.25)}
+.btn-primary:hover,.account-nav-register:hover{box-shadow:0 17px 36px rgba(164,88,255,.32)}
+.btn-outline{border-color:#5b4a73;background:rgba(35,25,54,.86);color:#f4eaff}.btn-outline:hover{border-color:#ba64fd;background:#2a1a44}
+.btn-dark{background:#472374;color:#fff}.btn-white{background:#251b3b;color:#fff}
+.hero{background:radial-gradient(ellipse at 79% 30%,#33184d 0,transparent 52%),linear-gradient(110deg,#0c0a19,#161024 55%,#1a102b)}
+.hero:before{background:radial-gradient(circle,rgba(144,47,240,.22),transparent 68%)}
+.hero-grid-overlay{opacity:.14;background-image:linear-gradient(#955dca 1px,transparent 1px),linear-gradient(90deg,#955dca 1px,transparent 1px)}
+.eyebrow{background:rgba(64,31,99,.55);border-color:#62427e;color:#ddb6ff}.eyebrow-pulse{background:#ba64fd;box-shadow:0 0 0 4px rgba(186,100,253,.17)}
+h1,.section-head h2,.split-head h2,.steps-intro h2,.faq-layout h2,.pricing-intro h2{color:#f8f2ff}
+.gradient-text{background:linear-gradient(100deg,#c575ff,#8235ee);color:transparent;background-clip:text;-webkit-background-clip:text}
+.hero-description,.section-head p,.split-head p,.steps-intro>p,.faq-layout>div>p,.pricing-intro p{color:#c3bdd4}
+.hero-subnote,.hero-microbar{color:#d2c5e3}.hero-microbar{border-color:#413355}.micro-icon{color:#ba64fd}
+.note-icons span,.hero-subnote .note-icons span{background:#322047;box-shadow:0 2px 8px rgba(0,0,0,.25)}
+.orb-one{background:radial-gradient(circle,rgba(131,53,217,.23),transparent 70%)}.orb-two{background:radial-gradient(circle,rgba(197,117,255,.12),transparent 70%)}
+.product-window{background:#181326;border-color:#594371;box-shadow:0 40px 80px rgba(0,0,0,.5)}
+.window-topbar,.window-toolstrip{background:#171326;color:#cbc0dd;border-color:#453854}.window-name{color:#f2e9ff}.window-toolstrip{background:#211832;color:#e1d6f0}
+.toolchip-active{background:#273a30;color:#23e693}.remote-desktop{background:linear-gradient(130deg,#3a155a,#261040 58%,#0e0921)}
+.wallpaper-ribbon{border-color:rgba(186,100,253,.24)}.ribbon-b{border-color:rgba(130,40,230,.3)}
+.remote-file{background:#21182f;border:1px solid #54406f}.file-toolbar{background:#2a2038;border-color:#514068;color:#e6d9f7}.file-folder{color:#e6d9f7}.remote-taskbar{background:#110b23}
+.float-card{background:#251c38;border-color:#564568;box-shadow:0 18px 45px #0009}.float-card strong{color:#fff}.float-card small,.art-caption{color:#bdb1d0}.float-icon{background:#243c34;color:#23e693}.secure-icon{background:#3c1e59;color:#d6acff}
+.intro,.faq-section{background:#0c0a19}.feature-section,.steps-section,.pricing-section{background:#100d1c}
+.solution-card,.feature-card,.pricing-card{background:linear-gradient(145deg,#241b38,#151020);border-color:#403752;box-shadow:0 10px 34px rgba(0,0,0,.16)}
+.solution-card:hover,.feature-card:hover{border-color:#8556ad}.solution-card.accent-card,.pricing-card-featured{background:linear-gradient(145deg,#472083,#24123d);border-color:#8d4bea}
+.solution-card h3,.feature-card h3,.pricing-card h3{color:#f7f1ff}.solution-card p,.feature-card p,.pricing-card ul,.pricing-description{color:#c3bdd4}
+.solution-number{color:#b4a8c6}.solution-icon.blue,.solution-icon.aqua,.feature-icon{background:#36234d;color:#d4a7ff}
+.solution-card>a{color:#daa6ff}.solution-deco,.accent-card .solution-deco{background:rgba(73,41,105,.35);border-color:#4a395b;color:#d0c1df}.solution-deco span:first-child{color:#ba64fd}
+.section-kicker,.pricing-label{color:#c575ff}.muted-heading{color:#ab9dbd}
+.pricing-card-featured{box-shadow:0 20px 46px rgba(116,36,194,.2)}.pricing-label span{background:#19372b;color:#23e693}
+.pricing-price,.pricing-card h3{color:#fff}.pricing-price small{color:#c3bdd4}.pricing-card ul{border-color:#473954}.pricing-card li:before{color:#23e693}
+.pricing-button{background:#291e3c;border-color:#5d4972;color:#f0dfff}.pricing-button:disabled{opacity:.7}
+.downloads-panel{background:linear-gradient(135deg,#2b1550,#140e27 80%);border-color:#67489a}
+.platform-card{background:rgba(26,16,46,.85);border-color:#594279;color:#f0e6ff}.platform-card:hover{border-color:#ba64fd}.platform-card.platform-selected,.platform-grid .platform-card[aria-pressed="true"]{background:rgba(141,56,233,.28);border-color:#ba64fd}
+.manual-architectures a{border-color:#75508e}.faq-layout details{border-color:#443752}.faq-layout summary{color:#f4eaff}
+.final-cta{background:linear-gradient(115deg,#2b1250,#100b24)}.footer{background:#090714;color:#cdc0df}.footer a:hover{color:#d1a3ff}
+.account-nav-login{color:#e9d5ff;border-color:#594170}.account-nav-login:hover{background:#2f1a47}
+.mobile-menu-button{border-color:#56446c;background:#20162f}.mobile-menu-button span{background:#d4b1f5}
+.mobile-navigation:not([hidden]){background:#171023;border-color:#594279}.mobile-navigation a{color:#eadff5}.mobile-navigation a:hover{color:#c575ff}
