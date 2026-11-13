@@ -9,7 +9,7 @@ async function authenticatedUser(header) {
     const { createRemoteJWKSet, jwtVerify } = await import('jose');
     const issuer = base.origin;
     const keys = createRemoteJWKSet(new URL(`${base.href.replace(/\/$/, '')}/.well-known/jwks.json`));
-    verifier = token => jwtVerify(token, keys, { issuer, algorithms: ['EdDSA'], requiredClaims: ['sub', 'exp', 'iat'] });
+    verifier = token => jwtVerify(token, keys, { issuer, audience: issuer, algorithms: ['EdDSA'], requiredClaims: ['sub', 'exp', 'iat'] });
   }
   try {
     const { payload } = await verifier(header.slice(7));
