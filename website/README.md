@@ -54,6 +54,12 @@ A rota tem gate `SEVEN_LICENSE_API_ENABLED=0` na Vercel. Ainda é preciso implem
 
 A API da InfinitePay não oferece um endpoint documentado para confirmar **estorno** com a mesma garantia do `/payment_check`. Webhooks não possuem assinatura e não devem, isoladamente, conceder nem revogar acesso. Operações de reembolso precisam ser conferidas no painel da InfinitePay e conciliadas em uma rotina auditável antes do lançamento. Não habilite pagamentos até o procedimento de reversão funcionar em teste.
 
+## Homologação de cadastro com código
+
+A branch isolada `seven-desk-billing-dev` agora exige verificação de e-mail antes do login e revoga sessões após recuperação de senha. A prévia `codex/sevendesk-pricing` usa `SEVEN_ACCOUNT_STATUS_ENABLED=1` e `SEVEN_REGISTRATION_ENABLED=1` exclusivamente em ambiente **Preview** para testar `/cadastro`, envio de OTP e `/entrar`. A branch `main` de produção continua com cadastro e login desativados, e as travas de pagamento e licenciamento fechadas. Nenhum teste de OTP foi dado como concluído sem a confirmação real do código recebido.
+
+O site de produção já publica a nova navegação, as páginas públicas de conta e o tema roxo escuro, mas não habilita o cadastro ou cobrança até a integração do servidor de acesso remoto.
+
 ## Downloads
 
 Os botões apontam para a página de Releases do repositório oficial, não para um binário fixo. Se o repositório permanecer privado, usuários não autorizados precisarão de acesso para baixar os arquivos. Para distribuição pública, publique os instaladores homologados em um canal público sob controle do projeto; não exponha chaves privadas ou tokens no frontend.
