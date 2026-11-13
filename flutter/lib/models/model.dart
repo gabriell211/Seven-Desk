@@ -915,6 +915,19 @@ class FfiModel with ChangeNotifier {
       parent.target?.inputModel.setRelativeMouseMode(false);
     }
 
+    if (type == 'silent-connection-error') {
+      _timer?.cancel();
+      _timer = null;
+      _reconnects = 1;
+      _offlineReconnectStartTime = null;
+      resetRestartReconnectState();
+      dialogManager.dismissAll();
+      if (desktopType != DesktopType.portForward) {
+        closeConnection(id: peerId);
+      }
+      return;
+    }
+
     if (type == 're-input-password') {
       wrongPasswordDialog(sessionId, dialogManager, type, title, text);
     } else if (type == 'input-2fa') {

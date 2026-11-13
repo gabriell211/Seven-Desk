@@ -312,6 +312,13 @@ handler.cancel_msgbox = function(tag) {
 
 var reconnectTimeout = 1000;
 handler.msgbox_retry = function(type, title, text, link, hasRetry) {
+    if (type == "silent-connection-error") {
+        self.timer(0, retryConnect);
+        reconnectTimeout = 1000;
+        closeMsgbox();
+        if (!is_port_forward) view.close();
+        return;
+    }
     handler.msgbox(type, title, text, link, hasRetry);
     if (hasRetry) {
         self.timer(0, retryConnect);

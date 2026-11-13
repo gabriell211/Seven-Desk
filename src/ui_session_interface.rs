@@ -1785,6 +1785,58 @@ impl<T: InvokeUiSession> DerefMut for Session<T> {
 
 impl<T: InvokeUiSession> FileManager for Session<T> {}
 
+const SILENT_CONNECTION_ERROR: &str = "silent-connection-error";
+
+fn is_public_server_connection_error(text: &str) -> bool {
+    if text.starts_with("The connection is not allowed.")
+        && (text.contains("Login-required-for-public-server")
+            || text.contains(
+                "this public server currently requires users to log in before connecting",
+            ))
+    {
+        return true;
+    }
+    text.strip_suffix(": Please try later")
+        .unwrap_or(text)
+        .strip_prefix("Failed to connect to ")
+        .is_some_and(crate::is_public)
+}
+
+#[cfg(test)]
+mod public_server_connection_error_tests {
+    use super::is_public_server_connection_error;
+
+    #[test]
+    fn recognizes_public_server_login_requirement() {
+        assert!(is_public_server_connection_error(concat!(
+            "The connection is not allowed.\n\n",
+            "Login guide:\nhttps://github.com/rustdesk/rustdesk/wiki/Login-required-for-public-server",
+        )));
+    }
+
+    #[test]
+    fn recognizes_public_server_connection_failure() {
+        assert!(is_public_server_connection_error(
+            "Failed to connect to rs-ny.rustdesk.com:21116: Please try later",
+        ));
+        assert!(is_public_server_connection_error(
+            "Failed to connect to rs-ny.rustdesk.com:21116",
+        ));
+    }
+
+    #[test]
+    fn keeps_other_connection_errors_visible() {
+        for text in [
+            "The connection is not allowed.",
+            "Remote desktop is offline",
+            "Failed to connect to server.example.org:21116: Please try later",
+            "Failed to connect to rs-ny.rustdesk.com.example.org:21116: Please try later",
+        ] {
+            assert!(!is_public_server_connection_error(text));
+        }
+    }
+}
+
 #[async_trait]
 impl<T: InvokeUiSession> Interface for Session<T> {
     fn get_lch(&self) -> Arc<RwLock<LoginConfigHandler>> {
@@ -1798,10 +1850,24 @@ impl<T: InvokeUiSession> Interface for Session<T> {
     }
 
     fn msgbox(&self, msgtype: &str, title: &str, text: &str, link: &str) {
+        // Only this local handler can dispatch a silent close to the UI.
+        if msgtype == SILENT_CONNECTION_ERROR {
+            return;
+        }
         let direct = self.lc.read().unwrap().direct;
         let received = self.lc.read().unwrap().received;
         let retry_for_relay = direct == Some(true) && !received;
         let retry = check_if_retry(msgtype, title, text, retry_for_relay);
+        if direct.is_none()
+            && !retry
+            && msgtype == "error"
+            && title == "Connection Error"
+            && is_public_server_connection_error(text)
+        {
+            self.ui_handler
+                .msgbox(SILENT_CONNECTION_ERROR, title, "", "", false);
+            return;
+        }
         self.ui_handler.msgbox(msgtype, title, text, link, retry);
     }
 
