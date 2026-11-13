@@ -32,8 +32,8 @@ test('unverified account sessions cannot unlock subscription or payment actions'
 });
 
 test('email verification resend uses Neon OTP API and handles an unverified login', () => {
-  assert.match(source, /auth\\.emailOtp\\.sendVerificationOtp\\(\\{email:verificationEmail, type:'email-verification'\\}\\)/);
-  assert.doesNotMatch(source, /auth\\.sendVerificationEmail\\(/);
+  assert.match(source, /auth\.emailOtp\.sendVerificationOtp\(\{email:verificationEmail, type:'email-verification'\}\)/);
+  assert.doesNotMatch(source, /auth\.sendVerificationEmail\(/);
   assert.match(source, /code === 'EMAIL_NOT_VERIFIED'/);
-  assert.match(source, /setVerificationMode\\(email\\)/);
+  assert.match(source, /setVerificationMode\(email\)/);
 });
