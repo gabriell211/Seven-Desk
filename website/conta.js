@@ -41,9 +41,11 @@ async function loadSubscription() {
   const target = el('account-subscription');
   target.textContent = 'Consultando período de teste...';
   try {
-    const { data, error } = await auth.token();
-    if (error || !data?.token) throw new Error();
-    const response = await fetch('/api/subscription', { headers: { Authorization: `Bearer ${data.token}` }, cache: 'no-store' });
+    // The installed Neon wrapper injects its JWT into the session token.
+    const { data, error } = await auth.getSession();
+    const token = data?.session?.token;
+    if (error || typeof token !== 'string' || token.split('.').length !== 3) throw new Error();
+    const response = await fetch('/api/subscription', { headers: { Authorization: `Bearer ${token}` }, cache: 'no-store' });
     if (!response.ok) throw new Error();
     const subscription = await response.json();
     const date = new Date(subscription.status === 'trial' ? subscription.trialEndsAt : subscription.accessEndsAt);
