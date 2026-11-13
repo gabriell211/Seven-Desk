@@ -19,6 +19,14 @@ O projeto Vercel **seven-desk-site** está conectado ao repositório `gabriell21
 
 A página é estática e não requer ambiente Node, variáveis secretas nem banco de dados.
 
+## Planos em desenvolvimento
+
+A seção de planos apresenta R$ 39,90 por usuário/mês ou R$ 400 por usuário/ano, com computadores ilimitados. A renovação planejada é feita pelo cliente, sem cobrança automática. Os botões ficam desativados até que cadastro, pagamento e autorização do aplicativo estejam integrados e testados.
+
+`lib/infinitepay.js` prepara links e consulta a confirmação junto à InfinitePay; `lib/billing.js` contém a lógica transacional de crédito por usuário. `db/001_billing.sql` define as tabelas para uma branch com Neon Auth. Esses módulos ainda não estão expostos por rotas do site e não habilitam vendas. O servidor da aplicação deve verificar a identidade da sessão, proteger as rotas e conferir o pagamento antes de liberar o acesso. Também é necessário lidar com estornos e falhas de entrega do webhook.
+
+Para habilitar o checkout no futuro, configure `INFINITEPAY_HANDLE` e `INFINITEPAY_API_KEY` somente no servidor. A chave é necessária para limitar cada link a um pagamento; ela não deve ser incluída no frontend. A documentação da InfinitePay informa que o webhook não tem assinatura, então cada aviso precisa ser confirmado pela API. A chave de API e as credenciais do banco não fazem parte do repositório. Não coloque em produção até integrar e testar o login e a autorização no Seven Desk.
+
 ## Downloads
 
 Os botões apontam para a página de Releases do repositório oficial, não para um binário fixo. Se o repositório permanecer privado, usuários não autorizados precisarão de acesso para baixar os arquivos. Para distribuição pública, publique os instaladores homologados em um canal público sob controle do projeto; não exponha chaves privadas ou tokens no frontend.
