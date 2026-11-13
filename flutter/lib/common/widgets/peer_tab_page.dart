@@ -169,11 +169,11 @@ class PeerTabPageState extends State<PeerTabPage>
   Widget _dashboardToolbar(BuildContext context, PeerTabModel model) {
     final filters = visibleContextMenuListener(
       Container(
-        height: 38,
+        height: 52,
         decoration: BoxDecoration(
           color: HomeDashboardTheme.surface,
           border: Border.all(color: HomeDashboardTheme.border),
-          borderRadius: BorderRadius.circular(9),
+          borderRadius: BorderRadius.circular(12),
         ),
         child: ReorderableListView(
           buildDefaultDragHandles: false,
@@ -198,13 +198,13 @@ class PeerTabPageState extends State<PeerTabPage>
                     style: TextButton.styleFrom(
                       foregroundColor: Colors.white,
                       backgroundColor: model.currentTab == index
-                          ? const Color(0xFF5424A3)
+                          ? const Color(0xFF6324B8)
                           : null,
-                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
                       shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(7)),
+                          borderRadius: BorderRadius.circular(9)),
                     ),
-                    icon: Icon(model.tabIcon(index), size: 16),
+                    icon: Icon(model.tabIcon(index), size: 19),
                     label: _dashboardTabLabel(model, index),
                   ),
                 ),
@@ -217,20 +217,20 @@ class PeerTabPageState extends State<PeerTabPage>
       mainAxisSize: MainAxisSize.min,
       children: [
         SizedBox(
-          width: 132,
-          height: 38,
+          width: 200,
+          height: 52,
           child: TextField(
             controller: peerSearchTextController,
             onChanged: (value) => peerSearchText.value = value,
             decoration: InputDecoration(
               isDense: true,
               hintText: translate('Search'),
-              prefixIcon: const Icon(Icons.search, size: 18),
+              prefixIcon: const Icon(Icons.search, size: 23),
               prefixIconConstraints: const BoxConstraints(minWidth: 34),
               border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(9),
+                borderRadius: BorderRadius.circular(12),
               ),
-              contentPadding: const EdgeInsets.symmetric(vertical: 9),
+              contentPadding: const EdgeInsets.symmetric(vertical: 13),
             ),
           ).workaroundFreezeLinuxMint(),
         ),
@@ -248,7 +248,7 @@ class PeerTabPageState extends State<PeerTabPage>
                       tooltip: translate(
                           type == PeerUiType.grid ? 'Grid View' : 'List View'),
                       constraints:
-                          const BoxConstraints.tightFor(width: 33, height: 34),
+                          const BoxConstraints.tightFor(width: 40, height: 42),
                       padding: EdgeInsets.zero,
                       onPressed: isOptionFixed(kOptionPeerCardUiType)
                           ? null
@@ -265,7 +265,7 @@ class PeerTabPageState extends State<PeerTabPage>
                         type == PeerUiType.grid
                             ? Icons.grid_view_rounded
                             : Icons.view_list_rounded,
-                        size: 18,
+                        size: 22,
                       ),
                     ),
                 ],
@@ -306,10 +306,11 @@ class PeerTabPageState extends State<PeerTabPage>
   Widget _dashboardTabLabel(PeerTabModel model, int index) {
     final tab = PeerTabIndex.values[index];
     final label = switch (tab) {
-      PeerTabIndex.lan => translate('Computers'),
-      PeerTabIndex.ab => translate('Contacts'),
-      PeerTabIndex.group => translate('Groups'),
-      _ => model.tabTooltip(index),
+      PeerTabIndex.lan => 'Meus Computadores',
+      PeerTabIndex.fav => 'Favoritos',
+      PeerTabIndex.recent => 'Recentes',
+      PeerTabIndex.ab => 'Contatos',
+      PeerTabIndex.group => 'Grupos',
     };
     final devices = switch (tab) {
       PeerTabIndex.recent => gFFI.recentPeersModel,

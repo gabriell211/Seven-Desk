@@ -19,16 +19,16 @@ class HomeDashboardTheme extends InheritedWidget {
   static bool of(BuildContext context) =>
       context.dependOnInheritedWidgetOfExactType<HomeDashboardTheme>() != null;
 
-  static const background = Color(0xFF0E0C19);
-  static const surface = Color(0xFF171427);
-  static const border = Color(0xFF383149);
-  static const muted = Color(0xFFBFB8D1);
-  static const purple = Color(0xFFAD62F6);
+  static const background = Color(0xFF0C0A19);
+  static const surface = Color(0xFF171326);
+  static const border = Color(0xFF403752);
+  static const muted = Color(0xFFC3BDD4);
+  static const purple = Color(0xFFBA64FD);
   static const green = Color(0xFF23E693);
   static const accent = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
-    colors: [Color(0xFF8639F0), Color(0xFF5420B7)],
+    colors: [Color(0xFF922CFA), Color(0xFF5623B9)],
   );
   static const panel = BoxDecoration(
     borderRadius: BorderRadius.all(Radius.circular(17)),
@@ -36,7 +36,7 @@ class HomeDashboardTheme extends InheritedWidget {
     gradient: LinearGradient(
       begin: Alignment.topLeft,
       end: Alignment.bottomRight,
-      colors: [Color(0xFF201833), Color(0xFF12111F)],
+      colors: [Color(0xFF241B38), Color(0xFF12101F)],
     ),
   );
 
@@ -98,8 +98,8 @@ class HomeDashboard extends StatelessWidget {
           color: HomeDashboardTheme.background,
           child: LayoutBuilder(
             builder: (context, constraints) {
-              final wide = constraints.maxWidth >= 900;
-              final inset = wide ? 26.0 : 16.0;
+              final wide = constraints.maxWidth >= 1040;
+              final inset = wide ? 30.0 : 16.0;
               final showProfileName = constraints.maxWidth >= 520;
               return Row(
                 children: [
@@ -125,22 +125,22 @@ class HomeDashboard extends StatelessWidget {
                             child: LayoutBuilder(
                               builder: (context, body) => SingleChildScrollView(
                                 padding: EdgeInsets.fromLTRB(
-                                    inset, wide ? 24 : 16, inset, 12),
+                                    inset, wide ? 32 : 16, inset, 12),
                                 child: Column(
                                   crossAxisAlignment:
                                       CrossAxisAlignment.stretch,
                                   children: [
                                     _welcome(wide),
                                     if (credentials != null) ...[
-                                      const SizedBox(height: 18),
+                                      const SizedBox(height: 25),
                                       credentials!,
                                     ],
                                     if (notices != null) notices!,
-                                    const SizedBox(height: 16),
+                                    const SizedBox(height: 22),
                                     connection,
-                                    const SizedBox(height: 18),
+                                    const SizedBox(height: 26),
                                     SizedBox(
-                                      height: (body.maxHeight - 315)
+                                      height: (body.maxHeight - 410)
                                           .clamp(224.0, double.infinity)
                                           .toDouble(),
                                       child: peers,
@@ -161,7 +161,7 @@ class HomeDashboard extends StatelessWidget {
                                     color: HomeDashboardTheme.border),
                               ),
                             ),
-                            child: status,
+                            child: SizedBox(height: 68, child: Center(child: status)),
                           ),
                       ],
                     ),
@@ -178,12 +178,12 @@ class HomeDashboard extends StatelessWidget {
   Widget _sidebar(BuildContext context, bool wide) {
     final peers = context.watch<PeerTabModel>();
     return Container(
-      width: wide ? 232 : 64,
+      width: wide ? 312 : 64,
       decoration: const BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: [Color(0xFF100E1B), Color(0xFF19102D)],
+          colors: [Color(0xFF100E1B), Color(0xFF1F0E36)],
         ),
         border: Border(right: BorderSide(color: HomeDashboardTheme.border)),
       ),
@@ -191,7 +191,7 @@ class HomeDashboard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           SizedBox(
-            height: 68,
+            height: 110,
             child: Padding(
               padding: EdgeInsets.only(
                   left: wide ? 16 : 10,
@@ -201,9 +201,9 @@ class HomeDashboard extends StatelessWidget {
                 mainAxisAlignment:
                     wide ? MainAxisAlignment.start : MainAxisAlignment.center,
                 children: [
-                  HomeDashboardLogo(size: wide ? 47 : 38),
+                  HomeDashboardLogo(size: wide ? 65 : 38),
                   if (wide) ...[
-                    const SizedBox(width: 9),
+                    const SizedBox(width: 12),
                     Flexible(
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -214,16 +214,16 @@ class HomeDashboard extends StatelessWidget {
                               overflow: TextOverflow.ellipsis,
                               style: TextStyle(
                                   height: 1.12,
-                                  fontSize: 22,
+                                  fontSize: 27,
                                   fontWeight: FontWeight.w700)),
                           const SizedBox(height: 3),
-                          Text(translate('Secure remote access'),
+                          Text('Acesso Remoto Seguro',
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: const TextStyle(
                                   height: 1.15,
                                   color: HomeDashboardTheme.muted,
-                                  fontSize: 12)),
+                                  fontSize: 14)),
                         ],
                       ),
                     ),
@@ -235,7 +235,7 @@ class HomeDashboard extends StatelessWidget {
           Expanded(
             child: ListView(
               primary: false,
-              padding: EdgeInsets.fromLTRB(wide ? 12 : 8, 16, wide ? 12 : 8, 8),
+              padding: EdgeInsets.fromLTRB(wide ? 18 : 8, 22, wide ? 18 : 8, 8),
               children: [
                 for (final item in HomeDashboardSection.values)
                   if (_showSection(item, peers)) _navigationItem(item, wide),
@@ -246,9 +246,9 @@ class HomeDashboard extends StatelessWidget {
               !bind.isDisableSettings() &&
               DesktopSettingPage.tabKeys.contains(SettingsTabKey.safety))
             Padding(
-              padding: EdgeInsets.fromLTRB(wide ? 14 : 8, 4, wide ? 14 : 8, 12),
+              padding: EdgeInsets.fromLTRB(wide ? 36 : 8, 4, wide ? 30 : 8, 14),
               child: Tooltip(
-                message: translate('Security'),
+                message: 'Configurações de segurança',
                 child: OutlinedButton(
                   onPressed: () =>
                       DesktopSettingPage.switch2page(SettingsTabKey.safety),
@@ -256,19 +256,43 @@ class HomeDashboard extends StatelessWidget {
                     foregroundColor: HomeDashboardTheme.green,
                     side: const BorderSide(color: HomeDashboardTheme.border),
                     backgroundColor: const Color(0xFF231638),
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    minimumSize: const Size(0, 42),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 12, vertical: 12),
+                    minimumSize: const Size(0, 68),
                     shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12)),
+                        borderRadius: BorderRadius.circular(14)),
                   ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Icon(Icons.verified_user_outlined, size: 20),
+                      const Icon(Icons.verified_user_outlined, size: 29),
                       if (wide) ...[
-                        const SizedBox(width: 10),
-                        Text(translate('Security'),
-                            style: const TextStyle(color: Colors.white)),
+                        const SizedBox(width: 12),
+                        const Expanded(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('Conexão Segura',
+                                  style: TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.w600)),
+                              Text('TLS + Criptografia',
+                                  style: TextStyle(
+                                      color: HomeDashboardTheme.muted,
+                                      fontSize: 12)),
+                            ],
+                          ),
+                        ),
+                        Obx(() => Icon(Icons.circle,
+                            size: 10,
+                            color: stateGlobal.svcStatus.value ==
+                                        SvcStatus.ready &&
+                                    !Get.find<RxBool>(
+                                            tag: 'stop-service')
+                                        .value
+                                ? HomeDashboardTheme.green
+                                : HomeDashboardTheme.muted)),
                       ],
                     ],
                   ),
@@ -277,7 +301,7 @@ class HomeDashboard extends StatelessWidget {
             ),
           if (wide)
             const SizedBox(
-              height: 54,
+              height: 78,
               child: CustomPaint(painter: _SidebarRibbon()),
             ),
         ],
@@ -295,43 +319,51 @@ class HomeDashboard extends StatelessWidget {
 
   Widget _navigationItem(HomeDashboardSection item, bool wide) {
     final selected = item == section;
-    final label = translate(item.label);
+    final label = switch (item) {
+      HomeDashboardSection.home => 'Início',
+      HomeDashboardSection.computers => 'Computadores',
+      HomeDashboardSection.contacts => 'Contatos',
+      HomeDashboardSection.groups => 'Grupos',
+      HomeDashboardSection.transfer => 'Transferência',
+      HomeDashboardSection.sessions => 'Logs & Sessões',
+      HomeDashboardSection.settings => 'Configurações',
+    };
     return Padding(
-      padding: const EdgeInsets.only(bottom: 5),
+      padding: const EdgeInsets.only(bottom: 7),
       child: Semantics(
         selected: selected,
         button: true,
         child: Tooltip(
           message: label,
           child: Material(
-            borderRadius: BorderRadius.circular(11),
+            borderRadius: BorderRadius.circular(13),
             color: Colors.transparent,
             child: Ink(
               decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(11),
+                borderRadius: BorderRadius.circular(13),
                 gradient: selected ? HomeDashboardTheme.accent : null,
                 border: selected
                     ? Border.all(color: HomeDashboardTheme.purple)
                     : null,
               ),
               child: InkWell(
-                borderRadius: BorderRadius.circular(11),
+                borderRadius: BorderRadius.circular(13),
                 onTap: () => onSection(item),
                 child: SizedBox(
-                  height: 44,
+                  height: 62,
                   child: Row(
                     mainAxisAlignment: wide
                         ? MainAxisAlignment.start
                         : MainAxisAlignment.center,
                     children: [
-                      if (wide) const SizedBox(width: 14),
-                      Icon(item.icon, size: 22, color: Colors.white),
+                      if (wide) const SizedBox(width: 25),
+                      Icon(item.icon, size: 26, color: Colors.white),
                       if (wide) ...[
-                        const SizedBox(width: 12),
+                        const SizedBox(width: 19),
                         Expanded(
                           child: Text(label,
                               overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(fontSize: 14)),
+                              style: const TextStyle(fontSize: 17)),
                         ),
                       ],
                     ],
@@ -350,7 +382,7 @@ class HomeDashboard extends StatelessWidget {
     final user = gFFI.userModel;
     final localPhoto = sessionToolbarPhoto;
     return Container(
-      height: 62,
+      height: 90,
       decoration: const BoxDecoration(
         color: HomeDashboardTheme.surface,
         border: Border(bottom: BorderSide(color: HomeDashboardTheme.border)),
@@ -414,7 +446,7 @@ class HomeDashboard extends StatelessWidget {
                 ? null
                 : buildAvatarWidget(
                     avatar: bind.mainResolveAvatarUrl(avatar: avatarUrl),
-                    size: 36,
+                    size: 44,
                   );
             final pages = DesktopSettingPage.tabKeys;
             return PopupMenuButton<SettingsTabKey>(
@@ -443,7 +475,7 @@ class HomeDashboard extends StatelessWidget {
                     Stack(
                       children: [
                         photo ??
-                            SessionToolbarAvatar(photo: localPhoto, size: 36),
+                            SessionToolbarAvatar(photo: localPhoto, size: 44),
                         if (status != null)
                           Obx(() => stateGlobal.svcStatus.value ==
                                       SvcStatus.ready &&
@@ -458,13 +490,24 @@ class HomeDashboard extends StatelessWidget {
                       ],
                     ),
                     if (showProfileName) ...[
-                      const SizedBox(width: 8),
+                      const SizedBox(width: 12),
                       ConstrainedBox(
-                        constraints: const BoxConstraints(maxWidth: 130),
-                        child: Text(
-                          name.isEmpty ? translate('Local Computer') : name,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(color: Colors.white),
+                        constraints: const BoxConstraints(maxWidth: 150),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(name.isEmpty ? 'Computador local' : name,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 17,
+                                    fontWeight: FontWeight.w600)),
+                            const Text('Suporte',
+                                style: TextStyle(
+                                    color: HomeDashboardTheme.muted,
+                                    fontSize: 13)),
+                          ],
                         ),
                       ),
                     ],
@@ -498,19 +541,19 @@ class HomeDashboard extends StatelessWidget {
         Text.rich(
           TextSpan(
             children: [
-              TextSpan(text: '${translate('Welcome to')} '),
+              const TextSpan(text: 'Bem-vindo ao '),
               const TextSpan(
                 text: 'Seven Desk',
                 style: TextStyle(color: HomeDashboardTheme.purple),
               ),
             ],
           ),
-          style: const TextStyle(fontSize: 29, fontWeight: FontWeight.w700),
+          style: const TextStyle(fontSize: 35, fontWeight: FontWeight.w700),
         ),
         const SizedBox(height: 4),
         Text(
-          translate('Connect to and manage your remote computers.'),
-          style: const TextStyle(color: HomeDashboardTheme.muted, fontSize: 15),
+          'Acesse e gerencie seus computadores de forma rápida, segura e estável.',
+          style: const TextStyle(color: HomeDashboardTheme.muted, fontSize: 18),
         ),
       ],
     );
@@ -525,15 +568,20 @@ class HomeDashboard extends StatelessWidget {
           }
           return Container(
             margin: const EdgeInsets.only(left: 10),
-            padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 17, vertical: 12),
             decoration: BoxDecoration(
               color: const Color(0xFF0F2726),
               borderRadius: BorderRadius.circular(11),
               border: Border.all(color: const Color(0xFF205445)),
             ),
-            child: Text(
-              translate('Ready for connections'),
-              style: const TextStyle(color: Color(0xFFB3F4D1), fontSize: 12),
+            child: const Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.circle, size: 11, color: HomeDashboardTheme.green),
+                SizedBox(width: 10),
+                Text('Pronto para conexões',
+                    style: TextStyle(color: Color(0xFFB3F4D1), fontSize: 14)),
+              ],
             ),
           );
         }),
