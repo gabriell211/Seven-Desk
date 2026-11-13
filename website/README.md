@@ -1,32 +1,66 @@
-# Seven Desk — website oficial
+# Seven Desk — site oficial
 
-Site institucional estático em português do Brasil para o Seven Desk.
+Website e área de conta do **Seven Desk**, com identidade escura/roxa e páginas em português do Brasil.
 
-**Produção:** https://www.sevendesk.tech/
+- **Produção:** https://www.sevendesk.tech/
+- **Repositório:** https://github.com/gabriell211/Seven-Desk
+- **Documentação principal:** [README do Seven Desk](../README.md)
+- **Instaladores:** [GitHub Releases](https://github.com/gabriell211/Seven-Desk/releases)
+
+## Executar testes e compilar
+
+Requer Node.js 24 e npm, com as versões de dependências registradas em `package-lock.json`.
+
+```bash
+cd website
+npm ci
+npm test
+npm run build
+```
+
+O build usa esbuild e publica os arquivos estáticos permitidos em `website/public/`. As APIs sob `api/`, o código servidor sob `lib/`, arquivos de banco e valores secretos **não podem ser copiados** para o diretório público.
 
 ## Estrutura
 
-- `index.html`: página inicial, recursos, casos de uso, instruções e downloads.
-- `styles.css`: design responsivo, tipografia, acessibilidade e ilustração da interface.
-- `script.js`: menu responsivo, perguntas frequentes e ano do rodapé.
-- `privacidade.html` e `licencas.html`: transparência, atribuições e privacidade do site.
-- `favicon.svg`: identidade do site.
-- `vercel.json`: cabeçalhos de segurança e URLs limpas.
+| Arquivo ou diretório | Função |
+| --- | --- |
+| `index.html`, `styles.css`, `script.js` | Página inicial e layout responsivo |
+| `assets/seven-desk-logo.svg`, `favicon.svg` | Identidade visual roxa oficial |
+| `conta.html`, `conta.js`, `conta.css` | Login, cadastro, verificação e recuperação de senha |
+| `api/` | Rotas de backend (disponibilidade de conta e autenticação) |
+| `lib/` | Módulos privados de backend quando presentes |
+| `tests/` | Testes Node de rotas, segurança, conteúdo e ícones |
+| `vercel.json` | Rewrites, redirecionamentos e cabeçalhos |
+| `licencas.html`, `privacidade.html` | Termos, atribuições e privacidade |
 
-## Domínio e DNS
+## Rotas
 
-A Vercel serve o site em `www.sevendesk.tech` (CNAME `7a02be585b4d78b4.vercel-dns-017.com`). O domínio raiz `sevendesk.tech` permanece apontando para o servidor de acesso remoto em `187.53.111.184`, por isso o painel da Vercel pode informar que o apex está mal configurado. **Não alterar o A/AAAA do apex para resolver o alerta**, pois isso pode interromper conexões remotas. Redirecionamento HTTPS do apex para www exige configuração no servidor que atende o domínio raiz, ou migração de todos os endpoints remotos para um subdomínio próprio.
+- `/`: apresentação, planos e downloads.
+- `/entrar`: autenticação.
+- `/cadastro`: criação de conta, quando liberada.
+- `/recuperar-senha` e `/redefinir-senha`: recuperação por código OTP, quando habilitada.
+- `/favicon.svg`: favicon original; `/favicon.ico` redireciona para o SVG, evitando requisições 404 de navegadores.
 
-## Publicação
+## Publicação e DNS
 
-O projeto Vercel **seven-desk-site** está conectado ao repositório `gabriell211/Seven-Desk`, com Root Directory `website`. Ele é **independente** do projeto `seven-desk-deploy`, que atende à infraestrutura de conexão remota. Ao alterar o site na branch de produção, o Vercel pode disparar um novo deploy automaticamente.
+O projeto **`seven-desk-site`** na Vercel usa o diretório `website`. O site funciona no subdomínio `www.sevendesk.tech`.
 
-A página é estática e não requer ambiente Node, variáveis secretas nem banco de dados.
+O domínio raiz `sevendesk.tech` atende à infraestrutura de conexões remotas e não deve ser repontado para a Vercel sem uma migração planejada. O código do cliente utiliza seu próprio endpoint de servidor.
 
-## Downloads
+Alterações na branch `main` podem iniciar um deploy pela integração Git. Consulte a Vercel e os testes da CI antes de afirmar que uma revisão está publicada. Limites de builds do plano podem impedir a criação de novos deployments.
 
-Os botões apontam para a página de Releases do repositório oficial, não para um binário fixo. Se o repositório permanecer privado, usuários não autorizados precisarão de acesso para baixar os arquivos. Para distribuição pública, publique os instaladores homologados em um canal público sob controle do projeto; não exponha chaves privadas ou tokens no frontend.
+## Autenticação, dados e pagamentos
 
-## Compatibilidade e segurança
+O site contém fluxos de autenticação conectados ao Neon Auth e pode utilizar PostgreSQL em APIs de assinaturas. A presença de páginas e variáveis configuradas **não significa** que o cadastro ou a cobrança estejam liberados.
 
-As ilustrações da home são **conceituais**, não capturas de uma sessão real. Recursos podem variar conforme a versão do cliente e a topologia da rede. A identidade visual e os avisos legais não alteram as obrigações de licença das bibliotecas de terceiros.
+As flags `SEVEN_ACCOUNT_STATUS_ENABLED`, `SEVEN_REGISTRATION_ENABLED`, `SEVEN_PASSWORD_RECOVERY_ENABLED` e as flags de cobrança devem permanecer desativadas até que autenticação, entrega de OTP, licenciamento no servidor, conciliação de pagamentos e estornos estejam homologados. Nunca armazene chaves de pagamento, senha SMTP ou string de conexão diretamente no JavaScript público.
+
+## Identidade e licenças
+
+O visual do website acompanha o aplicativo Seven Desk. Componentes de terceiros continuam sujeitos aos avisos e licenças do repositório, inclusive à [GNU AGPL-3.0](../LICENCE) onde aplicável.
+
+## Diagnóstico rápido
+
+- **`/favicon.ico` retorna 404:** confirme se a versão publicada contém o redirecionamento de `vercel.json` para `/favicon.svg`. Um commit no GitHub, sozinho, não garante que a Vercel tenha executado o deploy.
+- **Aviso `XSLTProcessor` de `xslt-extension.js`:** quando o arquivo é carregado por uma extensão do navegador, a mensagem não é emitida pelo site Seven Desk. Atualize ou desative a extensão responsável para testar.
+- **Status vermelho da Vercel:** diferencie falha de compilação de limite de builds do plano; veja a URL e os eventos associados ao commit.
