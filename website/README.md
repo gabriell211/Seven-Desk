@@ -4,6 +4,8 @@ Site institucional estático em português do Brasil para o Seven Desk.
 
 **Produção:** https://www.sevendesk.tech/
 
+A identidade do site usa o mesmo símbolo vetorial roxo e os tokens escuros do dashboard Flutter (gradiente #C575FF → #6D2BEC, fundo #0C0A19). O ícone tem fundo transparente, inclusive no favicon.
+
 ## Estrutura
 
 - `index.html`: página inicial, recursos, casos de uso, instruções e downloads.
