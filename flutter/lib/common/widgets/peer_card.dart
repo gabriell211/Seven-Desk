@@ -150,13 +150,13 @@ class _PeerCardState extends State<_PeerCard>
     final windows = platform == kPeerPlatformWindows;
     final selected = model.isPeerSelected(peer.id);
     return Material(
-      color: const Color(0xFF131B32),
+      color: const Color(0xFF11182C),
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(20),
         side: BorderSide(
           color:
               selected ? HomeDashboardTheme.purple : HomeDashboardTheme.border,
-          width: 2,
+          width: selected ? 2 : 1.5,
         ),
       ),
       clipBehavior: Clip.antiAlias,
@@ -165,10 +165,10 @@ class _PeerCardState extends State<_PeerCard>
         children: [
           CustomPaint(painter: _DeviceCardBackground(windows: windows)),
           Align(
-            alignment: const Alignment(0, -.5),
+            alignment: const Alignment(0, -.35),
             child: platform.isEmpty
-                ? const Icon(Icons.desktop_windows_outlined, size: 45)
-                : getPlatformImage(platform, size: 48),
+                ? const Icon(Icons.desktop_windows_outlined, size: 65)
+                : getPlatformImage(platform, size: 64),
           ),
           Positioned(
             top: 11,
@@ -176,7 +176,7 @@ class _PeerCardState extends State<_PeerCard>
             child: Tooltip(
               message: translate(online ? 'Online' : 'Offline'),
               child: Icon(Icons.circle,
-                  size: 12,
+                  size: 16,
                   color: online ? HomeDashboardTheme.green : Colors.white38),
             ),
           ),
@@ -192,9 +192,9 @@ class _PeerCardState extends State<_PeerCard>
             child: checkBoxOrActionMoreLandscape(peer, isTile: false),
           ),
           Positioned(
-            bottom: 7,
-            left: 12,
-            right: 6,
+            bottom: 13,
+            left: 22,
+            right: 11,
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
@@ -212,7 +212,7 @@ class _PeerCardState extends State<_PeerCard>
                               style: const TextStyle(
                                   color: Colors.white,
                                   fontWeight: FontWeight.w700,
-                                  fontSize: 16)),
+                                  fontSize: 19)),
                         ),
                         if (name.isNotEmpty)
                           Tooltip(
@@ -221,7 +221,7 @@ class _PeerCardState extends State<_PeerCard>
                                 overflow: TextOverflow.ellipsis,
                                 style: const TextStyle(
                                     color: HomeDashboardTheme.muted,
-                                    fontSize: 12)),
+                                    fontSize: 14)),
                           ),
                         if (_showNote(peer))
                           Text(peer.note,
@@ -258,7 +258,7 @@ class _PeerCardState extends State<_PeerCard>
       String label, IconData icon, VoidCallback action) {
     return IconButton(
       tooltip: translate(label),
-      icon: Icon(icon, size: 19),
+      icon: Icon(icon, size: 22),
       color: Colors.white,
       constraints: const BoxConstraints.tightFor(width: 34, height: 34),
       padding: EdgeInsets.zero,
