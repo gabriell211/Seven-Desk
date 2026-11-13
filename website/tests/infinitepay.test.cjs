@@ -17,7 +17,10 @@ test('rejects checkout links outside the payment provider', async () => {
   const fake = url => async () => ({ ok: true, json: async () => ({ url }) });
   await assert.rejects(payment.createCheckout(input, { fetchImpl: fake('https://checkout.infinitepay.com.br/a') }));
   assert.equal(await payment.createCheckout(input, { apiKey: 'test-key', fetchImpl: fake('https://checkout.infinitepay.com.br/a') }), 'https://checkout.infinitepay.com.br/a');
+  assert.equal(await payment.createCheckout(input, { apiKey: 'test-key', fetchImpl: fake('https://checkout.infinitepay.io/gabriel_1313/checkout-123') }), 'https://checkout.infinitepay.io/gabriel_1313/checkout-123');
   await assert.rejects(payment.createCheckout(input, { apiKey: 'test-key', fetchImpl: fake('https://checkout.infinitepay.com.br.evil.test/a') }));
+  await assert.rejects(payment.createCheckout(input, { apiKey: 'test-key', fetchImpl: fake('https://checkout.infinitepay.io.evil.test/a') }));
+  await assert.rejects(payment.createCheckout(input, { apiKey: 'test-key', fetchImpl: fake('http://checkout.infinitepay.io/a') }));
 });
 
 test('confirms a paid order using the provider and the stored plan amount', async () => {
