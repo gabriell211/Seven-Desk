@@ -26,6 +26,7 @@ import 'package:window_manager/window_manager.dart';
 import 'common.dart';
 import 'consts.dart';
 import 'utils/remote_display_defaults.dart';
+import 'utils/seven_desk_server_defaults.dart';
 import 'mobile/pages/home_page.dart';
 import 'mobile/pages/server_page.dart';
 import 'mobile/widgets/deploy_dialog.dart';
@@ -135,6 +136,7 @@ void runMainApp(bool startService) async {
   // register uni links
   await initEnv(kAppTypeMain);
   await _initializeSevenDeskDisplayDefaults();
+  await _initializeSevenDeskServerDefaults();
   checkUpdate();
   // trigger connection status updater
   await bind.mainCheckConnectStatus();
@@ -197,11 +199,31 @@ Future<void> _initializeSevenDeskDisplayDefaults() async {
   }
 }
 
+/// Do not replace an existing server or a logged-in account session.
+/// Only builds carrying a valid private server public key opt into this path.
+Future<void> _initializeSevenDeskServerDefaults() async {
+  if (isWeb) return;
+
+  try {
+    await SevenDeskServerDefaults.fromBuild.apply(
+      readOption: (key) => bind.mainGetOption(key: key),
+      writeOption: (key, value) => bind.mainSetOption(key: key, value: value),
+      hasAccountToken:
+          bind.mainGetLocalOption(key: 'access_token').isNotEmpty,
+      settingsDisabled: bind.isDisableSettings(),
+      isCustomClient: bind.isCustomClient(),
+    );
+  } catch (error) {
+    debugPrint('Seven Desk private server default was not applied: $error');
+  }
+}
+
 void runMobileApp() async {
   await initEnv(kAppTypeMain);
-  checkUpdate();
   if (isAndroid) androidChannelInit();
   if (isAndroid) platformFFI.syncAndroidServiceAppDirConfigPath();
+  await _initializeSevenDeskServerDefaults();
+  checkUpdate();
   draggablePositions.load();
   await Future.wait([gFFI.abModel.loadCache(), gFFI.groupModel.loadCache()]);
   gFFI.userModel.refreshCurrentUser();

@@ -1,0 +1,20 @@
+# Linux VPS with a routable public IPv4/IPv6 address.
+# Only hbbs/hbbr; no account web API is required.
+services:
+  hbbr:
+    image: rustdesk/rustdesk-server:latest
+    command: ["hbbr"]
+    network_mode: host
+    volumes:
+      - ./data:/root
+    restart: unless-stopped
+
+  hbbs:
+    image: rustdesk/rustdesk-server:latest
+    command: ["hbbs", "-r", "${SEVEN_DESK_RELAY_HOST:?Set SEVEN_DESK_RELAY_HOST in .env}:21117"]
+    network_mode: host
+    volumes:
+      - ./data:/root
+    depends_on:
+      - hbbr
+    restart: unless-stopped
