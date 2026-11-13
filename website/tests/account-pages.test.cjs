@@ -16,7 +16,7 @@ test('login, signup and recovery use dedicated accessible URLs', () => {
   assert.match(home,/href="\/entrar"/);
   assert.match(home,/href="\/cadastro"/);
   const account=read('conta.html');
-  for(const id of ['account-form','account-recovery-form','account-reset-form','account-signed-in',
+  for(const id of ['account-form','account-recovery-form','account-reset-form','account-verification-form','account-signed-in',
     'account-message','account-service-message','account-plan-actions']) {
     assert.ok(account.includes(`id="${id}"`),id);
   }
