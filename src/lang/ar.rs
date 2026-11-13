@@ -826,5 +826,7 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("install-directory-not-empty-tip", "المجلد المحدد ليس فارغًا. قد يؤدي التثبيت إلى حذف البيانات الموجودة. يُنصح باختيار مجلد آخر."),
         ("Request approval", "طلب الموافقة"),
         ("Forever", "إلى الأبد"),
+        ("Session toolbar photo", ""),
+        ("Could not use this photo. Select a JPG, PNG or WebP up to 12 MB and 32 megapixels.", ""),
     ].iter().cloned().collect();
 }

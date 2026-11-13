@@ -23,6 +23,7 @@ import '../../models/platform_model.dart';
 import '../../common/shared_state.dart';
 import './popup_menu.dart';
 import './kb_layout_type_chooser.dart';
+import './session_toolbar_avatar.dart';
 import 'package:flutter_hbb/utils/scale.dart';
 import 'package:flutter_hbb/common/widgets/custom_scale_base.dart';
 
@@ -802,7 +803,17 @@ class _RemoteToolbarState extends State<RemoteToolbar> {
 
   Widget _buildToolbar(
       BuildContext context, _ToolbarEdge edge, bool isHorizontal) {
-    final List<Widget> toolbarItems = [];
+    final List<Widget> toolbarItems = [
+      if (!isWeb) ...[
+        SizedBox.square(
+          dimension: _ToolbarTheme.buttonSize,
+          child: Center(
+            child: SessionToolbarAvatar(photo: sessionToolbarPhoto, size: 24),
+          ),
+        ),
+        _toolbarSeparator(isHorizontal),
+      ],
+    ];
     toolbarItems.add(_PinMenu(state: widget.state));
     toolbarItems.add(Obx(() {
       final privacyModeState = PrivacyModeState.find(widget.id);
@@ -851,8 +862,9 @@ class _RemoteToolbarState extends State<RemoteToolbar> {
       toolbarItems.add(_VoiceCallMenu(id: widget.id, ffi: widget.ffi));
     }
     if (!isWeb) toolbarItems.add(_RecordMenu());
+    toolbarItems.add(_toolbarSeparator(isHorizontal));
     toolbarItems.add(_CloseMenu(id: widget.id, ffi: widget.ffi));
-    final toolbarBorderRadius = BorderRadius.all(Radius.circular(4.0));
+    const toolbarBorderRadius = BorderRadius.all(Radius.circular(9));
     // innerAxis: how the toolbar icons themselves flow.
     // outerAxis: how the toolbar block and the handle stack against each other
     // (perpendicular to the dock edge, so the handle hangs off the interior face).
@@ -902,6 +914,14 @@ class _RemoteToolbarState extends State<RemoteToolbar> {
       children: children,
     );
   }
+
+  Widget _toolbarSeparator(bool isHorizontal) => SizedBox(
+        width: isHorizontal ? 10 : 20,
+        height: isHorizontal ? 20 : 10,
+        child: isHorizontal
+            ? const VerticalDivider(width: 10, thickness: 1)
+            : const Divider(height: 10, thickness: 1),
+      );
 
   ThemeData themeData() {
     return Theme.of(context).copyWith(
@@ -3586,6 +3606,17 @@ class _DraggableShowHideState extends State<_DraggableShowHide> {
       mainAxisSize: MainAxisSize.min,
       children: [
         _buildDraggable(context),
+        if (!isWeb)
+          Obx(() {
+            final photo = sessionToolbarPhoto;
+            if (collapse.isFalse || photo.isEmpty) {
+              return const SizedBox.shrink();
+            }
+            return SizedBox.square(
+              dimension: iconSize,
+              child: Center(child: SessionToolbarAvatar(photo: photo, size: 16)),
+            );
+          }),
         Obx(() => collapse.isTrue
             ? _MinimizedMonitorSwitchButton(id: widget.id, ffi: widget.ffi)
             : const Offstage()),

@@ -826,5 +826,7 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("install-directory-not-empty-tip", "پوشه انتخاب‌شده خالی نیست. نصب ممکن است داده‌های موجود را حذف کند. بهتر است پوشه دیگری انتخاب کنید."),
         ("Request approval", "درخواست تأیید"),
         ("Forever", "برای همیشه"),
+        ("Session toolbar photo", ""),
+        ("Could not use this photo. Select a JPG, PNG or WebP up to 12 MB and 32 megapixels.", ""),
     ].iter().cloned().collect();
 }

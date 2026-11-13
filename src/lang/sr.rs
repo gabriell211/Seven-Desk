@@ -826,5 +826,7 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("install-directory-not-empty-tip", "Izabrani direktorijum nije prazan. Instalacija može da obriše postojeće podatke. Razmislite o izboru drugog direktorijuma."),
         ("Request approval", "Zatraži odobrenje"),
         ("Forever", "Zauvek"),
+        ("Session toolbar photo", ""),
+        ("Could not use this photo. Select a JPG, PNG or WebP up to 12 MB and 32 megapixels.", ""),
     ].iter().cloned().collect();
 }

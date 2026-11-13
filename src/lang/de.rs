@@ -826,5 +826,7 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("install-directory-not-empty-tip", "Der ausgewählte Ordner ist nicht leer. Bei der Installation können vorhandene Daten gelöscht werden. Erwägen Sie, einen anderen Ordner auszuwählen."),
         ("Request approval", "Genehmigung anfordern"),
         ("Forever", "Für immer"),
+        ("Session toolbar photo", ""),
+        ("Could not use this photo. Select a JPG, PNG or WebP up to 12 MB and 32 megapixels.", ""),
     ].iter().cloned().collect();
 }
