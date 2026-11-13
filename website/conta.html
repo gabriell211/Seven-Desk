@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>Conta em testes | Seven Desk</title>
+  <link rel="stylesheet" href="/styles.css?v=8" />
+  <link rel="stylesheet" href="/conta.css" />
+  <script defer src="/conta.bundle.js"></script>
+</head>
+<body class="account-page">
+  <main class="account-shell">
+    <a class="account-brand" href="/">seven<span>desk</span></a>
+    <section class="account-card" aria-labelledby="account-title">
+      <p class="account-kicker">AMBIENTE DE TESTES</p>
+      <h1 id="account-title">Sua conta Seven Desk</h1>
+      <p class="account-intro">Esta área está em desenvolvimento. O cadastro de teste ainda não libera acesso ao aplicativo.</p>
+      <p id="account-message" class="account-message" role="status" aria-live="polite">Carregando...</p>
+      <div id="account-signed-out" hidden>
+        <div class="account-tabs" role="group" aria-label="Escolha uma ação">
+          <button id="show-login" type="button" aria-pressed="true">Entrar</button>
+          <button id="show-signup" type="button" aria-pressed="false">Criar conta</button>
+        </div>
+        <form id="account-form">
+          <label id="account-name-label" hidden>Nome <input id="account-name" autocomplete="name" maxlength="100" /></label>
+          <label>E-mail <input id="account-email" type="email" autocomplete="email" required maxlength="254" /></label>
+          <label>Senha <input id="account-password" type="password" autocomplete="current-password" required minlength="8" maxlength="128" /></label>
+          <button id="account-submit" class="account-submit" type="submit">Entrar</button>
+        </form>
+      </div>
+      <div id="account-signed-in" hidden>
+        <p>Conectado como <strong id="account-user"></strong>.</p>
+        <button id="account-signout" class="account-submit" type="button">Sair</button>
+      </div>
+    </section>
+    <a class="account-back" href="/">← Voltar ao site</a>
+  </main>
+</body>
+</html>

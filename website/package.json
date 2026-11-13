@@ -1,0 +1,14 @@
+{
+  "name": "seven-desk-site",
+  "private": true,
+  "scripts": {
+    "build": "esbuild conta.js --bundle --minify --outfile=conta.bundle.js",
+    "test": "node --test tests/*.test.cjs"
+  },
+  "dependencies": {
+    "@neon/auth": "0.8.2"
+  },
+  "devDependencies": {
+    "esbuild": "0.28.2"
+  }
+}

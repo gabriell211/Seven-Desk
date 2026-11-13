@@ -17,13 +17,15 @@ Site institucional estático em português do Brasil para o Seven Desk.
 
 O projeto Vercel **seven-desk-site** está conectado ao repositório `gabriell211/Seven-Desk`, com Root Directory `website`. Ele é **independente** do projeto `seven-desk-deploy`, que atende à infraestrutura de conexão remota. Ao alterar o site na branch de produção, o Vercel pode disparar um novo deploy automaticamente.
 
-A página é estática e não requer ambiente Node, variáveis secretas nem banco de dados.
+A página principal é estática. Para compilar a área experimental de contas, execute `npm ci` e `npm run build` na pasta `website`; a Vercel executa o build no deploy.
 
 ## Planos em desenvolvimento
 
 A seção de planos apresenta R$ 39,90 por usuário/mês ou R$ 400 por usuário/ano, com computadores ilimitados. A renovação planejada é feita pelo cliente, sem cobrança automática. Os botões ficam desativados até que cadastro, pagamento e autorização do aplicativo estejam integrados e testados.
 
 `lib/infinitepay.js` prepara links e consulta a confirmação junto à InfinitePay; `lib/billing.js` contém a lógica transacional de crédito por usuário. `db/001_billing.sql` define as tabelas para uma branch com Neon Auth. Esses módulos ainda não estão expostos por rotas do site e não habilitam vendas. O servidor da aplicação deve verificar a identidade da sessão, proteger as rotas e conferir o pagamento antes de liberar o acesso. Também é necessário lidar com estornos e falhas de entrega do webhook.
+
+`conta.html` é uma área experimental isolada, sem link no site público. Ela usa o serviço configurado em `NEON_AUTH_BASE_URL`, não libera acesso ao aplicativo e não deve ser apontada para contas reais até que validação de e-mail, recuperação de senha, SMTP de produção, autorização e os demais fluxos sejam preparados e testados. Em prévias, use somente uma branch de testes isolada do banco.
 
 Para habilitar o checkout no futuro, configure `INFINITEPAY_HANDLE` e `INFINITEPAY_API_KEY` somente no servidor. A chave é necessária para limitar cada link a um pagamento; ela não deve ser incluída no frontend. A documentação da InfinitePay informa que o webhook não tem assinatura, então cada aviso precisa ser confirmado pela API. A chave de API e as credenciais do banco não fazem parte do repositório. Não coloque em produção até integrar e testar o login e a autorização no Seven Desk.
 
