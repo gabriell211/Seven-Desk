@@ -27,7 +27,14 @@ A seção de planos apresenta um mês grátis a partir do cadastro, seguido por 
 
 `conta.html` é uma área experimental isolada, sem link no site público. Ela usa o serviço configurado em `NEON_AUTH_BASE_URL`, não libera acesso ao aplicativo e não deve ser apontada para contas reais até que validação de e-mail, recuperação de senha, SMTP de produção, autorização e os demais fluxos sejam preparados e testados. Em prévias, use somente uma branch de testes isolada do banco.
 
-Para habilitar o checkout no futuro, configure `INFINITEPAY_HANDLE` e `INFINITEPAY_API_KEY` somente no servidor. A chave é necessária para limitar cada link a um pagamento; ela não deve ser incluída no frontend. A documentação da InfinitePay informa que o webhook não tem assinatura, então cada aviso precisa ser confirmado pela API. A chave de API e as credenciais do banco não fazem parte do repositório. Não coloque em produção até integrar e testar o login e a autorização no Seven Desk.
+Os links cadastrados pelo responsável da conta InfinitePay `gabriel_1313` foram conferidos diretamente em 13/11/2026:
+
+- **Mensal — R$ 39,90:** https://checkout.infinitepay.io/gabriel_1313/mN840xnjIJ
+- **Anual — R$ 400,00:** https://checkout.infinitepay.io/gabriel_1313/DaWfLD8fl9
+
+Esses links fixos **não substituem** o checkout gerado por pedido: para creditar uma assinatura ao usuário correto, a API cria um `order_nsu` individual e configura `redirect_url` e `webhook_url` no novo link. Não publique botões para os links fixos como se liberassem acesso automático. A validação das URLs geradas pela API aceita apenas HTTPS em `checkout.infinitepay.io` ou `checkout.infinitepay.com.br`.
+
+Para habilitar o checkout no futuro, configure `INFINITEPAY_HANDLE=gabriel_1313` e `INFINITEPAY_API_KEY` somente no servidor. A chave é necessária para limitar cada link a um pagamento; ela não deve ser incluída no frontend. A documentação da InfinitePay informa que o webhook não tem assinatura, então cada aviso precisa ser confirmado pela API. A chave de API e as credenciais do banco não fazem parte do repositório. Não coloque em produção até integrar e testar o login e a autorização no Seven Desk.
 
 ## Downloads
 
