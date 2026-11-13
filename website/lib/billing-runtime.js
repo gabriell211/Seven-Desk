@@ -4,9 +4,10 @@ const { authenticatedUser } = require('./server-auth');
 const { createOrder, reconcilePayment } = require('./billing');
 const { createCheckout } = require('./infinitepay');
 const { createBillingHandlers } = require('./billing-routes');
+const { isCheckoutReady } = require('./billing-readiness');
 let db;
 module.exports = createBillingHandlers({
-  checkoutEnabled: () => process.env.SEVEN_BILLING_ENABLED === '1',
+  checkoutEnabled: () => isCheckoutReady(),
   webhookEnabled: () => process.env.SEVEN_WEBHOOK_ENABLED === '1',
   authenticate: authenticatedUser,
   pool: () => {
