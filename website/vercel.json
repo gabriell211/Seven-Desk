@@ -4,6 +4,23 @@
   "trailingSlash": false,
   "headers": [
     {
+      "source": "/(conta|entrar|cadastro|recuperar-senha|redefinir-senha)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-store"
+        },
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "no-referrer"
+        }
+      ]
+    },
+    {
       "source": "/(.*)",
       "headers": [
         {
@@ -28,6 +45,24 @@
           "value": "public, max-age=0, must-revalidate"
         }
       ]
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/entrar",
+      "destination": "/conta.html"
+    },
+    {
+      "source": "/cadastro",
+      "destination": "/conta.html"
+    },
+    {
+      "source": "/recuperar-senha",
+      "destination": "/conta.html"
+    },
+    {
+      "source": "/redefinir-senha",
+      "destination": "/conta.html"
     }
   ]
 }
