@@ -29,7 +29,7 @@ function checkoutPayload({ handle, orderId, plan, siteUrl }) {
     handle: requiredText(requiredText(handle, 'handle').replace(/^\$/, ''), 'handle'),
     order_nsu: requiredText(orderId, 'order'),
     items: [{ quantity: 1, price: selected.amount, description: selected.description }],
-    options: { single_payment: true },
+    options: { single_payment: true, valid_until: new Date(Date.now() + 30 * 60_000).toISOString() },
     redirect_url: `${origin.origin}/pagamento-retorno`,
     webhook_url: `${origin.origin}/api/infinitepay-webhook`,
   };
