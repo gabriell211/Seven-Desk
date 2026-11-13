@@ -2,6 +2,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 
 import '../../common.dart';
+import '../../models/platform_model.dart';
 import '../../utils/session_toolbar_photo.dart';
 
 const sessionToolbarPhotoLabel = 'Session toolbar photo';

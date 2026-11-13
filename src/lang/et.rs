@@ -828,5 +828,17 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("Forever", "Igavesti"),
         ("Session toolbar photo", ""),
         ("Could not use this photo. Select a JPG, PNG or WebP up to 12 MB and 32 megapixels.", ""),
+        ("Computers", ""),
+        ("Contacts", ""),
+        ("Groups", ""),
+        ("Secure remote access", ""),
+        ("Welcome to", ""),
+        ("Connect to and manage your remote computers.", ""),
+        ("Your ID", ""),
+        ("Ready for connections", ""),
+        ("Sessions", ""),
+        ("Online", ""),
+        ("Offline", ""),
+        ("{} video sessions", ""),
     ].iter().cloned().collect();
 }

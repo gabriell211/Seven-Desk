@@ -12,6 +12,7 @@ import 'package:flutter_hbb/consts.dart';
 import 'package:flutter_hbb/desktop/pages/connection_page.dart';
 import 'package:flutter_hbb/desktop/pages/desktop_setting_page.dart';
 import 'package:flutter_hbb/desktop/pages/desktop_tab_page.dart';
+import 'package:flutter_hbb/desktop/widgets/home_dashboard.dart';
 import 'package:flutter_hbb/desktop/widgets/update_progress.dart';
 import 'package:flutter_hbb/models/platform_model.dart';
 import 'package:flutter_hbb/models/server_model.dart';
@@ -58,6 +59,29 @@ class _DesktopHomePageState extends State<DesktopHomePage>
   @override
   Widget build(BuildContext context) {
     super.build(context);
+    if (useHomeDashboard) {
+      final outgoing = bind.isOutgoingOnly();
+      return _buildBlock(
+        child: ConnectionPage(
+          dashboardBuilder: (section, onSection, connection, peers, status) =>
+              HomeDashboard(
+            section: section,
+            onSection: onSection,
+            credentials: outgoing ? null : _dashboardCredentials(),
+            notices: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                if (!outgoing) buildPresetPasswordWarning(),
+                Obx(() => buildHelpCards(stateGlobal.updateUrl.value)),
+              ],
+            ),
+            connection: connection,
+            peers: peers,
+            status: status,
+          ),
+        ),
+      );
+    }
     final isIncomingOnly = bind.isIncomingOnly();
     return _buildBlock(
         child: Row(
@@ -68,6 +92,127 @@ class _DesktopHomePageState extends State<DesktopHomePage>
         if (!isIncomingOnly) Expanded(child: buildRightPane(context)),
       ],
     ));
+  }
+
+  Widget _dashboardCredentials() {
+    final model = gFFI.serverModel;
+    return ListenableBuilder(
+      listenable: model,
+      builder: (context, _) {
+        final showPassword = model.approveMode != 'click' &&
+            model.verificationMethod != kUsePermanentPassword;
+        final canEdit = !bind.isDisableSettings() &&
+            DesktopSettingPage.tabKeys.contains(SettingsTabKey.safety);
+        final id = _dashboardCredential(
+          label: 'Your ID',
+          controller: model.serverId,
+          actions: canEdit ? [buildPopupMenu(context)] : const [],
+        );
+        final password = _dashboardCredential(
+          label: 'One-time Password',
+          controller: model.serverPasswd,
+          canCopy: showPassword,
+          actions: [
+            if (showPassword)
+              IconButton(
+                tooltip: translate('Refresh Password'),
+                onPressed: () => bind.mainUpdateTemporaryPassword(),
+                icon: const Icon(Icons.refresh_rounded),
+              ),
+            if (canEdit)
+              IconButton(
+                tooltip: translate('Change Password'),
+                onPressed: () =>
+                    DesktopSettingPage.switch2page(SettingsTabKey.safety),
+                icon: const Icon(Icons.edit_outlined, size: 18),
+              ),
+          ],
+        );
+        return DecoratedBox(
+          decoration: HomeDashboardTheme.panel,
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final wide = constraints.maxWidth >= 680;
+              final sideBySide = constraints.maxWidth >= 470;
+              return Padding(
+                padding: EdgeInsets.symmetric(
+                    horizontal: wide ? 23 : 14, vertical: wide ? 18 : 12),
+                child: sideBySide
+                    ? Row(
+                        children: [
+                          if (wide) ...[
+                            const HomeDashboardLogo(size: 68),
+                            const SizedBox(width: 28),
+                          ],
+                          Expanded(child: id),
+                          const SizedBox(
+                            height: 56,
+                            child: VerticalDivider(width: 24),
+                          ),
+                          Expanded(child: password),
+                        ],
+                      )
+                    : Column(
+                        children: [id, const Divider(height: 14), password],
+                      ),
+              );
+            },
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _dashboardCredential({
+    required String label,
+    required TextEditingController controller,
+    bool canCopy = true,
+    List<Widget> actions = const [],
+  }) {
+    return ValueListenableBuilder<TextEditingValue>(
+      valueListenable: controller,
+      builder: (context, value, _) {
+        final canCopyValue = canCopy &&
+            value.text.isNotEmpty &&
+            value.text != '-' &&
+            value.text != translate('Generating ...');
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              translate(label),
+              style: const TextStyle(
+                  fontSize: 14, color: HomeDashboardTheme.muted),
+            ),
+            Row(
+              children: [
+                Expanded(
+                  child: AutoSizeText(
+                    canCopy ? value.text : '—',
+                    maxLines: 1,
+                    minFontSize: 13,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                        fontSize: 32, fontWeight: FontWeight.w700),
+                  ),
+                ),
+                ...actions,
+                IconButton(
+                  tooltip: translate('Copy to clipboard'),
+                  onPressed: canCopyValue
+                      ? () {
+                          Clipboard.setData(ClipboardData(text: value.text));
+                          showToast(translate('Copied'));
+                        }
+                      : null,
+                  icon: const Icon(Icons.copy_rounded, size: 19),
+                ),
+              ],
+            ),
+          ],
+        );
+      },
+    );
   }
 
   Widget _buildBlock({required Widget child}) {

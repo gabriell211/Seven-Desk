@@ -245,6 +245,7 @@ class DesktopTab extends StatefulWidget {
   // Right click tab menu
   final TabMenuBuilder? tabMenuBuilder;
   final Widget? tail;
+  final bool hideBarForHomeDashboard;
   final Future<bool> Function()? onWindowCloseButton;
   final TabBuilder? tabBuilder;
   final LabelGetter? labelGetter;
@@ -270,6 +271,7 @@ class DesktopTab extends StatefulWidget {
     this.pageViewBuilder,
     this.tabMenuBuilder,
     this.tail,
+    this.hideBarForHomeDashboard = false,
     this.onWindowCloseButton,
     this.tabBuilder,
     this.labelGetter,
@@ -523,6 +525,7 @@ class _DesktopTabState extends State<DesktopTab>
     return Column(children: [
       Obx(() {
         if (stateGlobal.showTabBar.isTrue &&
+            !(widget.hideBarForHomeDashboard && state.value.selected == 0) &&
             !(kUseCompatibleUiMode && isHideSingleItem())) {
           final showBottomDivider = _showTabBarBottomDivider(tabType);
           return SizedBox(

@@ -8,6 +8,7 @@ import 'package:flutter_hbb/common/widgets/my_group.dart';
 import 'package:flutter_hbb/common/widgets/peers_view.dart';
 import 'package:flutter_hbb/common/widgets/peer_card.dart';
 import 'package:flutter_hbb/consts.dart';
+import 'package:flutter_hbb/desktop/widgets/home_dashboard.dart';
 import 'package:flutter_hbb/desktop/widgets/popup_menu.dart';
 import 'package:flutter_hbb/desktop/widgets/material_mod_popup_menu.dart'
     as mod_menu;
@@ -27,9 +28,12 @@ import '../../common.dart';
 import '../../models/platform_model.dart';
 
 class PeerTabPage extends StatefulWidget {
-  const PeerTabPage({Key? key}) : super(key: key);
+  const PeerTabPage({Key? key, this.onTabSelected}) : super(key: key);
+
+  final ValueChanged<int>? onTabSelected;
+
   @override
-  State<PeerTabPage> createState() => _PeerTabPageState();
+  State<PeerTabPage> createState() => PeerTabPageState();
 }
 
 class _TabEntry {
@@ -42,9 +46,9 @@ EdgeInsets? _menuPadding() {
   return (isDesktop || isWebDesktop) ? kDesktopMenuPadding : null;
 }
 
-class _PeerTabPageState extends State<PeerTabPage>
+class PeerTabPageState extends State<PeerTabPage>
     with SingleTickerProviderStateMixin {
-  final List<_TabEntry> entries = [
+  final List<_TabEntry> _entries = [
     _TabEntry(RecentPeersView(
       menuPadding: _menuPadding(),
     )),
@@ -72,7 +76,7 @@ class _PeerTabPageState extends State<PeerTabPage>
 
   final isOptVisiableFixed = isOptionFixed(kOptionPeerTabVisible);
 
-  _PeerTabPageState() {
+  PeerTabPageState() {
     _loadLocalOptions();
   }
 
@@ -90,13 +94,27 @@ class _PeerTabPageState extends State<PeerTabPage>
   }
 
   Future<void> handleTabSelection(int tabIndex) async {
-    if (tabIndex < entries.length) {
+    if (tabIndex < _entries.length) {
       if (tabIndex != gFFI.peerTabModel.currentTab) {
         gFFI.peerTabModel.setCurrentTabCachedPeers([]);
       }
       gFFI.peerTabModel.setCurrentTab(tabIndex);
-      entries[tabIndex].load?.call(hint: false);
+      _entries[tabIndex].load?.call(hint: false);
     }
+  }
+
+  bool selectTab(int index) {
+    final model = gFFI.peerTabModel;
+    if (isOptionFixed(kOptionPeerTabIndex) ||
+        !model.visibleEnabledOrderedIndexs.contains(index)) {
+      return false;
+    }
+    if (model.currentTab != index && model.multiSelectionMode) {
+      model.setMultiSelectionMode(false);
+    }
+    handleTabSelection(index);
+    bind.setLocalFlutterOption(k: kOptionPeerTabIndex, v: index.toString());
+    return true;
   }
 
   @override
@@ -104,6 +122,19 @@ class _PeerTabPageState extends State<PeerTabPage>
     final model = Provider.of<PeerTabModel>(context);
     Widget selectionWrap(Widget widget) {
       return model.multiSelectionMode ? createMultiSelectionBar(model) : widget;
+    }
+
+    if (HomeDashboardTheme.of(context)) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (model.multiSelectionMode)
+            SizedBox(height: 38, child: createMultiSelectionBar(model))
+          else
+            _dashboardToolbar(context, model),
+          _createPeersView(),
+        ],
+      );
     }
 
     return Column(
@@ -132,6 +163,167 @@ class _PeerTabPageState extends State<PeerTabPage>
             ).paddingOnly(right: stateGlobal.isPortrait.isTrue ? 0 : 12)),
         _createPeersView(),
       ],
+    );
+  }
+
+  Widget _dashboardToolbar(BuildContext context, PeerTabModel model) {
+    final filters = visibleContextMenuListener(
+      Container(
+        height: 38,
+        decoration: BoxDecoration(
+          color: HomeDashboardTheme.surface,
+          border: Border.all(color: HomeDashboardTheme.border),
+          borderRadius: BorderRadius.circular(9),
+        ),
+        child: ReorderableListView(
+          buildDefaultDragHandles: false,
+          onReorder: model.reorder,
+          scrollDirection: Axis.horizontal,
+          children: [
+            for (final (position, index)
+                in model.visibleEnabledOrderedIndexs.indexed)
+              ReorderableDragStartListener(
+                key: ValueKey(index),
+                index: position,
+                child: Padding(
+                  padding: const EdgeInsets.all(2),
+                  child: TextButton.icon(
+                    onPressed: isOptionFixed(kOptionPeerTabIndex)
+                        ? null
+                        : () {
+                            if (selectTab(index)) {
+                              widget.onTabSelected?.call(index);
+                            }
+                          },
+                    style: TextButton.styleFrom(
+                      foregroundColor: Colors.white,
+                      backgroundColor: model.currentTab == index
+                          ? const Color(0xFF5424A3)
+                          : null,
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(7)),
+                    ),
+                    icon: Icon(model.tabIcon(index), size: 16),
+                    label: _dashboardTabLabel(model, index),
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+    final tools = Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        SizedBox(
+          width: 132,
+          height: 38,
+          child: TextField(
+            controller: peerSearchTextController,
+            onChanged: (value) => peerSearchText.value = value,
+            decoration: InputDecoration(
+              isDense: true,
+              hintText: translate('Search'),
+              prefixIcon: const Icon(Icons.search, size: 18),
+              prefixIconConstraints: const BoxConstraints(minWidth: 34),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(9),
+              ),
+              contentPadding: const EdgeInsets.symmetric(vertical: 9),
+            ),
+          ).workaroundFreezeLinuxMint(),
+        ),
+        const SizedBox(width: 6),
+        Obx(() => Container(
+              decoration: BoxDecoration(
+                color: HomeDashboardTheme.surface,
+                border: Border.all(color: HomeDashboardTheme.border),
+                borderRadius: BorderRadius.circular(9),
+              ),
+              child: Row(
+                children: [
+                  for (final type in [PeerUiType.grid, PeerUiType.list])
+                    IconButton(
+                      tooltip: translate(
+                          type == PeerUiType.grid ? 'Grid View' : 'List View'),
+                      constraints:
+                          const BoxConstraints.tightFor(width: 33, height: 34),
+                      padding: EdgeInsets.zero,
+                      onPressed: isOptionFixed(kOptionPeerCardUiType)
+                          ? null
+                          : () async {
+                              peerCardUiType.value = type;
+                              await bind.setLocalFlutterOption(
+                                  k: kOptionPeerCardUiType,
+                                  v: type.index.toString());
+                            },
+                      color: peerCardUiType.value == type
+                          ? HomeDashboardTheme.purple
+                          : Colors.white,
+                      icon: Icon(
+                        type == PeerUiType.grid
+                            ? Icons.grid_view_rounded
+                            : Icons.view_list_rounded,
+                        size: 18,
+                      ),
+                    ),
+                ],
+              ),
+            )),
+        _createRefresh(
+            index: PeerTabIndex.ab, loading: gFFI.abModel.currentAbLoading),
+        _createRefresh(
+            index: PeerTabIndex.group, loading: gFFI.groupModel.groupLoading),
+        if (model.currentTabCachedPeers.isNotEmpty) _createMultiSelection(),
+        if (model.currentTab != PeerTabIndex.recent.index) PeerSortDropdown(),
+        if (_showWebConsole(model)) _openWebConsole(),
+        if (model.currentTab == PeerTabIndex.ab.index) _toggleTags(),
+      ],
+    );
+    return LayoutBuilder(
+      builder: (context, constraints) => constraints.maxWidth >= 730
+          ? Row(children: [
+              Expanded(child: filters),
+              const SizedBox(width: 10),
+              tools,
+            ])
+          : Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                filters,
+                const SizedBox(height: 6),
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: SingleChildScrollView(
+                      scrollDirection: Axis.horizontal, child: tools),
+                ),
+              ],
+            ),
+    );
+  }
+
+  Widget _dashboardTabLabel(PeerTabModel model, int index) {
+    final tab = PeerTabIndex.values[index];
+    final label = switch (tab) {
+      PeerTabIndex.lan => translate('Computers'),
+      PeerTabIndex.ab => translate('Contacts'),
+      PeerTabIndex.group => translate('Groups'),
+      _ => model.tabTooltip(index),
+    };
+    final devices = switch (tab) {
+      PeerTabIndex.recent => gFFI.recentPeersModel,
+      PeerTabIndex.fav => gFFI.favoritePeersModel,
+      PeerTabIndex.lan => gFFI.lanPeersModel,
+      _ => null,
+    };
+    if (devices == null) return Text(label);
+    return ListenableBuilder(
+      listenable: devices,
+      builder: (context, _) {
+        final count = devices.getPeersCount() + devices.restPeerIds.length;
+        return Text('$label ($count)');
+      },
     );
   }
 
@@ -195,13 +387,13 @@ class _PeerTabPageState extends State<PeerTabPage>
       ));
     } else {
       if (model.visibleEnabledOrderedIndexs.contains(model.currentTab)) {
-        child = entries[model.currentTab].widget;
+        child = _entries[model.currentTab].widget;
       } else {
         debugPrint("should not happen! currentTab not in visibleIndexs");
         Future.delayed(Duration.zero, () {
           model.setCurrentTab(model.visibleEnabledOrderedIndexs[0]);
         });
-        child = entries[0].widget;
+        child = _entries[0].widget;
       }
     }
     return Expanded(
@@ -219,8 +411,8 @@ class _PeerTabPageState extends State<PeerTabPage>
         message: translate('Refresh'),
         child: RefreshWidget(
             onPressed: () {
-              if (gFFI.peerTabModel.currentTab < entries.length) {
-                entries[gFFI.peerTabModel.currentTab].load?.call();
+              if (gFFI.peerTabModel.currentTab < _entries.length) {
+                _entries[gFFI.peerTabModel.currentTab].load?.call();
               }
             },
             spinning: loading,
