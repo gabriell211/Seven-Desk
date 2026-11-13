@@ -95,8 +95,8 @@ async function startCheckout(plan) {
         url.username || url.password || url.port) throw new Error('Untrusted checkout URL');
     window.location.assign(url.href);
   } catch {
-    notice.textContent = 'Não foi possível iniciar o pagamento. Tente novamente mais tarde.';
     await loadCheckoutAvailability();
+    notice.textContent = 'Não foi possível iniciar o pagamento. Tente novamente mais tarde.';
   }
 }
 paymentButtons.forEach(button => button.addEventListener('click', () => startCheckout(button.dataset.plan)));
