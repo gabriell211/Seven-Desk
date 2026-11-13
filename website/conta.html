@@ -3,44 +3,97 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#071b3a" />
   <meta name="robots" content="noindex, nofollow" />
-  <title>Conta em testes | Seven Desk</title>
+  <meta name="description" content="Entre, crie sua conta e acompanhe seu período de acesso ao Seven Desk." />
+  <title>Minha conta | Seven Desk</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
   <link rel="stylesheet" href="/styles.css?v=8" />
-  <link rel="stylesheet" href="/conta.css" />
+  <link rel="stylesheet" href="/conta.css?v=2" />
   <script defer src="/conta.bundle.js"></script>
 </head>
 <body class="account-page">
-  <main class="account-shell">
-    <a class="account-brand" href="/">seven<span>desk</span></a>
+  <a class="skip-link" href="#conteudo">Ir para o conteúdo</a>
+  <header class="account-header">
+    <a class="account-brand" href="/" aria-label="Seven Desk — início">
+      <img src="/assets/seven-desk-logo.svg" alt="" width="42" height="42" />
+      <span>seven<strong>desk</strong></span>
+    </a>
+    <nav aria-label="Navegação da conta">
+      <a href="/">Início</a>
+      <a href="/entrar">Entrar</a>
+      <a href="/cadastro">Criar conta</a>
+    </nav>
+  </header>
+  <main id="conteudo" class="account-shell">
+    <aside class="account-intro-panel">
+      <span class="account-eyebrow">SEVEN DESK • SUA CONTA</span>
+      <h2>Seu acesso remoto começa <span>por aqui.</span></h2>
+      <p>Uma conta para acompanhar o período gratuito, seus planos e os próximos passos do Seven Desk.</p>
+      <ul>
+        <li>Um mês de teste a partir do cadastro</li>
+        <li>Planos mensal e anual com valores transparentes</li>
+        <li>Controle da assinatura no mesmo lugar</li>
+      </ul>
+      <p class="account-disclaimer">A liberação de recursos no aplicativo depende da integração com o servidor de acesso remoto.</p>
+    </aside>
     <section class="account-card" aria-labelledby="account-title">
-      <p class="account-kicker">AMBIENTE DE TESTES</p>
-      <h1 id="account-title">Sua conta Seven Desk</h1>
-      <p class="account-intro">Esta área está em desenvolvimento. O cadastro de teste ainda não libera acesso ao aplicativo.</p>
-      <p id="account-message" class="account-message" role="status" aria-live="polite">Carregando...</p>
+      <p class="account-kicker">ÁREA DO CLIENTE</p>
+      <h1 id="account-title">Entre na sua conta</h1>
+      <p id="account-intro" class="account-intro">Acesse seus dados e acompanhe sua assinatura.</p>
+      <p id="account-service-message" class="account-service-message" role="status" hidden></p>
+      <p id="account-message" class="account-message" role="status" aria-live="polite">Carregando sua conta...</p>
       <div id="account-signed-out" hidden>
-        <div class="account-tabs" role="group" aria-label="Escolha uma ação">
+        <div id="account-tabs" class="account-tabs" role="group" aria-label="Escolha uma ação">
           <button id="show-login" type="button" aria-pressed="true">Entrar</button>
           <button id="show-signup" type="button" aria-pressed="false">Criar conta</button>
         </div>
         <form id="account-form">
-          <label id="account-name-label" hidden>Nome <input id="account-name" autocomplete="name" maxlength="100" /></label>
-          <label>E-mail <input id="account-email" type="email" autocomplete="email" required maxlength="254" /></label>
-          <label>Senha <input id="account-password" type="password" autocomplete="current-password" required minlength="8" maxlength="128" /></label>
-          <button id="account-submit" class="account-submit" type="submit">Entrar</button>
+          <label id="account-name-label" hidden>Nome completo
+            <input id="account-name" name="name" autocomplete="name" minlength="2" maxlength="100" />
+          </label>
+          <label>E-mail
+            <input id="account-email" name="email" type="email" autocomplete="email" inputmode="email" required maxlength="254" />
+          </label>
+          <label>Senha
+            <input id="account-password" name="password" type="password" autocomplete="current-password" required minlength="8" maxlength="128" />
+          </label>
+          <a id="account-forgot-link" class="account-inline-link" href="/recuperar-senha">Esqueci minha senha</a>
+          <button id="account-submit" class="account-submit" type="submit" disabled>Entrar</button>
         </form>
+        <form id="account-recovery-form" hidden>
+          <label>E-mail cadastrado
+            <input id="recovery-email" type="email" autocomplete="email" required maxlength="254" />
+          </label>
+          <button id="recovery-submit" class="account-submit" type="submit" disabled>Enviar instruções</button>
+          <a class="account-inline-link" href="/entrar">Voltar para entrar</a>
+        </form>
+        <form id="account-reset-form" hidden>
+          <label>Nova senha
+            <input id="reset-password" type="password" autocomplete="new-password" required minlength="8" maxlength="128" />
+          </label>
+          <label>Confirme a nova senha
+            <input id="reset-confirm" type="password" autocomplete="new-password" required minlength="8" maxlength="128" />
+          </label>
+          <button id="reset-submit" class="account-submit" type="submit" disabled>Redefinir senha</button>
+          <a class="account-inline-link" href="/entrar">Voltar para entrar</a>
+        </form>
+        <p class="account-legal">Ao criar uma conta, você concorda com os <a href="/licencas">termos</a> e a <a href="/privacidade">política de privacidade</a>.</p>
       </div>
       <div id="account-signed-in" hidden>
-        <p>Conectado como <strong id="account-user"></strong>.</p>
-        <p id="account-subscription" class="account-intro" aria-live="polite"></p>
+        <div class="account-connected"><span aria-hidden="true">●</span> Conectado</div>
+        <p class="account-identity">Conectado como <strong id="account-user"></strong></p>
+        <p id="account-subscription" class="account-intro" aria-live="polite">Consultando seu acesso...</p>
         <div id="account-plan-actions" class="account-plan-actions" hidden>
-          <p id="account-checkout-notice" class="account-intro" aria-live="polite">Verificando pagamentos...</p>
+          <h2>Escolha seu plano</h2>
+          <p id="account-checkout-notice" class="account-intro" aria-live="polite">Verificando disponibilidade...</p>
           <button type="button" class="account-submit" data-plan="monthly" disabled>Plano mensal — R$ 39,90</button>
           <button type="button" class="account-submit" data-plan="yearly" disabled>Plano anual — R$ 400,00</button>
         </div>
-        <button id="account-signout" class="account-submit" type="button">Sair</button>
+        <button id="account-signout" class="account-signout" type="button">Sair da conta</button>
       </div>
     </section>
-    <a class="account-back" href="/">← Voltar ao site</a>
   </main>
+  <footer class="account-footer"><span>© 2026 Seven Desk</span><a href="/">Voltar ao site</a></footer>
 </body>
 </html>
