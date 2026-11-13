@@ -7,7 +7,10 @@ test('checkout prices are fixed by the selected plan on the server', () => {
   const common = { handle: '$merchant', orderId: 'order-1', siteUrl: 'https://example.com' };
   assert.equal(payment.checkoutPayload({ ...common, plan: 'monthly', amount: 1 }).items[0].price, 3990);
   assert.equal(payment.checkoutPayload({ ...common, plan: 'yearly', amount: 1 }).items[0].price, 40000);
-  assert.equal(payment.checkoutPayload({ ...common, plan: 'monthly' }).options.single_payment, true);
+  const checkout = payment.checkoutPayload({ ...common, plan: 'monthly' });
+  assert.equal(checkout.options.single_payment, true);
+  const lifetime = Date.parse(checkout.options.valid_until) - Date.now();
+  assert.ok(lifetime > 29 * 60_000 && lifetime <= 30 * 60_000);
   assert.throws(() => payment.checkoutPayload({ ...common, plan: 'unknown' }));
   assert.throws(() => payment.checkoutPayload({ ...common, plan: 'monthly', siteUrl: 'http://example.com' }));
 });
