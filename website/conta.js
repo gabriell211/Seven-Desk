@@ -4,18 +4,11 @@ const el = id => document.getElementById(id);
 const form = el('account-form');
 const message = el('account-message');
 const paymentButtons = [...document.querySelectorAll('[data-plan]')];
-const params = new URLSearchParams(window.location.search);
 const isResetPage = window.location.pathname === '/redefinir-senha';
-const resetToken = isResetPage ? params.get('token') : null;
 let auth;
 let signup = window.location.pathname === '/cadastro';
 let verificationEmail = '';
 let availability = {loginEnabled:false, registrationEnabled:false, recoveryEnabled:false};
-
-// One-time reset tokens should not remain visible in browser history/referrers.
-if (isResetPage && window.location.search) {
-  window.history.replaceState({}, '', window.location.pathname);
-}
 
 function status(text, error = false) {
   message.textContent = text;
@@ -64,15 +57,13 @@ function setRecoveryMode(reset) {
   el(reset ? 'reset-submit' : 'recovery-submit').disabled = !available;
   el('account-title').textContent = reset ? 'Redefina sua senha' : 'Recupere seu acesso';
   el('account-intro').textContent = reset
-    ? 'Escolha uma senha forte para proteger sua conta.'
-    : 'Informe o e-mail para receber instruções de recuperação.';
+    ? 'Informe seu e-mail, o código de seis dígitos recebido e uma nova senha.'
+    : 'Informe seu e-mail para solicitar um código de recuperação.';
   showServiceMessage(!available
     ? 'A recuperação de senha está temporariamente indisponível até a configuração segura do serviço de e-mail.'
     : '');
-  if (reset && (!resetToken || resetToken.length > 2048)) {
-    el('reset-submit').disabled = true;
-    status('Link de redefinição inválido ou expirado. Solicite outro.', true);
-  } else status('');
+  if (reset && !el('reset-email').value) el('reset-email').value = el('recovery-email').value.trim();
+  status('');
 }
 function setVerificationMode(email) {
   verificationEmail = email;
@@ -89,7 +80,7 @@ function setVerificationMode(email) {
 }
 
 function displaySession(session) {
-  const user = session?.user;
+  const user = session?.user?.emailVerified === true ? session.user : null;
   el('account-signed-in').hidden = !user;
   el('account-signed-out').hidden = !!user;
   el('account-user').textContent = user?.email || '';
@@ -105,7 +96,7 @@ async function refresh() {
   const {data, error} = await auth.getSession();
   if (error) throw error;
   displaySession(data);
-  if (data?.user) await Promise.all([loadSubscription(), loadCheckoutAvailability()]);
+  if (data?.user?.emailVerified === true) await Promise.all([loadSubscription(), loadCheckoutAvailability()]);
 }
 async function loadSubscription() {
   const target = el('account-subscription');
@@ -240,30 +231,44 @@ el('account-recovery-form').addEventListener('submit', async event=>{
   event.preventDefault();
   if (!availability.recoveryEnabled) return;
   const button = el('recovery-submit'); button.disabled = true;
+  const email = el('recovery-email').value.trim();
+  if (!email || email.length > 254 || !el('recovery-email').checkValidity()) {
+    status('Informe um e-mail válido.', true);
+    button.disabled = false;
+    return;
+  }
   try {
-    const email = el('recovery-email').value.trim();
-    if (!email || email.length > 254) throw new Error('Invalid email');
-    const result = await auth.requestPasswordReset({email, redirectTo:`${window.location.origin}/redefinir-senha`});
-    if (result.error) throw result.error;
-    status('Se houver uma conta cadastrada, enviaremos instruções ao e-mail informado.');
+    const {error} = await auth.forgetPassword.emailOtp({email});
+    if (error) throw error;
+    el('reset-email').value = email;
+    setRecoveryMode(true);
+    status('Se houver uma conta, o código de recuperação será enviado para o e-mail informado.');
   } catch {
-    status('Não foi possível solicitar a recuperação agora. Tente novamente mais tarde.', true);
+    status('Não foi possível solicitar o código agora. Tente novamente mais tarde.', true);
   } finally { button.disabled = !availability.recoveryEnabled; }
 });
 el('account-reset-form').addEventListener('submit', async event=>{
   event.preventDefault();
-  if (!availability.recoveryEnabled || !resetToken || resetToken.length > 2048) return;
-  const button = el('reset-submit');button.disabled = true;
+  if (!availability.recoveryEnabled) return;
+  const button = el('reset-submit'); button.disabled = true;
   try {
+    const email = el('reset-email').value.trim();
+    const otp = el('reset-code').value.trim();
     const password = el('reset-password').value;
     const confirm = el('reset-confirm').value;
-    if (password.length < 8 || password.length > 128 || password !== confirm) throw new Error('Invalid password');
-    const result = await auth.resetPassword({newPassword:password,token:resetToken});
-    if (result.error) throw result.error;
-    el('reset-password').value = '';el('reset-confirm').value = '';
-    status('Senha redefinida. Entre novamente com sua nova senha.');
+    if (!el('reset-email').checkValidity() || !/^[0-9]{6}$/.test(otp) ||
+        password.length < 8 || password.length > 128 || password !== confirm) {
+      throw new Error('Invalid recovery inputs');
+    }
+    const {error} = await auth.emailOtp.resetPassword({email,otp,password});
+    if (error) throw error;
+    el('reset-code').value = '';
+    el('reset-password').value = '';
+    el('reset-confirm').value = '';
+    setMode(false);
+    status('Senha redefinida. Entre com sua nova senha.');
   } catch {
-    status('Não foi possível redefinir a senha. Verifique o link ou solicite outro.', true);
+    status('Não foi possível redefinir a senha. Confira o código e a nova senha ou solicite outro.', true);
   } finally { button.disabled = !availability.recoveryEnabled; }
 });
 el('account-signout').addEventListener('click',async()=>{
