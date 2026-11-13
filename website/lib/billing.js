@@ -7,6 +7,8 @@ const { planFor, verifyPayment } = require('./infinitepay');
 async function createOrder(pool, userId, plan) {
   const selected = planFor(plan);
   const orderId = randomUUID();
+  const verified = await pool.query('SELECT 1 FROM neon_auth."user" WHERE id = $1 AND "emailVerified" IS TRUE', [userId]);
+  if (verified.rows.length !== 1) throw new Error('Verified account required');
   await pool.query(
     `INSERT INTO seven_desk_payment_orders (order_id, user_id, plan, amount_cents)
      VALUES ($1, $2, $3, $4)`,
@@ -24,7 +26,7 @@ async function getEntitlement(pool, userId) {
             CASE WHEN now() < u."createdAt" + interval '1 month' THEN 'trial'
                  WHEN s.paid_through > now() THEN 'paid' ELSE 'expired' END AS status
        FROM neon_auth."user" u LEFT JOIN seven_desk_subscriptions s ON s.user_id = u.id
-      WHERE u.id = $1`, [userId],
+      WHERE u.id = $1 AND u."emailVerified" IS TRUE`, [userId],
   );
   return result.rows[0] || null;
 }
@@ -59,7 +61,7 @@ async function reconcilePayment(pool, event, { handle, apiKey, fetchImpl } = {})
       await client.query('ROLLBACK');
       return locked.transaction_nsu === transactionId && locked.invoice_slug === slug;
     }
-    const account = await client.query('SELECT "createdAt" AS created_at FROM neon_auth."user" WHERE id = $1 FOR UPDATE', [locked.user_id]);
+    const account = await client.query('SELECT "createdAt" AS created_at FROM neon_auth."user" WHERE id = $1 AND "emailVerified" IS TRUE', [locked.user_id]);
     if (!account.rows[0]) throw new Error('Account unavailable');
     const interval = locked.plan === 'monthly' ? '1 month' : '1 year';
     await client.query(
