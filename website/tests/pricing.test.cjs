@@ -12,5 +12,5 @@ test('shows per-user monthly and yearly prices and unlimited computers', () => {
   assert.match(section, /39,90\s*<small>\/ usuário \/ mês/);
   assert.match(section, /400\s*<small>\/ usuário \/ ano/);
   assert.equal((section.match(/Computadores ilimitados/g) || []).length, 2);
-  assert.equal((section.match(/type="button" disabled/g) || []).length, 2);
+  assert.equal((section.match(/href="\/cadastro"/g) || []).length, 2);
 });
