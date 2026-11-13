@@ -42,6 +42,18 @@ Esses links fixos **não substituem** o checkout gerado por pedido: para credita
 
 Para habilitar o checkout no futuro, configure `INFINITEPAY_HANDLE=gabriel_1313` e `INFINITEPAY_API_KEY` somente no servidor. A chave é necessária para limitar cada link a um pagamento; ela não deve ser incluída no frontend. A documentação da InfinitePay informa que o webhook não tem assinatura, então cada aviso precisa ser confirmado pela API. A chave de API e as credenciais do banco não fazem parte do repositório. Não coloque em produção até integrar e testar o login e a autorização no Seven Desk.
 
+## Autenticação, licenciamento e operação
+
+A conta precisa ser verificada por código de e-mail antes de emitir um pedido de pagamento ou receber um período de teste pela API. A sessão usa um JWT assinado pelo Neon Auth (EdDSA, expiração de 15 minutos), verificado em cada operação contra JWKS, `iss` e `aud` oficiais do serviço.
+
+A rota `GET /api/license` foi preparada para consulta **pelo servidor de sinalização/retransmissão**, usando `Authorization: Bearer <JWT-da-conta>`. Ela retorna `allowed=true`, `status` e `accessEndsAt` somente se a assinatura estiver válida no Neon. Respostas `401`, `403` ou `503` não são autorização para acesso. O cliente **não pode** determinar por conta própria se a licença é válida.
+
+A rota tem gate `SEVEN_LICENSE_API_ENABLED=0` na Vercel. Ainda é preciso implementar a autenticação do usuário no desktop e a consulta obrigatória do endpoint pelo **servidor real que aceita sessões remotas**, migrar e homologar duas máquinas e só então ativar esse gate. O repositório Seven Desk atual contém o aplicativo, mas não contém o código-fonte do servidor de sinalização/retransmissão implantado na VPS. **Não interrompa conexões existentes com uma checagem parcial implementada apenas no cliente.**
+
+O domínio de envio `mail.sevendesk.tech` foi registrado no Resend em `sa-east-1`; a validação DKIM/SPF/MX no DNS da Hostinger está pendente. A Neon Auth `main` usa o SMTP compartilhado apenas para desenvolvimento e permanece com cadastros desativados. Configure o provedor SMTP verificado na Neon, teste entrega real de OTP e de redefinição de senha e só depois habilite `SEVEN_REGISTRATION_ENABLED` e `SEVEN_PASSWORD_RECOVERY_ENABLED` na Vercel.
+
+A API da InfinitePay não oferece um endpoint documentado para confirmar **estorno** com a mesma garantia do `/payment_check`. Webhooks não possuem assinatura e não devem, isoladamente, conceder nem revogar acesso. Operações de reembolso precisam ser conferidas no painel da InfinitePay e conciliadas em uma rotina auditável antes do lançamento. Não habilite pagamentos até o procedimento de reversão funcionar em teste.
+
 ## Downloads
 
 Os botões apontam para a página de Releases do repositório oficial, não para um binário fixo. Se o repositório permanecer privado, usuários não autorizados precisarão de acesso para baixar os arquivos. Para distribuição pública, publique os instaladores homologados em um canal público sob controle do projeto; não exponha chaves privadas ou tokens no frontend.
