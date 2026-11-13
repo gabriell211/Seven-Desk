@@ -27,12 +27,31 @@ function displaySession(session) {
   el('account-signed-in').hidden = !user;
   el('account-signed-out').hidden = !!user;
   el('account-user').textContent = user?.email || '';
+  if (!user) el('account-subscription').textContent = '';
 }
 
 async function refresh() {
   const { data, error } = await auth.getSession();
   if (error) throw error;
   displaySession(data);
+  if (data?.user) await loadSubscription();
+}
+
+async function loadSubscription() {
+  const target = el('account-subscription');
+  target.textContent = 'Consultando período de teste...';
+  try {
+    const { data, error } = await auth.token();
+    if (error || !data?.token) throw new Error();
+    const response = await fetch('/api/subscription', { headers: { Authorization: `Bearer ${data.token}` }, cache: 'no-store' });
+    if (!response.ok) throw new Error();
+    const subscription = await response.json();
+    const date = new Date(subscription.status === 'trial' ? subscription.trialEndsAt : subscription.accessEndsAt);
+    if (Number.isNaN(date.getTime())) throw new Error();
+    const formatted = new Intl.DateTimeFormat('pt-BR', { dateStyle: 'long', timeStyle: 'short' }).format(date);
+    target.textContent = subscription.status === 'trial' ? `Período grátis de teste até ${formatted}.` :
+      subscription.status === 'paid' ? `Período de acesso até ${formatted}.` : 'Período de acesso encerrado.';
+  } catch { target.textContent = 'Não foi possível consultar o período de teste.'; }
 }
 
 el('show-login').addEventListener('click', () => setMode(false));
