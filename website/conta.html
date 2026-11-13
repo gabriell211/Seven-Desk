@@ -61,6 +61,14 @@
           <a id="account-forgot-link" class="account-inline-link" href="/recuperar-senha">Esqueci minha senha</a>
           <button id="account-submit" class="account-submit" type="submit" disabled>Entrar</button>
         </form>
+        <form id="account-verification-form" hidden>
+          <label>Código de verificação enviado ao seu e-mail
+            <input id="verification-code" type="text" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6" minlength="6" required />
+          </label>
+          <button id="verify-email-submit" class="account-submit" type="submit">Verificar e-mail</button>
+          <button id="verification-resend" class="account-link-button" type="button">Reenviar código</button>
+          <a class="account-inline-link" href="/entrar">Voltar para entrar</a>
+        </form>
         <form id="account-recovery-form" hidden>
           <label>E-mail cadastrado
             <input id="recovery-email" type="email" autocomplete="email" required maxlength="254" />
