@@ -52,6 +52,7 @@ pub fn core_main() -> Option<CoreMainAction> {
         // return None to terminate the process
         return None;
     }
+    crate::seven_server::configure();
     let mut args = Vec::new();
     let mut flutter_args = Vec::new();
     let mut i = 0;
