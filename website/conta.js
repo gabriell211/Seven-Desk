@@ -182,7 +182,7 @@ form.addEventListener('submit', async event=>{
     if (response.error) throw response.error;
     el('account-password').value = '';
     if (signup) {
-      if (response.data?.user && response.data.user.emailVerified === false) {
+      if (response.data?.user?.emailVerified !== true) {
         setVerificationMode(email);
         status('Cadastro recebido. Informe o código enviado ao seu e-mail.');
       } else {
