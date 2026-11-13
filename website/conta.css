@@ -19,9 +19,9 @@ body.account-page{min-height:100vh;background:radial-gradient(ellipse at 12% 14%
 .account-tabs{display:flex;gap:7px;padding:5px;background:#141021;border-radius:12px;margin:18px 0 22px}
 .account-tabs button{flex:1;padding:13px;border:0;border-radius:9px;color:#c3bdd4;background:transparent;font-size:13px;font-weight:700;cursor:pointer}
 .account-tabs button[aria-pressed="true"]{color:#fff;background:linear-gradient(110deg,#922cfa,#5623b9);box-shadow:0 7px 15px #12052d66}
-#account-form label,#account-recovery-form label,#account-reset-form label{display:block;font-size:12px;font-weight:700;color:#e7ddf5;margin:17px 0}
-#account-form input,#account-recovery-form input,#account-reset-form input{display:block;width:100%;min-height:47px;box-sizing:border-box;margin-top:8px;border:1px solid #504365;border-radius:10px;padding:11px 14px;font:inherit;color:#fff;background:#181427;outline:none;transition:border-color .2s}
-#account-form input:focus-visible,#account-recovery-form input:focus-visible,#account-reset-form input:focus-visible{border-color:#c575ff;box-shadow:0 0 0 3px #8d44dd44}
+#account-form label,#account-recovery-form label,#account-reset-form label,#account-verification-form label{display:block;font-size:12px;font-weight:700;color:#e7ddf5;margin:17px 0}
+#account-form input,#account-recovery-form input,#account-reset-form input,#account-verification-form input{display:block;width:100%;min-height:47px;box-sizing:border-box;margin-top:8px;border:1px solid #504365;border-radius:10px;padding:11px 14px;font:inherit;color:#fff;background:#181427;outline:none;transition:border-color .2s}
+#account-form input:focus-visible,#account-recovery-form input:focus-visible,#account-reset-form input:focus-visible,#account-verification-form input:focus-visible{border-color:#c575ff;box-shadow:0 0 0 3px #8d44dd44}
 .account-submit{width:100%;min-height:47px;padding:13px;border:1px solid #b060fa;border-radius:10px;background:linear-gradient(110deg,#922cfa,#5623b9);color:#fff;font-size:13px;font-weight:800;cursor:pointer;margin-top:12px}
 .account-submit:not(:disabled):hover{filter:brightness(1.13)}.account-submit:disabled{opacity:.5;cursor:not-allowed}
 .account-inline-link{display:inline-block;margin:4px 0 12px;color:#c99dff;text-decoration:underline;text-underline-offset:3px;font-size:12px}
@@ -36,3 +36,6 @@ body.account-page{min-height:100vh;background:radial-gradient(ellipse at 12% 14%
 @media(max-width:850px){.account-shell{grid-template-columns:1fr;gap:22px;max-width:520px;margin:16px auto 44px}.account-intro-panel{padding:12px 0}.account-intro-panel h2{font-size:34px}.account-intro-panel ul,.account-intro-panel .account-disclaimer{display:none}}
 @media(max-width:520px){.account-header{min-height:78px}.account-brand{font-size:20px}.account-header nav{gap:13px;font-size:11px}.account-card{padding:23px}.account-intro-panel h2{font-size:30px}}
 @media(prefers-reduced-motion:reduce){.account-card *{transition:none!important}}
+
+.account-link-button{display:block;margin:14px auto 0;border:0;background:none;color:#d8afff;text-decoration:underline;text-underline-offset:3px;cursor:pointer;font:inherit;font-size:12px;font-weight:700}
+.account-link-button:disabled{opacity:.5;cursor:not-allowed}
