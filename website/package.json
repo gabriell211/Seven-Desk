@@ -2,7 +2,7 @@
   "name": "seven-desk-site",
   "private": true,
   "scripts": {
-    "build": "esbuild conta.js --bundle --minify --outfile=conta.bundle.js",
+    "build": "esbuild conta.js --bundle --minify --outfile=conta.bundle.js && node build-site.cjs",
     "test": "node --test tests/*.test.cjs"
   },
   "dependencies": {
