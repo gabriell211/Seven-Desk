@@ -182,11 +182,7 @@ class PeerTabPageState extends State<PeerTabPage>
           children: [
             for (final (position, index)
                 in model.visibleEnabledOrderedIndexs.indexed)
-              if (index == PeerTabIndex.lan.index ||
-                  index == PeerTabIndex.fav.index ||
-                  index == PeerTabIndex.recent.index ||
-                  index == PeerTabIndex.group.index)
-                ReorderableDragStartListener(
+              ReorderableDragStartListener(
                 key: ValueKey(index),
                 index: position,
                 child: Padding(
