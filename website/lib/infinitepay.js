@@ -6,6 +6,7 @@ const PLANS = Object.freeze({
   yearly: Object.freeze({ amount: 40000, description: 'Seven Desk - 1 usuario - 1 ano' }),
 });
 const API = 'https://api.checkout.infinitepay.io';
+const TRUSTED_CHECKOUT_HOSTS = new Set(['checkout.infinitepay.io', 'checkout.infinitepay.com.br']);
 
 function requiredText(value, name) {
   if (typeof value !== 'string' || !value.trim() || value.length > 255) {
@@ -51,7 +52,7 @@ async function createCheckout(input, options) {
   const result = await postJson('/links', checkoutPayload(input), options);
   let url;
   try { url = new URL(result.url); } catch { throw new Error('Invalid checkout URL'); }
-  if (url.protocol !== 'https:' || url.hostname !== 'checkout.infinitepay.com.br' ||
+  if (url.protocol !== 'https:' || !TRUSTED_CHECKOUT_HOSTS.has(url.hostname) ||
       url.port || url.username || url.password) throw new Error('Invalid checkout URL');
   return url.href;
 }
