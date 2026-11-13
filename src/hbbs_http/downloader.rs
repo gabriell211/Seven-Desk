@@ -323,6 +323,7 @@ pub fn cancel(id: &str) {
     }
 }
 
+#[allow(dead_code)] // Retained for explicit cleanup by future download consumers.
 pub fn remove(id: &str) {
     let _ = DOWNLOADERS.lock().unwrap().remove(id);
 }
