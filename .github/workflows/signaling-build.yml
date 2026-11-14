@@ -1,0 +1,29 @@
+name: Seven Desk Signaling Build
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'signaling/**'
+      - '.github/workflows/signaling-build.yml'
+  pull_request:
+    paths:
+      - 'signaling/**'
+      - '.github/workflows/signaling-build.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Build isolated signaling binaries
+        run: bash signaling/build.sh "$RUNNER_TEMP/sevendesk-signaling-source"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: sevendesk-signaling-linux-x64
+          path: signaling/dist/seven-*
+          if-no-files-found: error

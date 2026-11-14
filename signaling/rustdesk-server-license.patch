@@ -1,0 +1,139 @@
+diff --git a/src/lib.rs b/src/lib.rs
+index 8da29a2..e163627 100644
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -1,4 +1,5 @@
+ mod rendezvous_server;
++mod seven_license;
+ pub use rendezvous_server::*;
+ pub mod common;
+ mod database;
+diff --git a/src/rendezvous_server.rs b/src/rendezvous_server.rs
+index 84c0293..cfb926c 100644
+--- a/src/rendezvous_server.rs
++++ b/src/rendezvous_server.rs
+@@ -587,6 +587,16 @@ impl RendezvousServer {
+                         );
+                         return false;
+                     }
++                    if !crate::seven_license::allows(&rf.token).await {
++                        let mut reply = RendezvousMessage::new();
++                        reply.set_relay_response(RelayResponse {
++                            uuid: rf.uuid,
++                            refuse_reason: "Entre na sua conta Seven Desk para iniciar suporte".to_owned(),
++                            ..Default::default()
++                        });
++                        Self::send_to_sink(sink, reply).await;
++                        return true;
++                    }
+                     // there maybe several attempt, so sink can be none
+                     if let Some(sink) = sink.take() {
+                         self.tcp_punch.lock().await.insert(try_into_v4(addr), sink);
+@@ -791,6 +801,14 @@ impl RendezvousServer {
+             });
+             return Ok((msg_out, None));
+         }
++        if !crate::seven_license::allows(&ph.token).await {
++            let mut msg_out = RendezvousMessage::new();
++            msg_out.set_punch_hole_response(PunchHoleResponse {
++                failure: punch_hole_response::Failure::LICENSE_MISMATCH.into(),
++                ..Default::default()
++            });
++            return Ok((msg_out, None));
++        }
+         let id = ph.id;
+         // punch hole request from A, relay to B,
+         // check if in same intranet first,
+diff --git a/src/seven_license.rs b/src/seven_license.rs
+new file mode 100644
+index 0000000..7aee92a
+--- /dev/null
++++ b/src/seven_license.rs
+@@ -0,0 +1,87 @@
++use hbb_common::tokio::sync::Semaphore;
++use once_cell::sync::Lazy;
++use reqwest::{Client, StatusCode, Url};
++use serde::Deserialize;
++use std::{env, time::Duration};
++
++enum Endpoint {
++    Disabled,
++    Invalid,
++    Enabled(Url),
++}
++
++static ENDPOINT: Lazy<Endpoint> = Lazy::new(|| match env::var("SEVEN_LICENSE_URL") {
++    Err(env::VarError::NotPresent) => Endpoint::Disabled,
++    Ok(value) => parse_endpoint(&value).map_or(Endpoint::Invalid, Endpoint::Enabled),
++    Err(_) => Endpoint::Invalid,
++});
++static CLIENT: Lazy<Option<Client>> = Lazy::new(|| {
++    Client::builder()
++        .timeout(Duration::from_secs(4))
++        .redirect(reqwest::redirect::Policy::none())
++        .build()
++        .ok()
++});
++static IN_FLIGHT: Lazy<Semaphore> = Lazy::new(|| Semaphore::new(64));
++
++#[derive(Deserialize)]
++struct Decision {
++    allowed: bool,
++}
++
++fn parse_endpoint(value: &str) -> Option<Url> {
++    let url = Url::parse(value).ok()?;
++    if url.scheme() != "https"
++        || !url.username().is_empty()
++        || url.password().is_some()
++        || url.path() != "/api/license"
++        || url.query().is_some()
++        || url.fragment().is_some()
++    {
++        return None;
++    }
++    Some(url)
++}
++
++pub async fn allows(token: &str) -> bool {
++    let url = match &*ENDPOINT {
++        Endpoint::Disabled => return true,
++        Endpoint::Invalid => return false,
++        Endpoint::Enabled(url) => url,
++    };
++    if token.is_empty()
++        || token.len() > 8192
++        || !token.bytes().all(|byte| (0x21..=0x7e).contains(&byte))
++    {
++        return false;
++    }
++    let client = match &*CLIENT {
++        Some(client) => client,
++        None => return false,
++    };
++    let _permit = match IN_FLIGHT.try_acquire() {
++        Ok(permit) => permit,
++        Err(_) => return false,
++    };
++    match client.get(url.clone()).bearer_auth(token).send().await {
++        Ok(response) if response.status() == StatusCode::OK => response
++            .json::<Decision>()
++            .await
++            .map(|decision| decision.allowed)
++            .unwrap_or(false),
++        _ => false,
++    }
++}
++
++#[cfg(test)]
++mod tests {
++    use super::parse_endpoint;
++
++    #[test]
++    fn license_endpoint_requires_https_and_exact_route() {
++        assert!(parse_endpoint("https://www.sevendesk.tech/api/license").is_some());
++        assert!(parse_endpoint("http://www.sevendesk.tech/api/license").is_none());
++        assert!(parse_endpoint("https://www.sevendesk.tech/other").is_none());
++        assert!(parse_endpoint("https://user@www.sevendesk.tech/api/license").is_none());
++    }
++}
