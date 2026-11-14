@@ -24,6 +24,7 @@ REQUIRED = (
     re.compile(r"^rustdesk-.*-x86_64\.deb$"),
     re.compile(r"^rustdesk-.*-aarch64\.deb$"),
     re.compile(r"^rustdesk-.*-aarch64-signed\.apk$"),
+    re.compile(r"^rustdesk-.*-universal-signed\.apk$"),
 )
 
 

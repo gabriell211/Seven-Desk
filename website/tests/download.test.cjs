@@ -53,6 +53,9 @@ test('rejects missing, empty, unrelated and unsafe manifest entries', () => {
   assert.equal(assetScore('rustdesk-1.5.3-aarch64.exe', 'windows', 'x64'), -1);
   assert.equal(assetScore('rustdesk-unattended-wayland-1.5.3-x86_64.deb', 'linux', 'x64'), -1);
   assert.equal(assetScore('rustdesk-1.5.3-aarch64.apk', 'android', 'arm64'), -1);
+  assert.equal(findPackage({ version: manifest.version, files: [
+    file('rustdesk-1.5.3-aarch64-signed.apk'),
+  ] }, 'android', 'universal'), null);
   assert.equal(findPackage({ version: '../bad', files: manifest.files }, 'windows', 'x64'), null);
   assert.equal(findPackage({ version: manifest.version, files: [
     file('../sevendesk-1.5.3-x86_64.exe'),
