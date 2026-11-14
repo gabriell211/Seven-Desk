@@ -156,7 +156,7 @@ Sugestões de recursos, correções e melhorias são bem-vindas. Consulte [as or
 
 O repositório contém código coberto pela **GNU Affero General Public License, versão 3 (AGPL-3.0)**. Leia o texto em [`LICENCE`](LICENCE) para conhecer as condições e obrigações de uso, modificação, distribuição e disponibilização de código-fonte.
 
-O Seven Desk utiliza componentes derivados do projeto **RustDesk**. Os créditos de autoria, avisos de copyright, termos da AGPL e licenças de outras dependências continuam aplicáveis aos componentes correspondentes. A identidade visual Seven Desk não altera esses direitos e obrigações.
+Os créditos de autoria, avisos de copyright, termos da AGPL e licenças de outras dependências continuam aplicáveis aos componentes correspondentes. A identidade visual Seven Desk não altera esses direitos e obrigações.
 
 ---
 
