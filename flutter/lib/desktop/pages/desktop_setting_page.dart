@@ -28,6 +28,7 @@ import 'package:url_launcher/url_launcher_string.dart';
 
 import '../../common/widgets/dialog.dart';
 import '../../common/widgets/login.dart';
+import '../../common/widgets/seven_access.dart';
 
 const double _kTabWidth = 200;
 const double _kTabHeight = 42;
@@ -2291,7 +2292,12 @@ class _AccountState extends State<_Account> {
     return ListView(
       controller: scrollController,
       children: [
-        _Card(title: 'Account', children: [accountAction(), useInfo()]),
+        _Card(title: 'Account', children: [
+          _Button('Ativar Seven Desk',
+              () => showSevenDeskActivationDialog(context)),
+          accountAction(),
+          useInfo(),
+        ]),
       ],
     ).marginOnly(bottom: _kListViewBottomMargin);
   }

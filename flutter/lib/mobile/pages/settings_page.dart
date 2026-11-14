@@ -14,6 +14,7 @@ import 'package:url_launcher/url_launcher_string.dart';
 import '../../common.dart';
 import '../../common/widgets/dialog.dart';
 import '../../common/widgets/login.dart';
+import '../../common/widgets/seven_access.dart';
 import '../../consts.dart';
 import '../../models/model.dart';
 import '../../models/platform_model.dart';
@@ -740,6 +741,11 @@ class _SettingsState extends State<SettingsPage> with WidgetsBindingObserver {
           SettingsSection(
             title: Text(translate('Account')),
             tiles: [
+              SettingsTile(
+                title: const Text('Ativar Seven Desk'),
+                leading: const Icon(Icons.verified_user_outlined),
+                onPressed: (context) => showSevenDeskActivationDialog(context),
+              ),
               SettingsTile(
                 title: Obx(() => Text(gFFI.userModel.userName.value.isEmpty
                     ? translate('Login')

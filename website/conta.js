@@ -85,6 +85,10 @@ function displaySession(session) {
   el('account-signed-out').hidden = !!user;
   el('account-user').textContent = user?.email || '';
   el('account-plan-actions').hidden = !user;
+  el('account-app-access').hidden = true;
+  el('account-app-token').value = '';
+  el('account-app-token-label').hidden = true;
+  el('account-app-copy').hidden = true;
   if (!user) el('account-subscription').textContent = '';
   if (user) {
     showServiceMessage('');
@@ -96,7 +100,27 @@ async function refresh() {
   const {data, error} = await auth.getSession();
   if (error) throw error;
   displaySession(data);
-  if (data?.user?.emailVerified === true) await Promise.all([loadSubscription(), loadCheckoutAvailability()]);
+  if (data?.user?.emailVerified === true) await Promise.all([loadSubscription(), loadCheckoutAvailability(), loadAppAccess()]);
+}
+async function appAuthorization() {
+  const {data, error} = await auth.getSession();
+  const token = data?.session?.token;
+  if (error || typeof token !== 'string' || token.split('.').length !== 3) throw new Error('Invalid session');
+  return 'Bearer ' + token;
+}
+async function loadAppAccess() {
+  try {
+    const response = await fetch('/api/app-token', {
+      headers: {Authorization: await appAuthorization()}, cache:'no-store',
+    });
+    if (!response.ok) return;
+    const {active} = await response.json();
+    el('account-app-access').hidden = false;
+    el('account-app-revoke').hidden = !active;
+    el('account-app-notice').textContent = active
+      ? 'Seu código atual está ativo. Gerar outro revoga o anterior em todos os computadores.'
+      : 'Gere um código e insira no aplicativo Seven Desk para iniciar suporte.';
+  } catch { /* Account activation stays unavailable if the service cannot be reached. */ }
 }
 async function loadSubscription() {
   const target = el('account-subscription');
@@ -152,6 +176,48 @@ async function startCheckout(plan) {
   }
 }
 paymentButtons.forEach(button=>button.addEventListener('click',()=>startCheckout(button.dataset.plan)));
+el('account-app-generate').addEventListener('click', async()=>{
+  const button=el('account-app-generate');
+  button.disabled=true;
+  try {
+    const response=await fetch('/api/app-token', {
+      method:'POST', cache:'no-store', headers:{Authorization:await appAuthorization()},
+    });
+    if (!response.ok) throw new Error('Activation unavailable');
+    const {token}=await response.json();
+    if (typeof token !== 'string' || !/^sd_[A-Za-z0-9_-]{43}$/.test(token)) throw new Error('Invalid activation');
+    el('account-app-token').value=token;
+    el('account-app-token-label').hidden=false;
+    el('account-app-copy').hidden=false;
+    el('account-app-revoke').hidden=false;
+    el('account-app-notice').textContent='Copie este código agora. Ele não será exibido novamente.';
+  } catch {el('account-app-notice').textContent='Não foi possível gerar o código agora.';}
+  finally {button.disabled=false;}
+});
+el('account-app-copy').addEventListener('click', async()=>{
+  const field=el('account-app-token');
+  field.select();
+  try {
+    await navigator.clipboard.writeText(field.value);
+    el('account-app-notice').textContent='Código copiado. Cole no aplicativo Seven Desk.';
+  } catch {el('account-app-notice').textContent='Selecione e copie o código mostrado acima.';}
+});
+el('account-app-revoke').addEventListener('click', async()=>{
+  const button=el('account-app-revoke');
+  button.disabled=true;
+  try {
+    const response=await fetch('/api/app-token', {
+      method:'DELETE', cache:'no-store', headers:{Authorization:await appAuthorization()},
+    });
+    if (!response.ok) throw new Error('Revocation unavailable');
+    el('account-app-token').value='';
+    el('account-app-token-label').hidden=true;
+    el('account-app-copy').hidden=true;
+    button.hidden=true;
+    el('account-app-notice').textContent='Código revogado. Gere outro para iniciar suporte.';
+  } catch {el('account-app-notice').textContent='Não foi possível revogar o código agora.';}
+  finally {button.disabled=false;}
+});
 el('show-login').addEventListener('click',()=>setMode(false));
 el('show-signup').addEventListener('click',()=>setMode(true));
 

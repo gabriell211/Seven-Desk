@@ -98,6 +98,16 @@
         <div class="account-connected"><span aria-hidden="true">●</span> Conectado</div>
         <p class="account-identity">Conectado como <strong id="account-user"></strong></p>
         <p id="account-subscription" class="account-intro" aria-live="polite">Consultando seu acesso...</p>
+        <div id="account-app-access" class="account-plan-actions" hidden>
+          <h2>Ativar o aplicativo</h2>
+          <p id="account-app-notice" class="account-intro" aria-live="polite"></p>
+          <button id="account-app-generate" class="account-submit" type="button">Gerar código</button>
+          <label id="account-app-token-label" class="account-app-token-label" hidden>Código de ativação
+            <input id="account-app-token" type="text" readonly spellcheck="false" autocomplete="off" />
+          </label>
+          <button id="account-app-copy" class="account-signout" type="button" hidden>Copiar código</button>
+          <button id="account-app-revoke" class="account-signout" type="button" hidden>Revogar código</button>
+        </div>
         <div id="account-plan-actions" class="account-plan-actions" hidden>
           <h2>Escolha seu plano</h2>
           <p id="account-checkout-notice" class="account-intro" aria-live="polite">Verificando disponibilidade...</p>

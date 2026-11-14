@@ -57,6 +57,8 @@ As flags `SEVEN_ACCOUNT_STATUS_ENABLED`, `SEVEN_REGISTRATION_ENABLED`, `SEVEN_PA
 
 O fluxo de cobrança em `lib/infinitepay.js` cria um link individual para cada pedido (R$ 39,90 mensal ou R$ 400,00 anual). `api/infinitepay-webhook.js` e `api/confirm-payment.js` só registram acesso após consultar a InfinitePay; `db/001_billing.sql` define as tabelas de pedidos e assinaturas. A migração já está aplicada no projeto Neon Seven Desk. As rotas permanecem fechadas por `SEVEN_BILLING_ENABLED=0`, `SEVEN_WEBHOOK_ENABLED=0`, `SEVEN_LICENSE_API_ENABLED=0` e `SEVEN_SALES_LAUNCH_APPROVED=0` na produção. O aplicativo e o servidor de conexões ainda não consultam a assinatura do usuário, e estornos exigem conciliação operacional; portanto a cobrança não deve ser ativada antes da homologação real desses fluxos.
 
+`db/002_app_tokens.sql` define o código de ativação do aplicativo. Com a conta e a API de licença habilitadas, `/api/app-token` emite um código por conta verificada; gerar outro revoga o anterior. O banco guarda apenas o hash do código. O aplicativo o envia ao servidor de sinalização, que consulta `/api/license` e o prazo do plano. Essa integração precisa de build e testes de conexão reais antes de habilitar as flags de produção.
+
 ## Identidade e licenças
 
 O visual do website acompanha o aplicativo Seven Desk. Componentes de terceiros continuam sujeitos aos avisos e licenças do repositório, inclusive à [GNU AGPL-3.0](../LICENCE) onde aplicável.
