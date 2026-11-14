@@ -23,7 +23,7 @@ REQUIRED = (
     re.compile(r"^rustdesk-.*-aarch64\.dmg$"),
     re.compile(r"^rustdesk-.*-x86_64\.deb$"),
     re.compile(r"^rustdesk-.*-aarch64\.deb$"),
-    re.compile(r"^rustdesk-.*-aarch64\.apk$"),
+    re.compile(r"^rustdesk-.*-aarch64-signed\.apk$"),
 )
 
 
@@ -52,6 +52,8 @@ def select_assets(release, run_started_at):
         if not NAME.fullmatch(name) or not name.endswith(INSTALLER_SUFFIXES):
             continue
         if "unattended" in name or "wayland" in name:
+            continue
+        if name.endswith(".apk") and not name.endswith("-signed.apk"):
             continue
         digest = asset.get("digest", "")
         if not re.fullmatch(r"sha256:[0-9a-f]{64}", digest):

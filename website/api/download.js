@@ -44,8 +44,8 @@ function assetScore(file, platform, arch) {
       else match = /[-_](?:x86_64|amd64|x64)(?:[-_]sciter)?\.deb$/i.test(file);
       break;
     case 'android':
-      if (arch === 'arm64') match = /[-_](?:aarch64|universal)\.apk$/i.test(file);
-      else match = /[-_](?:universal|aarch64)\.apk$/i.test(file);
+      if (arch === 'arm64') match = /[-_](?:aarch64|universal)-signed\.apk$/i.test(file);
+      else match = /[-_](?:universal|aarch64)-signed\.apk$/i.test(file);
       break;
     default: break;
   }
