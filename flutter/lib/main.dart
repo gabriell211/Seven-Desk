@@ -181,12 +181,11 @@ void runMainApp(bool startService) async {
     }
     // Restore the location of the main window before window hide or show.
     await restoreWindowPosition(WindowType.Main);
-    if (useHomeDashboard && !kUseCompatibleUiMode && !isMacOS) {
+    if (useHomeDashboard && !kUseCompatibleUiMode && isWindows) {
       try {
-        // Run after position restoration so saved window frames cannot undo it.
-        await windowManager.maximize();
+        await windowManager.setFullScreen(true);
       } catch (error) {
-        debugPrint('Could not maximize Seven Desk at startup: $error');
+        debugPrint('Could not open Seven Desk in full screen: $error');
       }
     }
     // Check the startup argument, if we successfully handle the argument, we keep the main window hidden.

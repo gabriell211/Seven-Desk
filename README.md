@@ -1,162 +1,169 @@
-<p align="center">
-  <a href="https://seven-desk-site.vercel.app/"><strong>Website oficial do Seven Desk</strong></a> · <a href="https://seven-desk-site.vercel.app/#plataformas">Downloads</a><br><br>
-  <img src="res/icon.png" alt="SevenDesk - Seu desktop remoto" width="240"><br>
-  <a href="#passos-básicos-para-compilar">Compilar</a> •
-  <a href="#como-compilar-com-o-docker">Docker</a> •
-  <a href="#estrutura-de-arquivos">Estrutura</a> •
-  <a href="#capturas-de-tela">Capturas de tela</a> •
-  <a href="#contribuir">Contribuir</a><br>
-  [<a href="docs/README-UA.md">Українська</a>] | [<a href="docs/README-CS.md">česky</a>] | [<a href="docs/README-ZH.md">中文</a>] | [<a href="docs/README-HU.md">Magyar</a>] | [<a href="docs/README-ES.md">Español</a>] | [<a href="docs/README-FA.md">فارسی</a>] | [<a href="docs/README-FR.md">Français</a>] | [<a href="docs/README-DE.md">Deutsch</a>] | [<a href="docs/README-PL.md">Polski</a>] | [<a href="docs/README-ID.md">Indonesian</a>] | [<a href="docs/README-FI.md">Suomi</a>] | [<a href="docs/README-ML.md">മലയാളം</a>] | [<a href="docs/README-JP.md">日本語</a>] | [<a href="docs/README-NL.md">Nederlands</a>] | [<a href="docs/README-IT.md">Italiano</a>] | [<a href="docs/README-RU.md">Русский</a>] | [<a href="docs/README-PTPT.md">Português (Portugal)</a>] | [<a href="docs/README-PTBR.md">Português (Brasil)</a>] | [<a href="docs/README-EO.md">Esperanto</a>] | [<a href="docs/README-KR.md">한국어</a>] | [<a href="docs/README-AR.md">العربي</a>] | [<a href="docs/README-VN.md">Tiếng Việt</a>] | [<a href="docs/README-DA.md">Dansk</a>] | [<a href="docs/README-GR.md">Ελληνικά</a>] | [<a href="docs/README-TR.md">Türkçe</a>] | [<a href="docs/README-NO.md">Norsk</a>] | [<a href="docs/README-RO.md">Română</a>]<br>
-  <b>Ajude a aprimorar o SevenDesk: <a href="https://github.com/gabriell211/Seven-Desk">acesse o repositório</a>, contribua com o projeto ou compartilhe sugestões.</b>
-</p>
+<div align="center">
+  <img src="website/assets/seven-desk-logo.svg" alt="Símbolo oficial Seven Desk" width="104" height="104" />
 
-> [!CAUTION]
-> **Use com responsabilidade:** acesse somente dispositivos que você possui ou para os quais recebeu autorização. O acesso não autorizado, o controle sem consentimento ou a invasão de privacidade não são aceitáveis. Proteja suas credenciais e encerre as sessões quando não estiverem mais em uso.
+  # Seven Desk
 
-Conecte-se a outros dispositivos e ofereça suporte remoto com o SevenDesk. O aplicativo é escrito em Rust, funciona em diferentes plataformas e permite que você mantenha o controle do seu ambiente e da configuração dos servidores de conexão e retransmissão.
+  **Acesso remoto para conectar, ajudar e trabalhar de qualquer lugar.**
 
-## Downloads
+  [Site oficial](https://www.sevendesk.tech/) · [Instaladores e versões](https://github.com/gabriell211/Seven-Desk/releases) · [Relatar problema](https://github.com/gabriell211/Seven-Desk/issues) · [Contribuir](#contribuindo)
 
-Consulte a página de [versões do SevenDesk](https://github.com/gabriell211/Seven-Desk/releases) para verificar se há instaladores disponíveis. Os [workflows de CI e compilação](https://github.com/gabriell211/Seven-Desk/tree/main/.github/workflows) mostram os processos usados para cada plataforma.
+  Aplicativo multiplataforma • Identidade visual própria • Interface em português do Brasil
+</div>
 
-## Dependências
+---
 
-As versões para desktop usam Flutter ou Sciter (descontinuado) como interface gráfica. As instruções abaixo são voltadas à versão Sciter. Para conhecer o processo de compilação da versão Flutter, consulte os [workflows do SevenDesk](https://github.com/gabriell211/Seven-Desk/tree/main/.github/workflows).
+## Sobre o Seven Desk
 
-Baixe manualmente a biblioteca dinâmica do Sciter para sua plataforma:
+O **Seven Desk** é uma solução de acesso remoto para assistência técnica, acesso a computadores próprios e colaboração autorizada. O projeto reúne um aplicativo nativo, uma interface moderna, comunicação com servidores de identificação/retransmissão e um site próprio.
 
-[Windows](https://raw.githubusercontent.com/c-smile/sciter-sdk/master/bin.win/x64/sciter.dll) |
-[Linux](https://raw.githubusercontent.com/c-smile/sciter-sdk/master/bin.lnx/x64/libsciter-gtk.so) |
-[macOS](https://raw.githubusercontent.com/c-smile/sciter-sdk/master/bin.osx/libsciter.dylib)
+O objetivo é oferecer uma experiência simples para quem precisa acessar outro dispositivo, sem abrir mão de controles de conexão, permissões e transparência sobre o funcionamento.
 
-## Passos básicos para compilar
+> [!IMPORTANT]
+> Utilize o Seven Desk apenas em computadores seus ou com autorização expressa do responsável. Nunca compartilhe senhas, chaves privadas ou códigos de acesso em issues públicas.
 
-- Prepare os ambientes de desenvolvimento do Rust e de compilação do C++.
+## Funcionalidades
 
-- Instale o [vcpkg](https://github.com/microsoft/vcpkg) e configure corretamente a variável de ambiente `VCPKG_ROOT`.
+| Área | O que o projeto oferece |
+| --- | --- |
+| Acesso remoto | Visualização e controle de uma sessão autorizada |
+| Suporte técnico | Conexão a outros computadores para assistência |
+| Arquivos | Ferramentas de transferência e gerenciamento de arquivos |
+| Entrada e área de transferência | Integração de teclado, mouse e clipboard, conforme a plataforma |
+| Conectividade | Conexão direta quando possível, com suporte a retransmissão conforme o ambiente |
+| Multiplataforma | Código e fluxos de distribuição para Windows, macOS, Linux e Android |
+| Identidade | Interface e logotipo Seven Desk com paleta escura e roxa |
 
-  - Windows: `vcpkg install libvpx:x64-windows-static libyuv:x64-windows-static opus:x64-windows-static aom:x64-windows-static`
-  - Linux/macOS: `vcpkg install libvpx libyuv opus aom`
+A disponibilidade exata de cada recurso depende da versão instalada, do sistema operacional, das permissões e da configuração da rede.
 
-- Execute `cargo run`.
+## Download e instalação
 
-## Como compilar no Linux
+Acesse **[www.sevendesk.tech](https://www.sevendesk.tech/#plataformas)** para selecionar seu sistema operacional ou consulte a página de **[Releases](https://github.com/gabriell211/Seven-Desk/releases)**.
 
-### Ubuntu 18 (Debian 10)
+1. Escolha uma versão publicada e verifique se existe um instalador para seu sistema e arquitetura.
+2. Baixe e execute o instalador conforme as instruções da versão.
+3. Abra o Seven Desk nos dispositivos envolvidos.
+4. Inicie a conexão apenas após obter a autorização necessária.
 
-```sh
-sudo apt install -y zip g++ gcc git curl wget nasm yasm libgtk-3-dev clang libxcb-randr0-dev libxdo-dev \
-        libxfixes-dev libxcb-shape0-dev libxcb-xfixes0-dev libasound2-dev libpulse-dev cmake make \
-        libclang-dev ninja-build libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev
-```
+**Observação:** os instaladores disponíveis e o estado das compilações variam de acordo com a release. Consulte os artefatos e resultados dos workflows antes de distribuir uma versão.
 
-### openSUSE Tumbleweed
+## Como funciona
 
-```sh
-sudo zypper install gcc-c++ git curl wget nasm yasm gcc gtk3-devel clang libxcb-devel libXfixes-devel cmake alsa-lib-devel gstreamer-devel gstreamer-plugins-base-devel xdotool-devel
-```
+A arquitetura tem três partes principais:
 
-### Fedora 28 (CentOS 8)
+- **Aplicativo Seven Desk:** realiza a captura e exibição da sessão, o controle remoto e as operações permitidas pelo sistema.
+- **Servidor de identificação e retransmissão:** auxilia na descoberta das partes e pode encaminhar tráfego quando a conexão direta não estiver disponível.
+- **Site e área de conta:** apresentam o produto, os downloads e as páginas de autenticação e assinatura, cujo lançamento é controlado separadamente.
 
-```sh
-sudo yum -y install gcc-c++ git curl wget nasm yasm gcc gtk3-devel clang libxcb-devel libxdo-devel libXfixes-devel pulseaudio-libs-devel cmake alsa-lib-devel gstreamer1-devel gstreamer1-plugins-base-devel
-```
+### Endereços oficiais
 
-### Arch (Manjaro)
+| Finalidade | Endereço |
+| --- | --- |
+| Site e páginas de conta | [www.sevendesk.tech](https://www.sevendesk.tech/) |
+| Repositório e código | [gabriell211/Seven-Desk](https://github.com/gabriell211/Seven-Desk) |
+| Instaladores | [Releases](https://github.com/gabriell211/Seven-Desk/releases) |
+| Servidor configurado no cliente | `sevendesk.tech` |
 
-```sh
-sudo pacman -Syu --needed unzip git cmake gcc curl wget yasm nasm zip make pkg-config clang gtk3 xdotool libxcb libxfixes alsa-lib pipewire
-```
+O domínio do servidor remoto e o do website têm funções distintas. Não altere os endereços de sinalização/retransmissão somente para configurar o site: isso pode interromper conexões existentes.
 
-### Instalar o vcpkg
+### Contas, teste gratuito e assinaturas
 
-```sh
-git clone https://github.com/microsoft/vcpkg
-cd vcpkg
-git checkout 2023.04.15
-cd ..
-vcpkg/bootstrap-vcpkg.sh
-export VCPKG_ROOT=$HOME/vcpkg
-vcpkg/vcpkg install libvpx libyuv opus aom
-```
+A área de contas e os planos mensal/anual estão sendo preparados e homologados. As páginas públicas e os fluxos de autenticação podem ser publicados antes da abertura de novos cadastros.
 
-### Corrigir o libvpx (Fedora)
+**A cobrança não deve ser tratada como ativa apenas porque os preços são exibidos no site.** A liberação comercial depende da verificação de e-mail, confirmação de pagamento, tratamento de estornos e da validação da licença no serviço que autoriza as conexões remotas.
 
-```sh
-cd vcpkg/buildtrees/libvpx/src
-cd *
-./configure
-sed -i 's/CFLAGS+=-I/CFLAGS+=-fPIC -I/g' Makefile
-sed -i 's/CXXFLAGS+=-I/CXXFLAGS+=-fPIC -I/g' Makefile
-make
-cp libvpx.a $HOME/vcpkg/installed/x64-linux/lib/
-cd
-```
+## Tecnologias
 
-### Compilar
+| Camada | Tecnologias presentes no projeto |
+| --- | --- |
+| Núcleo e comunicação | Rust |
+| Aplicativos e interface | Flutter / Dart, com componentes nativos |
+| Site | HTML, CSS e JavaScript |
+| Build e testes do site | Node.js, esbuild e Node Test Runner |
+| Infraestrutura do site | Vercel |
+| Autenticação e dados de assinaturas | Neon Auth e PostgreSQL, nos fluxos em desenvolvimento |
 
-```sh
-curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-source $HOME/.cargo/env
+O repositório inclui módulos e dependências de terceiros. A marca e os recursos visuais do Seven Desk não substituem os avisos de licença aplicáveis ao código incorporado.
+
+## Estrutura do repositório
+
+| Caminho | Responsabilidade |
+| --- | --- |
+| [`src/`](src/) | Cliente, serviços locais, comunicação e integração com o sistema |
+| [`src/seven_server.rs`](src/seven_server.rs) | Configuração dos endpoints do Seven Desk no cliente |
+| [`flutter/`](flutter/) | Interface e aplicativos multiplataforma |
+| [`libs/`](libs/) | Bibliotecas de captura, rede e funcionalidades compartilhadas |
+| [`website/`](website/) | Website, autenticação, APIs e testes do site |
+| [`tests/`](tests/) | Testes do núcleo e de suas integrações |
+| [`.github/workflows/`](.github/workflows/) | Validação e compilação automatizadas |
+| [`docs/`](docs/) | Documentação técnica e orientações de contribuição |
+
+**Importante:** `src/seven_server.rs` configura a conexão do **cliente** com o servidor. Esse arquivo não é, por si só, a implementação do servidor de sinalização e retransmissão implantado na infraestrutura.
+
+## Desenvolvimento
+
+### Pré-requisitos
+
+Para desenvolvimento local, instale **Git**, o toolchain **Rust/Cargo** e as dependências nativas exigidas pela plataforma. Para trabalhar com a interface, instale também o **Flutter SDK** compatível com o projeto. O site utiliza **Node.js 24** e npm.
+
+Clone o projeto com seus submódulos:
+
+```bash
 git clone --recurse-submodules https://github.com/gabriell211/Seven-Desk.git
 cd Seven-Desk
-mkdir -p target/debug
-wget https://raw.githubusercontent.com/c-smile/sciter-sdk/master/bin.lnx/x64/libsciter-gtk.so
-mv libsciter-gtk.so target/debug
-VCPKG_ROOT=$HOME/vcpkg cargo run
 ```
 
-## Como compilar com o Docker
+### Site
 
-Clone o repositório e crie a imagem Docker:
-
-```sh
-git clone https://github.com/gabriell211/Seven-Desk.git
-cd Seven-Desk
-git submodule update --init --recursive
-docker build -t "sevendesk-builder" .
+```bash
+cd website
+npm ci
+npm test
+npm run build
 ```
 
-Depois, sempre que quiser compilar o aplicativo, execute:
+O build do site gera os arquivos públicos em `website/public/`. As rotas de API e os módulos do servidor devem permanecer fora desse diretório. Não coloque credenciais de produção nos arquivos versionados.
 
-```sh
-docker run --rm -it -v $PWD:/home/user/rustdesk -v rustdesk-git-cache:/home/user/.cargo/git -v rustdesk-registry-cache:/home/user/.cargo/registry -e PUID="$(id -u)" -e PGID="$(id -g)" sevendesk-builder
+### Aplicativo nativo
+
+O núcleo é compilado com Cargo e a interface utiliza o Flutter. As dependências de captura, codecs e sistema variam entre Windows, Linux e macOS; por isso, **consulte os [workflows de compilação](.github/workflows/)** antes de executar builds para uma plataforma específica.
+
+Para verificar o código Rust em um ambiente que já possua as dependências apropriadas:
+
+```bash
+cargo check
 ```
 
-A primeira compilação pode demorar mais enquanto as dependências são armazenadas em cache. As seguintes tendem a ser mais rápidas. Se precisar passar outros argumentos ao comando de compilação, adicione-os na posição `<ARGUMENTOS-OPCIONAIS>`. Por exemplo, para gerar uma versão otimizada de lançamento, acrescente `--release` ao comando. O executável ficará disponível na pasta `target`:
+Esse comando não substitui a homologação do aplicativo, dos instaladores ou das conexões entre duas máquinas reais.
 
-```sh
-target/debug/rustdesk
-```
+## Qualidade e segurança
 
-Ou, para executar a versão de lançamento:
+Ao desenvolver ou revisar mudanças:
 
-```sh
-target/release/rustdesk
-```
+- Preserve o consentimento e as permissões de cada conexão remota.
+- Nunca exiba senhas, chaves do servidor, tokens de sessão ou dados de pagamento nos logs públicos.
+- Mantenha os fluxos de autenticação e cobrança bloqueados por padrão até os testes de ponta a ponta.
+- Verifique as permissões do sistema e as diferenças entre plataformas.
+- Execute testes e revise os resultados da CI antes de gerar uma release.
+- Não altere os endpoints remotos ou a chave pública do cliente sem planejar a migração e testar a continuidade das conexões.
 
-Execute esses comandos a partir da raiz do repositório SevenDesk; caso contrário, o aplicativo pode não encontrar os recursos necessários. Outros subcomandos do Cargo, como `install` ou `run`, não são compatíveis com esse método, pois instalariam ou executariam o programa dentro do contêiner, em vez de no sistema hospedeiro.
+Problemas de segurança devem ser relatados **de forma privada**, sem publicar detalhes exploráveis em issues abertas.
 
-## Estrutura de arquivos
+## Contribuindo
 
-- **[`libs/hbb_common`](libs/hbb_common/)**: codec de vídeo, configuração, comunicação TCP/UDP e funções utilitárias compartilhadas com o servidor.
-- **[`libs/base`](libs/base/)**: protobuf, funções de sistema de arquivos para transferência de arquivos, teclado e código de plataforma usados pelo aplicativo.
-- **[`libs/scrap`](libs/scrap/)**: captura de tela.
-- **[`libs/enigo`](libs/enigo/)**: controle de teclado e mouse específico para cada plataforma.
-- **[`libs/clipboard`](libs/clipboard/)**: implementação de copiar e colar arquivos no Windows, Linux e macOS.
-- **[`src/ui`](src/ui/)**: interface antiga em Sciter (descontinuada).
-- **[`src/server`](src/server/)**: serviços de áudio, área de transferência, entrada, vídeo e conexões de rede.
-- **[`src/client.rs`](src/client.rs)**: inicia uma conexão entre dispositivos.
-- **[`src/rendezvous_mediator.rs`](src/rendezvous_mediator.rs)**: comunica-se com o servidor de conexão, aguardando uma conexão remota direta (TCP hole punching) ou retransmitida.
-- **[`src/platform`](src/platform/)**: código específico para cada plataforma.
-- **[`flutter`](flutter/)**: código Flutter para desktop e dispositivos móveis.
+Sugestões de recursos, correções e melhorias são bem-vindas. Consulte [as orientações de contribuição](docs/CONTRIBUTING.md) e abra uma [issue](https://github.com/gabriell211/Seven-Desk/issues) ou uma pull request com uma descrição objetiva, passos de reprodução e testes relevantes.
 
-## Capturas de tela
+## Licença e atribuições
 
-As capturas de tela específicas do SevenDesk serão adicionadas aqui.
+O repositório contém código coberto pela **GNU Affero General Public License, versão 3 (AGPL-3.0)**. Leia o texto em [`LICENCE`](LICENCE) para conhecer as condições e obrigações de uso, modificação, distribuição e disponibilização de código-fonte.
 
-## Contribuir
+O Seven Desk utiliza componentes derivados do projeto **RustDesk**. Os créditos de autoria, avisos de copyright, termos da AGPL e licenças de outras dependências continuam aplicáveis aos componentes correspondentes. A identidade visual Seven Desk não altera esses direitos e obrigações.
 
-Contribuições são bem-vindas. Consulte as [orientações para contribuir](docs/CONTRIBUTING.md) ou abra uma [issue](https://github.com/gabriell211/Seven-Desk/issues) para relatar um problema ou sugerir melhorias.
+---
 
+<div align="center">
+  <img src="website/assets/seven-desk-logo.svg" alt="" width="40" height="40" />
 
+  **Seven Desk — Perto, mesmo de longe.**
+
+  [Site](https://www.sevendesk.tech/) · [Downloads](https://github.com/gabriell211/Seven-Desk/releases) · [Termos e licenças](https://www.sevendesk.tech/licencas)
+</div>

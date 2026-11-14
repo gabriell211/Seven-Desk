@@ -60,7 +60,7 @@ function setRecoveryMode(reset) {
     ? 'Informe seu e-mail, o código de seis dígitos recebido e uma nova senha.'
     : 'Informe seu e-mail para solicitar um código de recuperação.';
   showServiceMessage(!available
-    ? 'A recuperação de senha está temporariamente indisponível até a configuração segura do serviço de e-mail.'
+    ? 'A recuperação de senha será ativada após a homologação do fluxo de redefinição.'
     : '');
   if (reset && !el('reset-email').value) el('reset-email').value = el('recovery-email').value.trim();
   status('');

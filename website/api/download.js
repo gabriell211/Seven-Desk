@@ -1,16 +1,14 @@
 'use strict';
 
-// GitHub releases are public; this endpoint never embeds a personal access token.
-const RELEASES_API = 'https://api.github.com/repos/gabriell211/Seven-Desk/releases?per_page=15';
-const RELEASES_PAGE = 'https://github.com/gabriell211/Seven-Desk/releases';
-const ASSET_PREFIX = 'https://github.com/gabriell211/Seven-Desk/releases/download/';
+const DOWNLOADS_ROOT = 'https://downloads.sevendesk.tech/';
+const MANIFEST_URL = DOWNLOADS_ROOT + 'manifest.json';
 const PLATFORMS = Object.freeze({
   windows: ['x64', 'arm64', 'x86'],
   macos: ['x64', 'arm64'],
   linux: ['x64', 'arm64'],
   android: ['universal', 'arm64'],
 });
-let memoryCache = { expires: 0, releases: [] };
+let memoryCache = { expires: 0, manifest: null };
 
 function normalizePlatform(value) {
   const name = String(value ?? '').toLowerCase();
@@ -59,52 +57,40 @@ function assetScore(file, platform, arch) {
   return score;
 }
 
-function findPackage(releases, platform, arch) {
-  for (const release of releases) {
-    if (release.draft || !Array.isArray(release.assets)) continue;
-    const compatible = release.assets
-      .filter(asset => (
-        asset &&
-        typeof asset.name === 'string' &&
-        Number(asset.size) > 0 &&
-        typeof asset.browser_download_url === 'string' &&
-        asset.browser_download_url.startsWith(ASSET_PREFIX) &&
-        assetScore(asset.name, platform, arch) >= 0
-      ))
-      .sort((a, b) => assetScore(b.name, platform, arch) - assetScore(a.name, platform, arch));
-    if (!compatible.length) continue;
-    const asset = compatible[0];
-    return {
-      version: release.tag_name,
-      filename: asset.name,
-      url: asset.browser_download_url,
-      size: Number(asset.size),
-    };
-  }
-  return null;
+function findPackage(manifest, platform, arch) {
+  if (!manifest || !/^v?[0-9][A-Za-z0-9._-]{0,63}$/.test(manifest.version) || !Array.isArray(manifest.files)) return null;
+  const compatible = manifest.files
+    .filter(file => (
+      file &&
+      typeof file.name === 'string' &&
+      /^[A-Za-z0-9][A-Za-z0-9._-]{0,199}$/.test(file.name) &&
+      Number.isSafeInteger(file.size) && file.size > 0 &&
+      assetScore(file.name, platform, arch) >= 0
+    ))
+    .sort((a, b) => assetScore(b.name, platform, arch) - assetScore(a.name, platform, arch));
+  if (!compatible.length) return null;
+  const file = compatible[0];
+  return {
+    version: manifest.version,
+    filename: file.name,
+    url: DOWNLOADS_ROOT + encodeURIComponent(manifest.version) + '/' + encodeURIComponent(file.name),
+    size: file.size,
+  };
 }
 
-async function fetchReleases() {
-  if (Date.now() < memoryCache.expires) return memoryCache.releases;
+async function fetchManifest() {
+  if (Date.now() < memoryCache.expires) return memoryCache.manifest;
   const controller = new AbortController();
   const stop = setTimeout(() => controller.abort(), 8000);
   try {
-    const response = await fetch(RELEASES_API, {
-      headers: {
-        'Accept': 'application/vnd.github+json',
-        'X-GitHub-Api-Version': '2022-11-28',
-        'User-Agent': 'SevenDesk-Website',
-      },
-      signal: controller.signal,
-    });
-    if (!response.ok) throw new Error('GitHub Releases API unavailable (' + response.status + ')');
-    const releases = await response.json();
-    if (!Array.isArray(releases)) throw new Error('Unexpected GitHub response');
-    const stable = releases
-      .filter(release => release && !release.draft)
-      .sort((a, b) => new Date(b.published_at || b.created_at || 0) - new Date(a.published_at || a.created_at || 0));
-    memoryCache = { expires: Date.now() + 120_000, releases: stable };
-    return stable;
+    const response = await fetch(MANIFEST_URL, { signal: controller.signal });
+    if (!response.ok) throw new Error('VPS manifest unavailable (' + response.status + ')');
+    const manifest = await response.json();
+    if (!manifest || !/^v?[0-9][A-Za-z0-9._-]{0,63}$/.test(manifest.version) || !Array.isArray(manifest.files)) {
+      throw new Error('Invalid VPS manifest');
+    }
+    memoryCache = { expires: Date.now() + 120_000, manifest };
+    return manifest;
   } finally {
     clearTimeout(stop);
   }
@@ -113,8 +99,8 @@ async function fetchReleases() {
 function errorPage(status, title, description) {
   return '<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>'
     + title + ' | Seven Desk</title></head><body style="font-family:system-ui,sans-serif;max-width:640px;margin:12vh auto;padding:24px;color:#17345a"><h1>'
-    + title + '</h1><p>' + description + '</p><p><a href="' + RELEASES_PAGE
-    + '">Conferir versões no GitHub</a> · <a href="/">Voltar ao site</a></p><small>HTTP ' + status + '</small></body></html>';
+    + title + '</h1><p>' + description + '</p><p><a href="' + DOWNLOADS_ROOT
+    + '">Conferir versões</a> · <a href="/">Voltar ao site</a></p><small>HTTP ' + status + '</small></body></html>';
 }
 
 module.exports = async function handler(req, res) {
@@ -135,12 +121,13 @@ module.exports = async function handler(req, res) {
     return res.status(400).send(errorPage(400, 'Arquitetura não suportada', 'Selecione uma arquitetura disponível para seu sistema.'));
   }
 
-  let releases;
+  let manifest;
   try {
-    releases = await fetchReleases();
+    manifest = await fetchManifest();
   } catch (error) {
     console.error('Seven Desk release lookup failed:', error.message);
-    return res.status(503).send(errorPage(503, 'Downloads temporariamente indisponíveis', 'Não conseguimos consultar os arquivos de versão agora. Tente novamente ou veja a lista de versões.'));
+    res.setHeader('Cache-Control', 'no-store');
+    return res.status(503).send(errorPage(503, 'Downloads temporariamente indisponíveis', 'Não conseguimos consultar os arquivos de versão agora. Tente novamente mais tarde.'));
   }
 
   if (mode === 'manifest') {
@@ -148,19 +135,20 @@ module.exports = async function handler(req, res) {
     for (const [name, architectures] of Object.entries(PLATFORMS)) {
       devices[name] = {};
       for (const targetArch of architectures) {
-        const asset = findPackage(releases, name, targetArch);
+        const asset = findPackage(manifest, name, targetArch);
         devices[name][targetArch] = asset ? { version: asset.version, filename: asset.filename, size: asset.size } : null;
       }
     }
     return res.status(200).json({
-      latestRelease: releases[0]?.tag_name || null,
+      latestRelease: manifest.version,
       devices,
-      source: RELEASES_PAGE,
+      source: DOWNLOADS_ROOT,
     });
   }
 
-  const asset = findPackage(releases, platform, arch);
+  const asset = findPackage(manifest, platform, arch);
   if (!asset) {
+    res.setHeader('Cache-Control', 'no-store');
     return res.status(404).send(errorPage(404, 'Instalador ainda não disponível', 'Não existe um instalador publicado para esta plataforma e arquitetura. Confira as versões disponíveis.'));
   }
   res.setHeader('Location', asset.url);

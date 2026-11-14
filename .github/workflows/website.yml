@@ -27,5 +27,27 @@ jobs:
           node --version
           node --check website/api/download.js
           node --check website/script.js
-      - name: Run download resolver tests
-        run: node --test website/tests/*.test.cjs
+      - name: Configure Node.js 24
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: website/package-lock.json
+      - name: Install website dependencies
+        working-directory: website
+        run: npm ci --no-audit --no-fund
+      - name: Run website tests
+        working-directory: website
+        run: npm test
+      - name: Build production website
+        working-directory: website
+        run: npm run build
+      - name: Check private source exclusion from published assets
+        shell: bash
+        run: |
+          test -f website/public/conta.html
+          test -f website/public/conta.bundle.js
+          test -f website/public/index.html
+          test ! -d website/public/api
+          test ! -d website/public/db
+          test ! -f website/public/package-lock.json

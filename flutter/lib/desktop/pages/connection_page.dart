@@ -67,9 +67,8 @@ class _OnlineStatusWidgetState extends State<OnlineStatusWidget> {
           final status = stateGlobal.svcStatus.value;
           final ready = !stopped && status == SvcStatus.ready;
           final sessions = stateGlobal.videoConnCount.value;
-          return LayoutBuilder(
-            builder: (context, constraints) => Row(
-              children: [
+          return Row(
+            children: [
                 Icon(Icons.circle,
                     size: 13,
                     color: ready
@@ -96,20 +95,7 @@ class _OnlineStatusWidgetState extends State<OnlineStatusWidget> {
                     '$sessions sessões ativas',
                     style: const TextStyle(color: HomeDashboardTheme.muted),
                   ),
-                if (constraints.maxWidth >= 660) ...[
-                  const SizedBox(width: 28),
-                  const Icon(Icons.bolt_outlined,
-                      color: HomeDashboardTheme.purple, size: 22),
-                  const SizedBox(width: 5),
-                  const Text('P2P'),
-                  const SizedBox(width: 25),
-                  const Icon(Icons.dns_outlined,
-                      color: HomeDashboardTheme.purple, size: 22),
-                  const SizedBox(width: 7),
-                  const Text('Relay (Backup)'),
-                ],
-              ],
-            ),
+            ],
           );
         }),
       );

@@ -4,7 +4,7 @@
   "trailingSlash": false,
   "headers": [
     {
-      "source": "/(conta|entrar|cadastro|recuperar-senha|redefinir-senha)",
+      "source": "/(conta|entrar|cadastro|recuperar-senha|redefinir-senha|pagamento-retorno)",
       "headers": [
         {
           "key": "Cache-Control",
@@ -63,6 +63,17 @@
     {
       "source": "/redefinir-senha",
       "destination": "/conta.html"
+    },
+    {
+      "source": "/pagamento-retorno",
+      "destination": "/pagamento-retorno.html"
+    }
+  ],
+  "redirects": [
+    {
+      "source": "/favicon.ico",
+      "destination": "/favicon.svg",
+      "permanent": true
     }
   ]
 }
