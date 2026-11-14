@@ -115,11 +115,11 @@
           + encodeURIComponent(packageArchitecture(selectedPlatform))
         : '#plataformas';
       downloadButton.setAttribute('aria-label', selectedPlatform
-        ? (available ? 'Baixar Seven Desk para ' : 'Instalador indisponível para ') + label
+        ? (available ? 'Baixar Seven Desk para ' : availableDevices ? 'Instalador indisponível para ' : 'Verificando instalador para ') + label
         : 'Escolher plataforma para baixar Seven Desk');
       downloadButton.setAttribute('aria-disabled', String(!available));
     }
-    if (downloadLabel) downloadLabel.firstChild.textContent = available ? 'Baixar para ' : 'Indisponível para ';
+    if (downloadLabel) downloadLabel.firstChild.textContent = available ? 'Baixar para ' : availableDevices ? 'Indisponível para ' : 'Verificando para ';
     if (downloadNotice) downloadNotice.textContent = !availableDevices
       ? 'Verificando instaladores disponíveis...'
       : available

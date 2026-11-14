@@ -126,6 +126,7 @@ module.exports = async function handler(req, res) {
     manifest = await fetchManifest();
   } catch (error) {
     console.error('Seven Desk release lookup failed:', error.message);
+    res.setHeader('Cache-Control', 'no-store');
     return res.status(503).send(errorPage(503, 'Downloads temporariamente indisponíveis', 'Não conseguimos consultar os arquivos de versão agora. Tente novamente mais tarde.'));
   }
 
@@ -147,6 +148,7 @@ module.exports = async function handler(req, res) {
 
   const asset = findPackage(manifest, platform, arch);
   if (!asset) {
+    res.setHeader('Cache-Control', 'no-store');
     return res.status(404).send(errorPage(404, 'Instalador ainda não disponível', 'Não existe um instalador publicado para esta plataforma e arquitetura. Confira as versões disponíveis.'));
   }
   res.setHeader('Location', asset.url);
