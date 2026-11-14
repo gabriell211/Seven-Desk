@@ -7,6 +7,7 @@ function isCheckoutReady(env = process.env) {
   if (env.SEVEN_BILLING_ENABLED !== '1' ||
       env.SEVEN_WEBHOOK_ENABLED !== '1' ||
       env.SEVEN_ACCOUNT_STATUS_ENABLED !== '1' ||
+      env.SEVEN_LICENSE_API_ENABLED !== '1' ||
       env.SEVEN_SALES_LAUNCH_APPROVED !== '1' ||
       !keys.every(key => typeof env[key] === 'string' && env[key].trim().length > 0)) return false;
   try {

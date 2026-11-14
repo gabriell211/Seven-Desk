@@ -7,6 +7,7 @@ const ready = {
   SEVEN_BILLING_ENABLED: '1',
   SEVEN_WEBHOOK_ENABLED: '1',
   SEVEN_ACCOUNT_STATUS_ENABLED: '1',
+  SEVEN_LICENSE_API_ENABLED: '1',
   SEVEN_SALES_LAUNCH_APPROVED: '1',
   DATABASE_URL: 'postgres://example.invalid/db',
   NEON_AUTH_BASE_URL: 'https://auth.example.test',
