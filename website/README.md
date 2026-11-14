@@ -5,7 +5,7 @@ Website e área de conta do **Seven Desk**, com identidade escura/roxa e página
 - **Produção:** https://www.sevendesk.tech/
 - **Repositório:** https://github.com/gabriell211/Seven-Desk
 - **Documentação principal:** [README do Seven Desk](../README.md)
-- **Instaladores:** [GitHub Releases](https://github.com/gabriell211/Seven-Desk/releases)
+- **Instaladores:** [downloads do Seven Desk](https://downloads.sevendesk.tech/)
 
 ## Executar testes e compilar
 

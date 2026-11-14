@@ -18,7 +18,7 @@ test('there is exactly one primary download action', () => {
 test('OS icon replaces arrow inside the one download CTA', () => {
   assert.match(html, /class="download-os-icon"[^>]*data-os-icon/);
   assert.match(js, /osIcon\.src = icons\[selectedPlatform\]/);
-  assert.match(js, /downloadButton\.href = selectedPlatform/);
+  assert.match(js, /downloadButton\.href = available/);
   const button = html.match(/<a id="download-principal"[\s\S]*?<\/a>/)?.[0];
   assert.ok(button, 'primary download button exists');
   assert.doesNotMatch(button, /download-fallback-icon|↗|↘|<svg/);

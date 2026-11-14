@@ -51,12 +51,15 @@
     android: '/assets/android.svg?v=2',
   });
   const downloadButton = document.querySelector('[data-auto-download]');
+  const downloadLabel = downloadButton?.querySelector('.download-button-label');
   const osIcon = document.querySelector('[data-os-icon]');
   const nameSlots = document.querySelectorAll('[data-os-name]');
   const platformCards = Array.from(document.querySelectorAll('[data-platform]'));
+  const downloadNotice = document.querySelector('.download-notice');
   let selectedPlatform = null;
   let detectedPlatform = null;
   let detectedArch = 'x64';
+  let availableDevices = null;
 
   function identifyOS() {
     const ua = (navigator.userAgent || '').toLowerCase();
@@ -98,22 +101,32 @@
   function packageArchitecture(platform) {
     if (platform === 'android') return 'universal';
     if (platform === detectedPlatform) return detectedArch;
-    // Users on other operating systems can select an architecture on Releases.
+    // Users on other operating systems can select an architecture on the downloads page.
     return 'x64';
   }
 
   function selectPlatform(platform, revealButton = false) {
     selectedPlatform = Object.hasOwn(labels, platform) ? platform : null;
+    const available = selectedPlatform && availableDevices?.[selectedPlatform]?.[packageArchitecture(selectedPlatform)];
     if (downloadButton) {
       const label = selectedPlatform ? labels[selectedPlatform] : 'seu sistema';
-      downloadButton.href = selectedPlatform
+      downloadButton.href = available
         ? '/api/download?platform=' + encodeURIComponent(selectedPlatform) + '&arch='
           + encodeURIComponent(packageArchitecture(selectedPlatform))
         : '#plataformas';
       downloadButton.setAttribute('aria-label', selectedPlatform
-        ? 'Baixar Seven Desk para ' + label
+        ? (available ? 'Baixar Seven Desk para ' : 'Instalador indisponível para ') + label
         : 'Escolher plataforma para baixar Seven Desk');
+      downloadButton.setAttribute('aria-disabled', String(!available));
     }
+    if (downloadLabel) downloadLabel.firstChild.textContent = available ? 'Baixar para ' : 'Indisponível para ';
+    if (downloadNotice) downloadNotice.textContent = !availableDevices
+      ? 'Verificando instaladores disponíveis...'
+      : available
+        ? 'Instalador ' + available.version + ' disponível: ' + available.filename + '.'
+        : selectedPlatform
+          ? 'Ainda não há instalador publicado para ' + labels[selectedPlatform] + ' nesta arquitetura.'
+          : 'Escolha um sistema para ver os instaladores disponíveis.';
     nameSlots.forEach(el => {
       el.textContent = selectedPlatform ? labels[selectedPlatform] : 'seu sistema';
     });
@@ -150,6 +163,21 @@
       // Recalculate only if the visitor has not switched to a different platform.
       if (selectedPlatform === detectedPlatform) selectPlatform(selectedPlatform);
     });
+
+    void fetch('/api/download?format=manifest')
+      .then(response => {
+        if (!response.ok) throw new Error('Downloads unavailable');
+        return response.json();
+      })
+      .then(manifest => {
+        availableDevices = manifest.devices;
+        selectPlatform(selectedPlatform);
+      })
+      .catch(() => {
+        availableDevices = {};
+        selectPlatform(selectedPlatform);
+        if (downloadNotice) downloadNotice.textContent = 'Downloads temporariamente indisponíveis. Tente novamente mais tarde.';
+      });
   }
 
   initializeDownloads();

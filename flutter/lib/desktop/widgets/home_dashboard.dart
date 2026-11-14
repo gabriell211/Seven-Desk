@@ -9,6 +9,7 @@ import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter_hbb/models/state_model.dart';
 import 'package:get/get.dart';
+import 'package:window_manager/window_manager.dart';
 
 bool get useHomeDashboard =>
     isDesktop && !bind.isIncomingOnly() && !bind.isCustomClient();
@@ -262,40 +263,48 @@ class HomeDashboard extends StatelessWidget {
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(14)),
                   ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(Icons.verified_user_outlined, size: 29),
-                      if (wide) ...[
-                        const SizedBox(width: 12),
-                        const Expanded(
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                  child: wide
+                      ? Obx(() {
+                          final stopped =
+                              Get.find<RxBool>(tag: 'stop-service').value;
+                          final status = stateGlobal.svcStatus.value;
+                          final ready = status == SvcStatus.ready && !stopped;
+                          return Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Text('Conexão Segura',
-                                  style: TextStyle(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.w600)),
-                              Text('TLS + Criptografia',
-                                  style: TextStyle(
-                                      color: HomeDashboardTheme.muted,
-                                      fontSize: 12)),
+                              const Icon(Icons.verified_user_outlined, size: 29),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Text('Estado do serviço',
+                                        style: TextStyle(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.w600)),
+                                    Text(stopped
+                                        ? 'Serviço parado'
+                                        : ready
+                                            ? 'Pronto para conexões'
+                                            : status == SvcStatus.connecting
+                                                ? 'Conectando'
+                                                : 'Indisponível',
+                                        style: const TextStyle(
+                                            color: HomeDashboardTheme.muted,
+                                            fontSize: 12)),
+                                  ],
+                                ),
+                              ),
+                              Icon(Icons.circle,
+                                  size: 10,
+                                  color: ready
+                                      ? HomeDashboardTheme.green
+                                      : HomeDashboardTheme.muted),
                             ],
-                          ),
-                        ),
-                        Obx(() => Icon(Icons.circle,
-                            size: 10,
-                            color: stateGlobal.svcStatus.value ==
-                                        SvcStatus.ready &&
-                                    !Get.find<RxBool>(
-                                            tag: 'stop-service')
-                                        .value
-                                ? HomeDashboardTheme.green
-                                : HomeDashboardTheme.muted)),
-                      ],
-                    ],
-                  ),
+                          );
+                        })
+                      : const Icon(Icons.verified_user_outlined, size: 29),
                 ),
               ),
             ),
@@ -433,10 +442,17 @@ class HomeDashboard extends StatelessWidget {
             IconButton(
               tooltip: translate('Help'),
               onPressed: () => launchUrl(
-                Uri.parse('https://seven-desk-site.vercel.app/#perguntas'),
+                Uri.parse('https://www.sevendesk.tech/#perguntas'),
                 mode: LaunchMode.externalApplication,
               ),
               icon: const Icon(Icons.help_outline_rounded),
+            ),
+          if (isWindows && !kUseCompatibleUiMode)
+            IconButton(
+              tooltip: 'Alternar tela cheia',
+              onPressed: () async => windowManager.setFullScreen(
+                  !await windowManager.isFullScreen()),
+              icon: const Icon(Icons.fullscreen_rounded),
             ),
           const SizedBox(width: 4),
           Obx(() {
@@ -503,8 +519,8 @@ class HomeDashboard extends StatelessWidget {
                                     color: Colors.white,
                                     fontSize: 17,
                                     fontWeight: FontWeight.w600)),
-                            const Text('Suporte',
-                                style: TextStyle(
+                            Text(user.isLogin ? 'Conta conectada' : 'Suporte sem login',
+                                style: const TextStyle(
                                     color: HomeDashboardTheme.muted,
                                     fontSize: 13)),
                           ],
