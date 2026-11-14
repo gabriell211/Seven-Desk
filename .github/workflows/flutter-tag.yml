@@ -1,13 +1,7 @@
 name: Flutter Tag Build
 
 on:
-  workflow_dispatch:
   push:
-    # Publish a branded Windows installer after the Seven Desk packaging correction.
-    branches:
-      - main
-    paths:
-      - '.github/workflows/flutter-tag.yml'
     tags:
       - 'v[0-9]+.[0-9]+.[0-9]+'
       - '[0-9]+.[0-9]+.[0-9]+'
@@ -32,6 +26,7 @@ jobs:
       - name: Validate Python packaging and Debian maintainer scripts
         run: |
           python3 -m py_compile build.py
+          python3 -m py_compile scripts/publish_vps_release.py
           python3 -m unittest discover -s tests -p 'test_debian_maintainer_script_permissions.py' -v
           python3 -m unittest discover -s tests -p 'test_mfx_dispatch_patch.py' -v
           python3 -m unittest discover -s tests -p 'test_windows_sevendesk_branding.py' -v
@@ -42,5 +37,39 @@ jobs:
     secrets: inherit
     with:
       upload-artifact: true
-      upload-tag: ${{ github.ref == 'refs/heads/main' && 'v1.5.3-5' || github.ref_name }}
+      upload-tag: ${{ github.ref_name }}
       publish-update-metadata: ${{ github.repository == 'rustdesk/rustdesk' }}
+
+  finalize-release:
+    needs: run-flutter-tag-build
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+      - name: Verify complete release
+        run: |
+          python3 - <<'PY'
+          import os
+          from scripts.publish_vps_release import API, read_json, select_assets, tag_commit
+
+          tag = os.environ["GITHUB_REF_NAME"]
+          commit = os.environ["GITHUB_SHA"]
+          run = read_json(f"{API}/actions/runs/{os.environ['GITHUB_RUN_ID']}")
+          if tag_commit(tag) != commit or run["head_sha"] != commit:
+              raise ValueError("Release source does not match the tag and build")
+          release = read_json(f"{API}/releases/tags/{tag}")
+          if release["draft"]:
+              raise ValueError("Release is still a draft")
+          assets = select_assets(release, run["run_started_at"])
+          print(f"Verified {len(assets)} installers for {tag}")
+          PY
+      - name: Publish final release
+        uses: softprops/action-gh-release@de2c0eb89ae2a093876385947365aca7b0e5f844 # v1
+        with:
+          tag_name: ${{ github.ref_name }}
+          prerelease: false
