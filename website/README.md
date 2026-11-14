@@ -55,6 +55,8 @@ O site contém fluxos de autenticação conectados ao Neon Auth e pode utilizar 
 
 As flags `SEVEN_ACCOUNT_STATUS_ENABLED`, `SEVEN_REGISTRATION_ENABLED`, `SEVEN_PASSWORD_RECOVERY_ENABLED` e as flags de cobrança devem permanecer desativadas até que autenticação, entrega de OTP, licenciamento no servidor, conciliação de pagamentos e estornos estejam homologados. Nunca armazene chaves de pagamento, senha SMTP ou string de conexão diretamente no JavaScript público.
 
+O fluxo de cobrança em `lib/infinitepay.js` cria um link individual para cada pedido (R$ 39,90 mensal ou R$ 400,00 anual). `api/infinitepay-webhook.js` e `api/confirm-payment.js` só registram acesso após consultar a InfinitePay; `db/001_billing.sql` define as tabelas de pedidos e assinaturas. A migração já está aplicada no projeto Neon Seven Desk. As rotas permanecem fechadas por `SEVEN_BILLING_ENABLED=0`, `SEVEN_WEBHOOK_ENABLED=0`, `SEVEN_LICENSE_API_ENABLED=0` e `SEVEN_SALES_LAUNCH_APPROVED=0` na produção. O aplicativo e o servidor de conexões ainda não consultam a assinatura do usuário, e estornos exigem conciliação operacional; portanto a cobrança não deve ser ativada antes da homologação real desses fluxos.
+
 ## Identidade e licenças
 
 O visual do website acompanha o aplicativo Seven Desk. Componentes de terceiros continuam sujeitos aos avisos e licenças do repositório, inclusive à [GNU AGPL-3.0](../LICENCE) onde aplicável.
