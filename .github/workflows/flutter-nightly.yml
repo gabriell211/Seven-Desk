@@ -1,4 +1,4 @@
-name: Flutter Nightly Build
+name: Seven Desk Nightly Build
 
 on:
   schedule:
