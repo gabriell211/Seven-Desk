@@ -14,6 +14,7 @@ import 'package:url_launcher/url_launcher_string.dart';
 import '../../common.dart';
 import '../../common/widgets/dialog.dart';
 import '../../common/widgets/login.dart';
+import '../../common/widgets/seven_access.dart';
 import '../../consts.dart';
 import '../../models/model.dart';
 import '../../models/platform_model.dart';
@@ -160,6 +161,7 @@ class _SettingsState extends State<SettingsPage> with WidgetsBindingObserver {
   @override
   void initState() {
     super.initState();
+    sevenDeskProfile.refresh();
     WidgetsBinding.instance.addObserver(this);
 
     WidgetsBinding.instance.addPostFrameCallback((_) async {
@@ -741,12 +743,16 @@ class _SettingsState extends State<SettingsPage> with WidgetsBindingObserver {
             title: Text(translate('Account')),
             tiles: [
               SettingsTile(
-                title: Obx(() => Text(gFFI.userModel.userName.value.isEmpty
-                    ? translate('Login')
-                    : '${translate('Logout')} (${gFFI.userModel.accountLabelWithHandle})')),
+                title: const Text('Ativar Seven Desk'),
+                leading: const Icon(Icons.verified_user_outlined),
+                onPressed: (context) => showSevenDeskActivationDialog(context),
+              ),
+              SettingsTile(
+                title: Obx(() => Text(sevenDeskProfile.name.value.isEmpty
+                    ? 'Abrir conta no site'
+                    : sevenDeskProfile.name.value)),
                 leading: Obx(() {
-                  final avatar = bind.mainResolveAvatarUrl(
-                      avatar: gFFI.userModel.avatar.value);
+                  final avatar = sevenDeskProfile.image.value;
                   return buildAvatarWidget(
                         avatar: avatar,
                         size: 28,
@@ -755,13 +761,10 @@ class _SettingsState extends State<SettingsPage> with WidgetsBindingObserver {
                       ) ??
                       Icon(Icons.person);
                 }),
-                onPressed: (context) {
-                  if (gFFI.userModel.userName.value.isEmpty) {
-                    loginDialog();
-                  } else {
-                    logOutConfirmDialog();
-                  }
-                },
+                onPressed: (context) => launchUrl(
+                  Uri.parse('https://www.sevendesk.tech/conta'),
+                  mode: LaunchMode.externalApplication,
+                ),
               ),
             ],
           ),

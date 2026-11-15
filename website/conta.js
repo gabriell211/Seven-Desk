@@ -84,7 +84,17 @@ function displaySession(session) {
   el('account-signed-in').hidden = !user;
   el('account-signed-out').hidden = !!user;
   el('account-user').textContent = user?.email || '';
+  el('account-profile-name').value = user?.name || '';
+  const photo = el('account-profile-photo');
+  photo.hidden = !user?.image;
+  if (user?.image) photo.src = user.image;
+  else photo.removeAttribute('src');
   el('account-plan-actions').hidden = !user;
+  el('account-app-access').hidden = true;
+  el('account-app-token').value = '';
+  el('account-app-token-label').hidden = true;
+  el('account-app-copy').hidden = true;
+  el('account-device-list').replaceChildren();
   if (!user) el('account-subscription').textContent = '';
   if (user) {
     showServiceMessage('');
@@ -96,7 +106,84 @@ async function refresh() {
   const {data, error} = await auth.getSession();
   if (error) throw error;
   displaySession(data);
-  if (data?.user?.emailVerified === true) await Promise.all([loadSubscription(), loadCheckoutAvailability()]);
+  if (data?.user?.emailVerified === true) await Promise.all([loadSubscription(), loadCheckoutAvailability(), loadAppAccess()]);
+}
+async function appAuthorization() {
+  const {data, error} = await auth.getSession();
+  const token = data?.session?.token;
+  if (error || typeof token !== 'string' || token.split('.').length !== 3) throw new Error('Invalid session');
+  return 'Bearer ' + token;
+}
+async function loadAppAccess() {
+  try {
+    const response = await fetch('/api/app-token', {
+      headers: {Authorization: await appAuthorization()}, cache:'no-store',
+    });
+    if (!response.ok) return;
+    const {devices} = await response.json();
+    if (!Array.isArray(devices)) return;
+    el('account-app-access').hidden = false;
+    el('account-app-notice').textContent = 'Dê um nome a cada computador e gere seu código. Gerar novamente revoga o código anterior daquele computador.';
+    const list = el('account-device-list');
+    list.replaceChildren();
+    for (let slot = 1; slot <= 5; slot++) {
+      const device = devices.find(item => Number(item.slot) === slot);
+      const row = document.createElement('div');
+      row.className = 'account-device-row';
+      const label = document.createElement('label');
+      label.textContent = `Computador ${slot}`;
+      const input = document.createElement('input');
+      input.maxLength = 60;
+      input.value = device?.label || (slot === 1 ? 'Meu computador' : `Técnico ${slot}`);
+      label.append(input);
+      const generate = document.createElement('button');
+      generate.type = 'button';
+      generate.className = 'account-signout';
+      generate.textContent = device ? 'Gerar novo código' : 'Gerar código';
+      generate.addEventListener('click', () => updateAppDevice(slot, input.value, false));
+      row.append(label, generate);
+      if (device) {
+        const revoke = document.createElement('button');
+        revoke.type = 'button';
+        revoke.className = 'account-signout';
+        revoke.textContent = 'Revogar';
+        revoke.addEventListener('click', () => updateAppDevice(slot, '', true));
+        row.append(revoke);
+      }
+      list.append(row);
+    }
+  } catch { /* Account activation stays unavailable if the service cannot be reached. */ }
+}
+async function updateAppDevice(slot, label, revoke) {
+  const notice = el('account-app-notice');
+  const name = label.trim();
+  if (!revoke && (name.length < 1 || name.length > 60)) {
+    notice.textContent = 'Informe um nome de até 60 caracteres.';
+    return;
+  }
+  try {
+    const response = await fetch('/api/app-token', {
+      method: revoke ? 'DELETE' : 'POST', cache: 'no-store',
+      headers: {'Content-Type':'application/json', Authorization: await appAuthorization()},
+      body: JSON.stringify({slot, label:name}),
+    });
+    if (!response.ok) throw new Error('Activation unavailable');
+    const result = await response.json();
+    if (!revoke) {
+      if (typeof result.token !== 'string' || !/^sd_[A-Za-z0-9_-]{43}$/.test(result.token)) throw new Error('Invalid activation');
+      el('account-app-token').value = result.token;
+      el('account-app-token-label').hidden = false;
+      el('account-app-copy').hidden = false;
+    } else {
+      el('account-app-token').value = '';
+      el('account-app-token-label').hidden = true;
+      el('account-app-copy').hidden = true;
+    }
+    await loadAppAccess();
+    notice.textContent = revoke
+      ? `Acesso do computador ${slot} revogado.`
+      : `Código do computador ${slot}: copie agora e cole no aplicativo. Ele não será exibido novamente.`;
+  } catch { notice.textContent = 'Não foi possível atualizar o computador agora.'; }
 }
 async function loadSubscription() {
   const target = el('account-subscription');
@@ -152,6 +239,47 @@ async function startCheckout(plan) {
   }
 }
 paymentButtons.forEach(button=>button.addEventListener('click',()=>startCheckout(button.dataset.plan)));
+el('account-profile-form').addEventListener('submit', async event => {
+  event.preventDefault();
+  const button = el('account-profile-save');
+  const message = el('account-profile-message');
+  const name = el('account-profile-name').value.trim();
+  const file = el('account-profile-file').files?.[0];
+  if (name.length < 2 || name.length > 100 ||
+      (file && (file.size > 2 * 1024 * 1024 || !['image/jpeg', 'image/png', 'image/webp'].includes(file.type)))) {
+    message.textContent = 'Informe um nome válido e uma foto JPG, PNG ou WebP de até 2 MB.';
+    return;
+  }
+  button.disabled = true;
+  message.textContent = 'Salvando seu perfil...';
+  try {
+    let image;
+    if (file) {
+      const response = await fetch('/api/avatar-upload', {
+        method:'POST', cache:'no-store',
+        headers:{'Content-Type':file.type, Authorization:await appAuthorization()},
+        body:file,
+      });
+      if (!response.ok) throw new Error('Upload unavailable');
+      image = (await response.json()).url;
+      if (typeof image !== 'string' || !image.startsWith('https://www.sevendesk.tech/avatars/')) throw new Error('Invalid image URL');
+    }
+    const result = await auth.updateUser(image ? {name, image} : {name});
+    if (result.error) throw result.error;
+    el('account-profile-file').value = '';
+    await refresh();
+    message.textContent = 'Perfil salvo. Nome e foto serão sincronizados no aplicativo.';
+  } catch { message.textContent = 'Não foi possível salvar seu perfil agora.'; }
+  finally { button.disabled = false; }
+});
+el('account-app-copy').addEventListener('click', async()=>{
+  const field=el('account-app-token');
+  field.select();
+  try {
+    await navigator.clipboard.writeText(field.value);
+    el('account-app-notice').textContent='Código copiado. Cole no aplicativo Seven Desk.';
+  } catch {el('account-app-notice').textContent='Selecione e copie o código mostrado acima.';}
+});
 el('show-login').addEventListener('click',()=>setMode(false));
 el('show-signup').addEventListener('click',()=>setMode(true));
 

@@ -2043,7 +2043,21 @@ pub async fn io_loop<T: InvokeUiSession>(handler: Session<T>, round: u32) {
     #[cfg(not(any(target_os = "android", target_os = "ios")))]
     let (sender, mut receiver) = mpsc::unbounded_channel::<Data>();
     *handler.sender.write().unwrap() = Some(sender.clone());
-    let token = LocalConfig::get_option("access_token");
+    let seven_token = LocalConfig::get_option(base::config::keys::OPTION_SEVEN_LICENSE_TOKEN);
+    let token = if seven_token.is_empty() {
+        LocalConfig::get_option("access_token")
+    } else {
+        {
+            use sha2::{Digest, Sha256};
+            let device_id = Config::get_id();
+            if device_id.is_empty() {
+                String::new()
+            } else {
+                let device_hash = Sha256::digest(device_id.as_bytes());
+                format!("{}:{:x}", seven_token, device_hash)
+            }
+        }
+    };
     let key = crate::get_key(false).await;
     #[cfg(not(any(target_os = "android", target_os = "ios")))]
     if handler.is_port_forward() {

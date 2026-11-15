@@ -1,8 +1,7 @@
 'use strict';
 
-// This endpoint is for a trusted remote-access server to query while the
-// caller presents a fresh signed Neon Auth JWT. A desktop application must
-// never be allowed to decide the authorization outcome itself.
+// The remote-access server checks the bearer token against the account's
+// current entitlement. The desktop application cannot decide authorization.
 function createLicenseHandler({ enabled, authenticate, pool, getEntitlement, now = () => Date.now() }) {
   return async (req, res) => {
     res.setHeader('Cache-Control', 'no-store');

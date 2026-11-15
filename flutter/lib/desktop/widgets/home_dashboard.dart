@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_hbb/common.dart';
+import 'package:flutter_hbb/common/widgets/seven_access.dart';
 import 'package:flutter_hbb/desktop/pages/desktop_setting_page.dart';
 import 'package:flutter_hbb/desktop/widgets/session_toolbar_avatar.dart';
 import 'package:flutter_hbb/desktop/widgets/tabbar_widget.dart';
@@ -388,8 +389,6 @@ class HomeDashboard extends StatelessWidget {
 
   Widget _header(BuildContext context, bool showProfileName) {
     final tabs = Get.find<DesktopTabController>();
-    final user = gFFI.userModel;
-    final localPhoto = sessionToolbarPhoto;
     return Container(
       height: 90,
       decoration: const BoxDecoration(
@@ -456,17 +455,15 @@ class HomeDashboard extends StatelessWidget {
             ),
           const SizedBox(width: 4),
           Obx(() {
-            final name = user.displayNameOrUserName;
-            final avatarUrl = user.avatar.value;
-            final photo = localPhoto.isNotEmpty || avatarUrl.isEmpty
+            final name = sevenDeskProfile.name.value;
+            final avatarUrl = sevenDeskProfile.image.value;
+            final photo = avatarUrl.isEmpty
                 ? null
-                : buildAvatarWidget(
-                    avatar: bind.mainResolveAvatarUrl(avatar: avatarUrl),
-                    size: 44,
-                  );
+                : buildAvatarWidget(avatar: avatarUrl, size: 44);
             final pages = DesktopSettingPage.tabKeys;
             return PopupMenuButton<SettingsTabKey>(
               tooltip: translate('Settings'),
+              onOpened: () => sevenDeskProfile.refresh(),
               enabled: !bind.isDisableSettings() &&
                   (pages.contains(SettingsTabKey.general) ||
                       pages.contains(SettingsTabKey.account)),
@@ -491,7 +488,7 @@ class HomeDashboard extends StatelessWidget {
                     Stack(
                       children: [
                         photo ??
-                            SessionToolbarAvatar(photo: localPhoto, size: 44),
+                            const SessionToolbarAvatar(photo: '', size: 44),
                         if (status != null)
                           Obx(() => stateGlobal.svcStatus.value ==
                                       SvcStatus.ready &&
@@ -519,7 +516,7 @@ class HomeDashboard extends StatelessWidget {
                                     color: Colors.white,
                                     fontSize: 17,
                                     fontWeight: FontWeight.w600)),
-                            Text(user.isLogin ? 'Conta conectada' : 'Suporte sem login',
+                            Text(name.isEmpty ? 'Suporte sem login' : 'Perfil do site',
                                 style: const TextStyle(
                                     color: HomeDashboardTheme.muted,
                                     fontSize: 13)),
