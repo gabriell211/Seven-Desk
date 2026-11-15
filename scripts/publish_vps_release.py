@@ -125,6 +125,7 @@ def main():
             download(asset, destination)
             files.append({"name": asset["name"], "size": asset["size"], "sha256": asset["digest"][7:]})
             print(f"Verified {destination.name}")
+        stage.chmod(0o755)
         stage.rename(version_dir)
         manifest = {"version": args.tag, "source_commit": args.commit, "build_run_id": args.run_id, "files": files}
         temporary = root / f".manifest-{os.getpid()}.json"
