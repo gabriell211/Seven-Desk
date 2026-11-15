@@ -1,4 +1,4 @@
-name: Full Flutter CI
+name: Seven Desk Flutter CI
 
 on:
   workflow_dispatch:
@@ -19,6 +19,7 @@ on:
 
 jobs:
   run-ci:
+    name: Seven Desk Flutter CI
     uses: ./.github/workflows/flutter-build.yml
     with:
       upload-artifact: false
