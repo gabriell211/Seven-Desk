@@ -1193,9 +1193,9 @@ pub async fn do_check_software_update() -> hbb_common::ResultType<()> {
 #[inline]
 pub fn get_app_name() -> String {
     let app_name = hbb_common::config::APP_NAME.read().unwrap().clone();
-    // Keep the underlying RustDesk configuration compatible, but give the Windows
-    // product its own executable, service, protocol, installer and shortcut identity.
-    #[cfg(target_os = "windows")]
+    // Keep the underlying RustDesk configuration compatible while using the
+    // SevenDesk executable and bundle name on Windows and macOS.
+    #[cfg(any(target_os = "windows", target_os = "macos"))]
     if app_name == "RustDesk" {
         return "SevenDesk".to_owned();
     }

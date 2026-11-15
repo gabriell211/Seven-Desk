@@ -1,5 +1,5 @@
 {
-  "id": "com.rustdesk.RustDesk",
+  "id": "tech.sevendesk.app",
   "runtime": "org.freedesktop.Platform",
   "runtime-version": "24.08",
   "sdk": "org.freedesktop.Sdk",
@@ -27,7 +27,8 @@
       "build-commands": [
         "bsdtar -Oxf rustdesk.deb data.tar.xz | bsdtar -xf -",
         "cp -r usr/* /app/",
-        "mkdir -p /app/bin && ln -s /app/share/rustdesk/rustdesk /app/bin/rustdesk"
+        "mkdir -p /app/bin && ln -s /app/share/rustdesk/rustdesk /app/bin/rustdesk",
+        "install -Dm644 tech.sevendesk.app.metainfo.xml /app/share/metainfo/tech.sevendesk.app.metainfo.xml"
       ],
       "sources": [
         {
@@ -36,7 +37,7 @@
         },
         {
           "type": "file",
-          "path": "com.rustdesk.RustDesk.metainfo.xml"
+          "path": "tech.sevendesk.app.metainfo.xml"
         }
       ]
     }

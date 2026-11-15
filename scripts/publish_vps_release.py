@@ -14,17 +14,24 @@ from pathlib import Path
 
 REPOSITORY = "gabriell211/Seven-Desk"
 API = f"https://api.github.com/repos/{REPOSITORY}"
-NAME = re.compile(r"^(?:sevendesk|rustdesk)-[A-Za-z0-9._-]{1,180}$")
-INSTALLER_SUFFIXES = (".exe", ".msi", ".dmg", ".deb", ".rpm", ".apk", ".pkg.tar.zst")
+NAME = re.compile(r"^sevendesk-[A-Za-z0-9._-]{1,180}$")
+INSTALLER_SUFFIXES = (".exe", ".msi", ".dmg", ".deb", ".rpm", ".apk", ".pkg.tar.zst", ".AppImage", ".flatpak")
 REQUIRED = (
     re.compile(r"^sevendesk-.*-x86_64\.exe$"),
     re.compile(r"^sevendesk-.*-aarch64\.exe$"),
-    re.compile(r"^rustdesk-.*-x86_64\.dmg$"),
-    re.compile(r"^rustdesk-.*-aarch64\.dmg$"),
-    re.compile(r"^rustdesk-.*-x86_64\.deb$"),
-    re.compile(r"^rustdesk-.*-aarch64\.deb$"),
-    re.compile(r"^rustdesk-.*-aarch64-signed\.apk$"),
-    re.compile(r"^rustdesk-.*-universal-signed\.apk$"),
+    re.compile(r"^sevendesk-.*-x86_64\.dmg$"),
+    re.compile(r"^sevendesk-.*-aarch64\.dmg$"),
+    re.compile(r"^sevendesk-.*-x86_64\.deb$"),
+    re.compile(r"^sevendesk-.*-aarch64\.deb$"),
+    re.compile(r"^sevendesk-.*\.x86_64\.rpm$"),
+    re.compile(r"^sevendesk-.*\.aarch64\.rpm$"),
+    re.compile(r"^sevendesk-.*-x86_64\.pkg\.tar\.zst$"),
+    re.compile(r"^sevendesk-.*-aarch64-signed\.apk$"),
+    re.compile(r"^sevendesk-.*-universal-signed\.apk$"),
+    re.compile(r"^sevendesk-.*-x86_64\.AppImage$"),
+    re.compile(r"^sevendesk-.*-aarch64\.AppImage$"),
+    re.compile(r"^sevendesk-.*-x86_64\.flatpak$"),
+    re.compile(r"^sevendesk-.*-aarch64\.flatpak$"),
 )
 
 
@@ -50,6 +57,8 @@ def select_assets(release, run_started_at):
     selected = []
     for asset in release["assets"]:
         name = asset["name"]
+        if name.startswith("rustdesk-") and name.endswith(INSTALLER_SUFFIXES):
+            raise ValueError(f"Installer still has legacy identity: {name}")
         if not NAME.fullmatch(name) or not name.endswith(INSTALLER_SUFFIXES):
             continue
         if "unattended" in name or "wayland" in name:
@@ -125,6 +134,7 @@ def main():
             download(asset, destination)
             files.append({"name": asset["name"], "size": asset["size"], "sha256": asset["digest"][7:]})
             print(f"Verified {destination.name}")
+        stage.chmod(0o755)
         stage.rename(version_dir)
         manifest = {"version": args.tag, "source_commit": args.commit, "build_run_id": args.run_id, "files": files}
         temporary = root / f".manifest-{os.getpid()}.json"

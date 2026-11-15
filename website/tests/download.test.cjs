@@ -11,11 +11,11 @@ const manifest = {
     file('sevendesk-1.5.3-x86_64.exe'),
     file('sevendesk-1.5.3-aarch64.exe'),
     file('sevendesk-1.5.3-x86-sciter.exe'),
-    file('rustdesk-1.5.3-x86_64.dmg'),
-    file('rustdesk-1.5.3-aarch64.dmg'),
-    file('rustdesk-1.5.3-x86_64.deb'),
-    file('rustdesk-1.5.3-aarch64.deb'),
-    file('rustdesk-1.5.3-universal-signed.apk'),
+    file('sevendesk-1.5.3-x86_64.dmg'),
+    file('sevendesk-1.5.3-aarch64.dmg'),
+    file('sevendesk-1.5.3-x86_64.deb'),
+    file('sevendesk-1.5.3-aarch64.deb'),
+    file('sevendesk-1.5.3-universal-signed.apk'),
   ],
 };
 
@@ -36,9 +36,9 @@ test('uses only files listed for the published VPS version', () => {
   assert.equal(win.url, 'https://downloads.sevendesk.tech/v1.5.3-5/sevendesk-1.5.3-x86_64.exe');
   assert.equal(findPackage(manifest, 'windows', 'arm64').filename, 'sevendesk-1.5.3-aarch64.exe');
   assert.equal(findPackage(manifest, 'windows', 'x86').filename, 'sevendesk-1.5.3-x86-sciter.exe');
-  assert.equal(findPackage(manifest, 'macos', 'arm64').filename, 'rustdesk-1.5.3-aarch64.dmg');
-  assert.equal(findPackage(manifest, 'linux', 'x64').filename, 'rustdesk-1.5.3-x86_64.deb');
-  assert.equal(findPackage(manifest, 'android', 'universal').filename, 'rustdesk-1.5.3-universal-signed.apk');
+  assert.equal(findPackage(manifest, 'macos', 'arm64').filename, 'sevendesk-1.5.3-aarch64.dmg');
+  assert.equal(findPackage(manifest, 'linux', 'x64').filename, 'sevendesk-1.5.3-x86_64.deb');
+  assert.equal(findPackage(manifest, 'android', 'universal').filename, 'sevendesk-1.5.3-universal-signed.apk');
 });
 
 test('prefers Seven Desk filenames when the VPS has both names', () => {
