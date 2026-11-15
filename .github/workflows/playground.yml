@@ -1,4 +1,4 @@
-name: playground
+name: Seven Desk Playground
 
 on:
   #schedule:
@@ -186,7 +186,7 @@ jobs:
           cargo -V
           rustc -V
 
-      - name: Build rustdesk
+      - name: Build Seven Desk
         run: |
           ./build.py --flutter ${{ matrix.job.extra-build-args }}
 
@@ -215,7 +215,7 @@ jobs:
           # notarize the rustdesk-${{ env.VERSION }}.dmg
           rcodesign notary-submit --api-key-path ${{ github.workspace }}/rustdesk.json  --staple rustdesk-${{ env.VERSION }}.dmg
 
-      - name: Rename rustdesk
+      - name: Rename Seven Desk
         run: |
           for name in rustdesk*??.dmg; do
               mv "$name" "${name%%.dmg}-${{ matrix.job.arch }}-flutter${{ matrix.job.flutter }}-flutter${{ matrix.job.date }}.dmg"
@@ -232,7 +232,7 @@ jobs:
 
   build-rustdesk-android:
     if: false
-    name: build rustdesk android apk ${{ matrix.job.target }}
+    name: build Seven Desk android apk ${{ matrix.job.target }}
     runs-on: ${{ matrix.job.os }}
     strategy:
       fail-fast: false
@@ -342,7 +342,7 @@ jobs:
           # cp -rf /opt/rustdesk_thirdparty_lib/vcpkg/* /opt/artifacts/vcpkg/
           ls -ls /opt/artifacts/vcpkg/installed/arm64-android/lib/
 
-      - name: Build rustdesk lib
+      - name: Build Seven Desk lib
         env:
           ANDROID_NDK_HOME: ${{ steps.setup-ndk.outputs.ndk-path }}
           ANDROID_NDK_ROOT: ${{ steps.setup-ndk.outputs.ndk-path }}
@@ -362,7 +362,7 @@ jobs:
             ;;
           esac
 
-      - name: Build rustdesk
+      - name: Build Seven Desk
         shell: bash
         env:
           JAVA_HOME: /usr/lib/jvm/java-17-openjdk-amd64
