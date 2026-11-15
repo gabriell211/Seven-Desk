@@ -12,23 +12,32 @@ function response() {
     json(body) { this.body = body; return this; } };
 }
 function fixture({ enabled = true, verified = true } = {}) {
-  let storedHash;
+  const storedHashes = new Map();
+  const boundDevices = new Map();
   let count = 0;
   const db = {
     async query(sql, params) {
       if (sql.includes('INSERT INTO seven_desk_app_tokens')) {
         if (!verified) return { rows: [] };
-        storedHash = params[1];
+        storedHashes.set(params[1], params[3]);
+        boundDevices.delete(params[1]);
         return { rows: [{ user_id: userId }] };
       }
+      if (sql.startsWith('UPDATE seven_desk_app_tokens')) {
+        const slot = [...storedHashes].find(([, hash]) => hash === params[0])?.[0];
+        if (!verified || !slot || (boundDevices.has(slot) && boundDevices.get(slot) !== params[1])) return {rows:[]};
+        boundDevices.set(slot, params[1]);
+        return {rows:[{user_id:userId}]};
+      }
       if (sql.includes('JOIN neon_auth."user"')) {
-        return { rows: verified && params[0] === storedHash ? [{ user_id: userId }] : [] };
+        return { rows: verified && [...storedHashes.values()].includes(params[0]) ? [{ user_id: userId }] : [] };
       }
       if (sql.startsWith('DELETE')) {
-        storedHash = undefined;
+        storedHashes.delete(params[1]);
+        boundDevices.delete(params[1]);
         return { rows: [] };
       }
-      if (sql.startsWith('SELECT 1')) return { rows: storedHash ? [{}] : [] };
+      if (sql.startsWith('SELECT slot')) return { rows: [...storedHashes.keys()].map(slot => ({slot, label:`Técnico ${slot}`})) };
       throw new Error('Unexpected query');
     },
   };
@@ -40,8 +49,8 @@ function fixture({ enabled = true, verified = true } = {}) {
   });
   return { db, handler };
 }
-function request(method, authorization = 'Bearer session') {
-  return { method, headers: { authorization } };
+function request(method, authorization = 'Bearer session', slot = 1) {
+  return { method, headers: { authorization }, body: {slot, label:`Técnico ${slot}`} };
 }
 
 test('app activation is gated and requires a verified account', async () => {
@@ -64,35 +73,59 @@ test('rotating and revoking an app token changes the server access decision', as
   assert.equal(first.code, 200);
   assert.match(first.body.token, /^sd_[A-Za-z0-9_-]{43}$/);
   assert.equal(await appTokenUser(db, 'Bearer ' + first.body.token), userId);
+  const other = response();
+  await handler(request('POST', 'Bearer session', 2), other);
+  assert.equal(await appTokenUser(db, 'Bearer ' + other.body.token), userId);
   assert.equal(await appTokenUser(db, 'Bearer sd_invalid'), null);
   const second = response();
   await handler(request('POST'), second);
   assert.equal(second.code, 200);
   assert.equal(await appTokenUser(db, 'Bearer ' + first.body.token), null);
   assert.equal(await appTokenUser(db, 'Bearer ' + second.body.token), userId);
+  assert.equal(await appTokenUser(db, 'Bearer ' + other.body.token), userId);
   const revoke = response();
   await handler(request('DELETE'), revoke);
   assert.equal(revoke.body.active, false);
   assert.equal(await appTokenUser(db, 'Bearer ' + second.body.token), null);
+  assert.equal(await appTokenUser(db, 'Bearer ' + other.body.token), userId);
+});
+
+test('only the five technician slots can be issued', async () => {
+  const { handler } = fixture();
+  for (let slot = 1; slot <= 5; slot++) {
+    const issued = response();
+    await handler(request('POST', 'Bearer session', slot), issued);
+    assert.equal(issued.code, 200);
+  }
+  const sixth = response();
+  await handler(request('POST', 'Bearer session', 6), sixth);
+  assert.equal(sixth.code, 400);
 });
 
 test('a valid app token receives paid access only while its account has time remaining', async () => {
   const { db, handler } = fixture();
   const issue = response();
   await handler(request('POST'), issue);
+  const device = 'a'.repeat(64);
   const license = createLicenseHandler({
     enabled: () => true,
-    authenticate: header => appTokenUser(db, header),
+    authenticate: header => appTokenUser(db, header, true),
     pool: () => db,
     getEntitlement: async () => ({ status: 'paid', access_ends_at: '2026-12-01T00:00:00Z' }),
     now: () => Date.parse('2026-11-14T00:00:00Z'),
   });
   const allowed = response();
-  await license(request('GET', 'Bearer ' + issue.body.token), allowed);
+  await license(request('GET', 'Bearer ' + issue.body.token + ':' + device), allowed);
   assert.equal(allowed.code, 200);
   assert.equal(allowed.body.allowed, true);
+  const copied = response();
+  await license(request('GET', 'Bearer ' + issue.body.token + ':' + 'b'.repeat(64)), copied);
+  assert.equal(copied.code, 401);
+  const noDevice = response();
+  await license(request('GET', 'Bearer ' + issue.body.token), noDevice);
+  assert.equal(noDevice.code, 401);
   await handler(request('DELETE'), response());
   const denied = response();
-  await license(request('GET', 'Bearer ' + issue.body.token), denied);
+  await license(request('GET', 'Bearer ' + issue.body.token + ':' + device), denied);
   assert.equal(denied.code, 401);
 });

@@ -97,16 +97,29 @@
       <div id="account-signed-in" hidden>
         <div class="account-connected"><span aria-hidden="true">●</span> Conectado</div>
         <p class="account-identity">Conectado como <strong id="account-user"></strong></p>
+        <form id="account-profile-form" class="account-plan-actions">
+          <h2>Seu perfil</h2>
+          <img id="account-profile-photo" alt="Foto do perfil" width="72" height="72" hidden />
+          <label>Nome exibido no aplicativo
+            <input id="account-profile-name" name="name" maxlength="100" minlength="2" required autocomplete="name" />
+          </label>
+          <label>Foto do perfil
+            <input id="account-profile-file" name="photo" type="file" accept="image/jpeg,image/png,image/webp" />
+          </label>
+          <button id="account-profile-save" class="account-submit" type="submit">Salvar perfil</button>
+          <p id="account-profile-message" class="account-intro" role="status" aria-live="polite"></p>
+        </form>
         <p id="account-subscription" class="account-intro" aria-live="polite">Consultando seu acesso...</p>
         <div id="account-app-access" class="account-plan-actions" hidden>
-          <h2>Ativar o aplicativo</h2>
+          <h2>Computadores de técnicos</h2>
+          <p class="account-intro">Sua conta permite até cinco computadores para prestar suporte. Clientes atendidos não precisam de cadastro.</p>
+          <p class="account-intro">Cada código fica vinculado ao primeiro computador que iniciar suporte com ele. Para trocar de computador, gere um novo código na mesma vaga.</p>
           <p id="account-app-notice" class="account-intro" aria-live="polite"></p>
-          <button id="account-app-generate" class="account-submit" type="button">Gerar código</button>
+          <div id="account-device-list"></div>
           <label id="account-app-token-label" class="account-app-token-label" hidden>Código de ativação
             <input id="account-app-token" type="text" readonly spellcheck="false" autocomplete="off" />
           </label>
           <button id="account-app-copy" class="account-signout" type="button" hidden>Copiar código</button>
-          <button id="account-app-revoke" class="account-signout" type="button" hidden>Revogar código</button>
         </div>
         <div id="account-plan-actions" class="account-plan-actions" hidden>
           <h2>Escolha seu plano</h2>

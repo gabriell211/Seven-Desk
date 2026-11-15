@@ -2287,6 +2287,12 @@ class _Account extends StatefulWidget {
 
 class _AccountState extends State<_Account> {
   @override
+  void initState() {
+    super.initState();
+    sevenDeskProfile.refresh();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final scrollController = ScrollController();
     return ListView(
@@ -2295,85 +2301,24 @@ class _AccountState extends State<_Account> {
         _Card(title: 'Account', children: [
           _Button('Ativar Seven Desk',
               () => showSevenDeskActivationDialog(context)),
-          accountAction(),
-          useInfo(),
+          _Button('Abrir conta no site', () => launchUrl(
+              Uri.parse('https://www.sevendesk.tech/conta'),
+              mode: LaunchMode.externalApplication)),
+          Obx(() => ListTile(
+                leading: buildAvatarWidget(
+                      avatar: sevenDeskProfile.image.value,
+                      size: 44,
+                    ) ?? const Icon(Icons.person),
+                title: Text(sevenDeskProfile.name.value.isEmpty
+                    ? 'Suporte sem login'
+                    : sevenDeskProfile.name.value),
+                subtitle: const Text('Nome e foto sincronizados com o site'),
+              )),
         ]),
       ],
     ).marginOnly(bottom: _kListViewBottomMargin);
   }
 
-  Widget accountAction() {
-    return Obx(() => _Button(
-        gFFI.userModel.userName.value.isEmpty
-            ? 'Login'
-            : '${translate('Logout')} (${gFFI.userModel.accountLabelWithHandle})',
-        () => {
-              gFFI.userModel.userName.value.isEmpty
-                  ? loginDialog()
-                  : logOutConfirmDialog()
-            }));
-  }
-
-  Widget useInfo() {
-    return Obx(() => Offstage(
-          offstage: gFFI.userModel.userName.value.isEmpty,
-          child: Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surfaceContainerHighest,
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Builder(builder: (context) {
-              final avatarWidget = _buildUserAvatar();
-              return Row(
-                children: [
-                  if (avatarWidget != null) avatarWidget,
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          gFFI.userModel.displayNameOrUserName,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        SelectionArea(
-                          child: Text(
-                            '@${gFFI.userModel.userName.value}',
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              fontSize: 13,
-                              color:
-                                  Theme.of(context).textTheme.bodySmall?.color,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              );
-            }),
-          ),
-        )).marginOnly(left: 18, top: 16);
-  }
-
-  Widget? _buildUserAvatar() {
-    // Resolve relative avatar path at display time
-    final avatar =
-        bind.mainResolveAvatarUrl(avatar: gFFI.userModel.avatar.value);
-    return buildAvatarWidget(
-      avatar: avatar,
-      size: 44,
-    );
-  }
 }
 
 class _Checkbox extends StatefulWidget {

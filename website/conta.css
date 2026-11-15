@@ -30,6 +30,11 @@ body.account-page{min-height:100vh;background:radial-gradient(ellipse at 12% 14%
 .account-connected{display:inline-flex;gap:10px;align-items:center;color:#23e693;font-size:12px;font-weight:700;background:#0f352a7c;padding:9px 12px;border-radius:24px}
 .account-identity{font-size:14px;color:#c3bdd4;margin:22px 0}.account-identity strong{color:#fff;overflow-wrap:anywhere}
 .account-plan-actions{padding:20px;border:1px solid #403752;border-radius:14px;margin:23px 0}.account-plan-actions h2{font-size:18px;color:#fff;letter-spacing:-.025em}
+.account-plan-actions label{display:block;font-size:12px;font-weight:700;color:#e7ddf5;margin:14px 0}
+.account-plan-actions label input{display:block;width:100%;box-sizing:border-box;margin-top:8px;border:1px solid #504365;border-radius:10px;padding:11px 14px;font:inherit;color:#fff;background:#181427}
+#account-profile-photo{object-fit:cover;border-radius:50%;margin:12px 0}
+.account-device-row{padding:12px 0;border-bottom:1px solid #403752}
+.account-device-row .account-signout{margin:5px 8px 5px 0}
 .account-app-token-label{display:block;margin-top:16px;font-size:12px;font-weight:700;color:#e7ddf5}
 .account-app-token-label input{display:block;width:100%;box-sizing:border-box;margin-top:8px;border:1px solid #504365;border-radius:10px;padding:11px 14px;font:inherit;color:#fff;background:#181427}
 .account-signout{background:none;border:1px solid #625476;border-radius:10px;padding:12px 19px;color:#efe4ff;font-size:13px;font-weight:700;cursor:pointer;margin-top:16px}

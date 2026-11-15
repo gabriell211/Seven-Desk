@@ -2047,7 +2047,16 @@ pub async fn io_loop<T: InvokeUiSession>(handler: Session<T>, round: u32) {
     let token = if seven_token.is_empty() {
         LocalConfig::get_option("access_token")
     } else {
-        seven_token
+        {
+            use sha2::{Digest, Sha256};
+            let device_id = Config::get_id();
+            if device_id.is_empty() {
+                String::new()
+            } else {
+                let device_hash = Sha256::digest(device_id.as_bytes());
+                format!("{}:{:x}", seven_token, device_hash)
+            }
+        }
     };
     let key = crate::get_key(false).await;
     #[cfg(not(any(target_os = "android", target_os = "ios")))]

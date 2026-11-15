@@ -1,10 +1,47 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:http/http.dart' as http;
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../models/platform_model.dart';
 
 const _optionKey = 'seven-license-token';
 final _tokenPattern = RegExp(r'^sd_[A-Za-z0-9_-]{43}$');
+
+final sevenDeskProfile = SevenDeskProfile()..refresh();
+
+class SevenDeskProfile {
+  final name = ''.obs;
+  final image = ''.obs;
+
+  Future<void> refresh() async {
+    name.value = '';
+    image.value = '';
+    final token = bind.mainGetLocalOption(key: _optionKey);
+    if (!_tokenPattern.hasMatch(token)) return;
+    try {
+      final response = await http.get(
+        Uri.parse('https://www.sevendesk.tech/api/app-profile'),
+        headers: {'Authorization': 'Bearer $token'},
+      ).timeout(const Duration(seconds: 8));
+      if (bind.mainGetLocalOption(key: _optionKey) != token) return;
+      if (response.statusCode != 200) return;
+      final profile = jsonDecode(response.body);
+      if (profile is! Map) return;
+      final profileName = profile['name'];
+      final profileImage = profile['image'];
+      if (profileName is String) name.value = profileName;
+      if (profileImage is String) {
+        final uri = Uri.tryParse(profileImage);
+        if (uri?.scheme == 'https') image.value = profileImage;
+      }
+    } catch (_) {
+      // An offline receiver can still accept support without a profile.
+    }
+  }
+}
 
 Future<void> showSevenDeskActivationDialog(BuildContext context) {
   return showDialog<void>(
@@ -52,6 +89,7 @@ class _SevenDeskActivationDialogState
     });
     try {
       await bind.mainSetLocalOption(key: _optionKey, value: token);
+      await sevenDeskProfile.refresh();
       if (mounted) Navigator.of(context).pop();
     } catch (_) {
       if (mounted) {
