@@ -79,13 +79,23 @@ mv -Tf "$base/current.new" "$base/current"
 systemctl daemon-reload
 systemctl enable --now sevendesk-site
 systemctl restart sevendesk-site
-if ! curl --fail --silent --show-error http://127.0.0.1:3100/api/account-availability >/dev/null; then
+healthy=0
+for _ in {1..20}; do
+  if curl --fail --silent http://127.0.0.1:3100/api/account-availability >/dev/null; then
+    healthy=1
+    break
+  fi
+  sleep 1
+done
+if [[ "$healthy" != 1 ]]; then
   if [[ -n "$previous" ]]; then
     ln -sfn "$previous" "$base/current.new"
     mv -Tf "$base/current.new" "$base/current"
     systemctl restart sevendesk-site
+    echo 'Site failed health check; previous release restored' >&2
+  else
+    echo 'Site failed health check; no previous release exists' >&2
   fi
-  echo 'Site failed health check; previous release restored' >&2
   exit 1
 fi
 

@@ -11,11 +11,11 @@ function tokenHash(token) {
 
 async function appTokenUser(pool, header, bindDevice = false) {
   const credential = typeof header === 'string' && header.startsWith('Bearer ') ? header.slice(7) : '';
-  const [rawToken, deviceHash, extra] = credential.split(':');
-  const token = TOKEN_RE.test(rawToken) && !extra ? rawToken : null;
-  if (!token) return null;
+  const parts = credential.split(':');
+  if (parts.length !== (bindDevice ? 2 : 1)) return null;
+  const [token, deviceHash] = parts;
+  if (!TOKEN_RE.test(token)) return null;
   if (bindDevice && !DEVICE_RE.test(deviceHash || '')) return null;
-  if (!bindDevice && deviceHash !== undefined) return null;
   const result = bindDevice
     ? await pool.query(
       `UPDATE seven_desk_app_tokens t SET device_hash = COALESCE(t.device_hash, $2)
