@@ -32,6 +32,7 @@ if [[ -e "$release" ]]; then
 else
   mv "$checkout" "$release"
 fi
+chmod 755 "$release"
 trap - EXIT
 
 if [[ ! -f /etc/sevendesk/site.env ]]; then
@@ -77,6 +78,7 @@ previous=$(readlink "$base/current" || true)
 ln -sfn "$release" "$base/current.new"
 mv -Tf "$base/current.new" "$base/current"
 systemctl daemon-reload
+systemctl reset-failed sevendesk-site
 systemctl enable --now sevendesk-site
 systemctl restart sevendesk-site
 healthy=0
