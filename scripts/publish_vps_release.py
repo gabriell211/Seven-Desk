@@ -61,8 +61,6 @@ def select_assets(release, run_started_at):
             raise ValueError(f"Installer still has legacy identity: {name}")
         if not NAME.fullmatch(name) or not name.endswith(INSTALLER_SUFFIXES):
             continue
-        if "unattended" in name or "wayland" in name:
-            continue
         if name.endswith(".apk") and not name.endswith("-signed.apk"):
             continue
         digest = asset.get("digest", "")
