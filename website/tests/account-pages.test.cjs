@@ -1,16 +1,19 @@
 'use strict';
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const {readFileSync} = require('node:fs');
+const {readFileSync, existsSync} = require('node:fs');
 const {join} = require('node:path');
 
 const root = join(__dirname, '..');
 const read = name => readFileSync(join(root,name),'utf8');
 
 test('login, signup and recovery use dedicated accessible URLs', () => {
-  const routes = JSON.parse(read('vercel.json')).rewrites;
+  const config = JSON.parse(read('vercel.json'));
+  assert.equal(config.cleanUrls, true);
+  const routes = config.rewrites;
   for (const source of ['/entrar','/cadastro','/recuperar-senha','/redefinir-senha']) {
-    assert.deepEqual(routes.find(x=>x.source===source), {source,destination:'/conta.html'});
+    assert.deepEqual(routes.find(x=>x.source===source), {source,destination:'/conta'});
+    assert.equal(existsSync(join(root, 'conta.html')), true, 'clean URL destination must exist');
   }
   const home=read('index.html');
   assert.match(home,/href="\/entrar"/);

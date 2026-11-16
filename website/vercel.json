@@ -50,19 +50,19 @@
   "rewrites": [
     {
       "source": "/entrar",
-      "destination": "/conta.html"
+      "destination": "/conta"
     },
     {
       "source": "/cadastro",
-      "destination": "/conta.html"
+      "destination": "/conta"
     },
     {
       "source": "/recuperar-senha",
-      "destination": "/conta.html"
+      "destination": "/conta"
     },
     {
       "source": "/redefinir-senha",
-      "destination": "/conta.html"
+      "destination": "/conta"
     },
     {
       "source": "/pagamento-retorno",
