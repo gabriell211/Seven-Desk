@@ -134,18 +134,18 @@ void main() {
     await tester.runAsync(() => Future<void>.delayed(Duration.zero));
     await tester.pump();
     expect(
-        find.text('Welcome to Seven Desk', findRichText: true), findsOneWidget);
+        find.text('Bem-vindo ao Seven Desk', findRichText: true), findsOneWidget);
     expect(find.text('123 456 789'), findsOneWidget);
-    expect(find.text('Ready for connections'), findsWidgets);
+    expect(find.text('Pronto para conexões'), findsWidgets);
     expect(find.text('Support PC'), findsOneWidget);
-    expect(find.text('Recent sessions (1)'), findsOneWidget);
+    expect(find.text('Recentes (1)'), findsOneWidget);
     expect(tester.takeException(), isNull);
 
     tester.view.physicalSize = const Size(800, 600);
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 100));
     expect(tester.takeException(), isNull);
-    await tester.tap(find.byTooltip('Transfer file').first);
+    await tester.tap(find.byTooltip('Transferência').first);
     await tester.pump();
     expect(
         find.widgetWithText(ElevatedButton, 'Transfer file'), findsOneWidget);

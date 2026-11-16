@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>tech.sevendesk.app</id>
+  <developer id="tech.sevendesk">
+    <name>Seven Desk</name>
+  </developer>
+  <launchable type="desktop-id">tech.sevendesk.app.desktop</launchable>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>AGPL-3.0-only</project_license>
+  <name>Seven Desk</name>
+  <summary>Remote support with Seven Desk</summary>
+  <description>
+    <p>
+        Seven Desk lets technicians connect to computers for remote support.
+        People receiving support can share their ID without creating an account.
+    </p>
+  </description>
+  <categories>
+    <category>Utility</category>
+  </categories>
+  <branding>
+    <color type="primary" scheme_preference="light">#6e36c9</color>
+    <color type="primary" scheme_preference="dark">#b995f2</color>
+  </branding>
+  <url type="homepage">https://sevendesk.tech</url>
+  <url type="bugtracker">https://github.com/gabriell211/Seven-Desk/issues</url>
+  <url type="vcs-browser">https://github.com/gabriell211/Seven-Desk</url>
+  <url type="contact">mailto:sevendesk@sevendesk.tech</url>
+  <requires>
+    <display_length compare="ge">600</display_length>
+    <internet>always</internet>
+  </requires>
+  <supports>
+    <control>keyboard</control>
+    <control>pointing</control>
+  </supports>
+  <content_rating type="oars-1.1"/>
+</component>

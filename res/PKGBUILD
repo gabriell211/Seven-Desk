@@ -1,10 +1,10 @@
-pkgname=rustdesk
+pkgname=sevendesk
 pkgver=1.5.3
 pkgrel=0
 epoch=
-pkgdesc=""
+pkgdesc="Seven Desk remote support"
 arch=('x86_64')
-url=""
+url="https://sevendesk.tech"
 license=('AGPL-3.0')
 groups=()
 depends=('gtk3' 'xdotool' 'libxcb' 'libxfixes' 'alsa-lib' 'libva' 'libappindicator-gtk3' 'gst-plugins-base' 'gst-plugin-pipewire')
@@ -12,7 +12,7 @@ makedepends=()
 checkdepends=()
 optdepends=()
 provides=()
-conflicts=()
+conflicts=('rustdesk')
 replaces=()
 backup=()
 options=()
@@ -31,5 +31,4 @@ package() {
   install -Dm 644 $HBB/res/rustdesk.desktop -t "${pkgdir}/usr/share/rustdesk/files"
   install -Dm 644 $HBB/res/rustdesk-link.desktop -t "${pkgdir}/usr/share/rustdesk/files"
   install -Dm 644 $HBB/res/128x128@2x.png "${pkgdir}/usr/share/icons/hicolor/256x256/apps/rustdesk.png"
-  install -Dm 644 $HBB/res/scalable.svg "${pkgdir}/usr/share/icons/hicolor/scalable/apps/rustdesk.svg"
 }

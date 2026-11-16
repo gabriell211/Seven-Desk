@@ -51,6 +51,12 @@ import 'package:flutter_hbb/generated_bridge.dart'
 import 'package:flutter_hbb/native/custom_cursor.dart'
     if (dart.library.html) 'package:flutter_hbb/web/custom_cursor.dart';
 
+// The macOS bundle retains the old URL scheme for existing support links.
+bool acceptsConnectionUriScheme(String url, String currentPrefix,
+    {required bool onMacOS}) =>
+    url.startsWith(currentPrefix) ||
+    (onMacOS && url.startsWith('rustdesk://'));
+
 typedef HandleMsgBox = Function(Map<String, dynamic> evt, String id);
 typedef ReconnectHandle = Function(OverlayDialogManager, SessionID, bool);
 final _constSessionId = Uuid().v4obj();
@@ -745,7 +751,8 @@ class FfiModel with ChangeNotifier {
 
   onUrlSchemeReceived(Map<String, dynamic> evt) {
     final url = evt['url'].toString().trim();
-    if (url.startsWith(bind.mainUriPrefixSync()) &&
+    if (acceptsConnectionUriScheme(url, bind.mainUriPrefixSync(),
+            onMacOS: isMacOS) &&
         handleUriLink(uriString: url)) {
       return;
     }
