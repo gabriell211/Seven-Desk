@@ -85,8 +85,8 @@ void main() {
   test('rolls back incomplete initial configuration', () async {
     final options = <String, String>{};
     final config = defaults();
-    expect(
-      () => config.apply(
+    await expectLater(
+      config.apply(
         readOption: (name) async => options[name] ?? '',
         writeOption: (name, value) async {
           if (name == 'custom-rendezvous-server' && value.isNotEmpty) {
