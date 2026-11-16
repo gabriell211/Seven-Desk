@@ -55,6 +55,28 @@
   const osIcon = document.querySelector('[data-os-icon]');
   const nameSlots = document.querySelectorAll('[data-os-name]');
   const platformCards = Array.from(document.querySelectorAll('[data-platform]'));
+  const releaseVersion = document.querySelector('[data-live-release]');
+  const releaseSource = document.querySelector('[data-release-source]');
+  const releaseRows = Array.from(document.querySelectorAll('[data-release-platform]'));
+
+  function renderReleasePanel(manifest) {
+    const valid = manifest && typeof manifest.latestRelease === 'string'
+      && manifest.devices && typeof manifest.devices === 'object';
+    if (releaseVersion) releaseVersion.textContent = valid ? manifest.latestRelease : 'Consulta indisponível';
+    if (releaseSource) releaseSource.textContent = valid
+      ? 'Disponibilidade consultada no servidor oficial de downloads.'
+      : 'Não foi possível consultar os pacotes agora. Consulte o histórico de versões.';
+    releaseRows.forEach(row => {
+      const architectures = valid ? manifest.devices[row.dataset.releasePlatform] : null;
+      const available = architectures && typeof architectures === 'object'
+        && Object.values(architectures).some(item => item && typeof item.version === 'string');
+      row.dataset.availability = !valid ? 'unknown' : available ? 'available' : 'missing';
+      const status = row.querySelector('[data-release-state]');
+      if (status) status.textContent = !valid ? 'Consulta indisponível'
+        : available ? 'Disponível' : 'Sem pacote publicado';
+    });
+  }
+
   const downloadNotice = document.querySelector('.download-notice');
   let selectedPlatform = null;
   let detectedPlatform = null;
@@ -170,11 +192,16 @@
         return response.json();
       })
       .then(manifest => {
+        if (!manifest || !manifest.devices || typeof manifest.devices !== 'object') {
+          throw new Error('Invalid downloads manifest');
+        }
         availableDevices = manifest.devices;
+        renderReleasePanel(manifest);
         selectPlatform(selectedPlatform);
       })
       .catch(() => {
         availableDevices = {};
+        renderReleasePanel(null);
         selectPlatform(selectedPlatform);
         if (downloadNotice) downloadNotice.textContent = 'Downloads temporariamente indisponíveis. Tente novamente mais tarde.';
       });

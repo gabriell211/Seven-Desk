@@ -160,3 +160,36 @@ h1,.section-head h2,.split-head h2,.steps-intro h2,.faq-layout h2,.pricing-intro
 .account-nav-login{color:#e9d5ff;border-color:#594170}.account-nav-login:hover{background:#2f1a47}
 .mobile-menu-button{border-color:#56446c;background:#20162f}.mobile-menu-button span{background:#d4b1f5}
 .mobile-navigation:not([hidden]){background:#171023;border-color:#594279}.mobile-navigation a{color:#eadff5}.mobile-navigation a:hover{color:#c575ff}
+
+
+/* The hero displays live published packages, never a simulated remote session. */
+.hero-grid{grid-template-columns:minmax(0,.95fr) minmax(0,1.05fr);gap:clamp(28px,5vw,76px);min-height:560px}
+.hero-copy{padding-bottom:0}
+.hero h1{font-size:clamp(53px,6vw,83px)}
+.hero-description{max-width:510px}
+.release-panel{position:relative;z-index:2;min-width:0;overflow:hidden;border:1px solid #624577;border-radius:22px;background:linear-gradient(157deg,rgba(36,26,56,.98),rgba(17,12,31,.98));box-shadow:0 32px 86px rgba(3,1,12,.52),0 0 60px rgba(135,65,228,.12)}
+.release-panel::before{content:"";position:absolute;inset:0 0 auto auto;width:270px;height:240px;background:radial-gradient(ellipse at 100% 0%,rgba(142,61,244,.18),transparent 68%);pointer-events:none}
+.release-panel-head,.release-panel-footer{position:relative;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:19px 23px;border-bottom:1px solid #493557}
+.release-panel-brand{display:flex;align-items:center;gap:10px;color:#fff;font-size:14px;font-weight:800;letter-spacing:-.02em}
+.release-panel-brand img{display:block;object-fit:contain;flex-shrink:0}
+.release-panel-brand small{display:block;color:#b9a9ce;font-size:10px;font-weight:500;letter-spacing:0;margin-top:3px}
+.release-panel-head>a,.release-panel-footer>a{color:#d9b0ff;font-size:11px;font-weight:700;white-space:nowrap}
+.release-panel-head>a:hover,.release-panel-footer>a:hover{color:#fff;text-decoration:underline}
+.release-panel-body{position:relative;padding:29px 27px 23px}
+.release-panel-kicker{color:#c58bfa;font-size:10px;letter-spacing:.14em;font-weight:800}
+.release-panel-body h2{font-size:clamp(24px,2.5vw,32px);line-height:1.24;letter-spacing:-.047em;color:#fbf7ff;margin:11px 0 10px}
+.release-panel-body>p{font-size:12px;line-height:1.75;color:#c7bcd7;max-width:410px;margin:0 0 24px}
+.release-version{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 16px;background:rgba(144,75,225,.13);border:1px solid #594076;border-radius:11px;margin-bottom:17px}
+.release-version span{color:#cabbdc;font-size:12px}
+.release-version strong{font-size:13px;color:#f7eeff;overflow-wrap:anywhere;text-align:right}
+.release-availability{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.release-platform{display:grid;grid-template-columns:24px minmax(0,1fr);grid-template-rows:auto auto;column-gap:9px;row-gap:3px;align-items:center;min-width:0;border:1px solid #413452;background:#191425;border-radius:11px;padding:13px 12px}
+.release-platform img{grid-row:1 / 3;display:block;object-fit:contain;max-width:23px;max-height:23px}
+.release-platform span{color:#f4eaff;font-size:12px;font-weight:800}
+.release-platform strong{color:#b9abc8;font-size:10px;font-weight:600;line-height:1.35}
+.release-platform[data-availability="available"] strong{color:#58e1af}
+.release-platform[data-availability="missing"] strong{color:#d6adc2}
+.release-panel-footer{border-top:1px solid #493557;border-bottom:0;align-items:flex-start}
+.release-panel-footer>span{font-size:10px;line-height:1.5;color:#a99abb;max-width:230px}
+@media(max-width:980px){.hero-grid{grid-template-columns:1fr;gap:34px}.release-panel{width:100%;max-width:690px;margin-inline:auto}}
+@media(max-width:640px){.hero-grid{min-height:unset}.release-panel{border-radius:17px}.release-panel-head,.release-panel-footer{padding:15px}.release-panel-body{padding:22px 16px}.release-panel-body h2{font-size:25px}.release-panel-head>a{font-size:10px}.release-availability{gap:8px}.release-platform{padding:11px 8px;column-gap:6px}.release-platform span{font-size:11px}.release-platform strong{font-size:9px}.release-panel-footer{gap:10px}}
