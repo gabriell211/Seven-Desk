@@ -3790,6 +3790,7 @@ impl LoginConfigHandler {
         } else {
             (my_id, self.id.clone())
         };
+        let site_profile = crate::seven_license::operator_profile();
         let mut avatar = get_builtin_option(keys::OPTION_AVATAR);
         if avatar.is_empty() {
             avatar = serde_json::from_str::<serde_json::Value>(&LocalConfig::get_option(
@@ -3802,6 +3803,9 @@ impl LoginConfigHandler {
                     .map(|x| x.trim().to_owned())
             })
             .unwrap_or_default();
+        }
+        if let Some((_, site_image, _)) = &site_profile {
+            avatar = site_image.clone();
         }
         avatar = resolve_avatar_url(avatar);
         let mut display_name = get_builtin_option(keys::OPTION_DISPLAY_NAME);
@@ -3821,6 +3825,13 @@ impl LoginConfigHandler {
         }
         if display_name.is_empty() {
             display_name = crate::username();
+        }
+        if let Some((site_name, _, site_company)) = &site_profile {
+            display_name = if !site_company.is_empty() && site_company != site_name {
+                format!("{site_name} · {site_company}")
+            } else {
+                site_name.clone()
+            };
         }
         let display_name = display_name
             .split_whitespace()
