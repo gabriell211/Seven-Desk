@@ -84,4 +84,49 @@ void main() {
       open: const Rect.fromLTWH(2790, 0, 1050, 735),
     );
   });
+  testWidgets('accepted session panel anchors to lower-right with workarea margin',
+      (tester) async {
+    const windowChannel = MethodChannel('window_manager');
+    const screenChannel = MethodChannel('flutter/windowsize');
+    final messenger = tester.binding.defaultBinaryMessenger;
+    var calls = 0;
+    Rect? bounds;
+    messenger.setMockMethodCallHandler(screenChannel, (_) async => {
+      'frame': [0.0, 0.0, 1920.0, 1080.0],
+      'scaleFactor': 1.0,
+      'screen': {
+        'frame': [0.0, 0.0, 1920.0, 1080.0],
+        'visibleFrame': [0.0, 0.0, 1920.0, 1040.0],
+        'scaleFactor': 1.0,
+      },
+    });
+    messenger.setMockMethodCallHandler(windowChannel, (call) async {
+      if (call.method == 'setBounds') {
+        calls++;
+        final args = call.arguments;
+        final ratio = args['devicePixelRatio'] as double;
+        bounds = Rect.fromLTWH(
+          args['x'] * ratio,
+          args['y'] * ratio,
+          args['width'] * ratio,
+          args['height'] * ratio,
+        );
+      }
+      return null;
+    });
+    addTearDown(() {
+      messenger.setMockMethodCallHandler(screenChannel, null);
+      messenger.setMockMethodCallHandler(windowChannel, null);
+    });
+    await setWindowsCmWindowBounds(
+      const Size(430, 196), bottomRight: true);
+    expect(calls, 1);
+    expect(bounds, const Rect.fromLTWH(1490, 832, 430, 196));
+
+    await setWindowsCmWindowBounds(
+      const Size(315, 130), bottomRight: true);
+    expect(calls, 2);
+    expect(bounds, const Rect.fromLTWH(1605, 898, 315, 130));
+  });
+
 }
