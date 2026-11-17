@@ -245,6 +245,15 @@ class _ConnectionPageState extends State<ConnectionPage>
           visibleTabs.contains(PeerTabIndex.lan.index)) {
         bind.mainLoadLanPeers();
       }
+      // The reference home screen opens on client PCs recently accessed.
+      // The user's saved aliases and the remaining tabs are kept intact.
+      if (visibleTabs.contains(PeerTabIndex.recent.index)) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            _peerTabs.currentState?.selectTab(PeerTabIndex.recent.index);
+          }
+        });
+      }
     }
     _idFocusNode.addListener(onFocusChanged);
     if (_idController.text.isEmpty) {
@@ -370,8 +379,14 @@ class _ConnectionPageState extends State<ConnectionPage>
     if (tab != null && _peerTabs.currentState?.selectTab(tab.index) != true) {
       return;
     }
+    if (section == HomeDashboardSection.home &&
+        gFFI.peerTabModel.visibleEnabledOrderedIndexs
+            .contains(PeerTabIndex.recent.index)) {
+      _peerTabs.currentState?.selectTab(PeerTabIndex.recent.index);
+    }
     setState(() => _section = section);
-    if (section == HomeDashboardSection.transfer) {
+    if (section == HomeDashboardSection.transfer ||
+        section == HomeDashboardSection.home) {
       _idFocusNode.requestFocus();
       final input = _idFocusNode.context;
       if (input != null) Scrollable.ensureVisible(input);
