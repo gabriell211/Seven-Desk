@@ -9,11 +9,11 @@ const ready = {
   SEVEN_ACCOUNT_STATUS_ENABLED: '1',
   SEVEN_LICENSE_API_ENABLED: '1',
   SEVEN_SALES_LAUNCH_APPROVED: '1',
-  DATABASE_URL: 'postgres://example.invalid/db',
-  NEON_AUTH_BASE_URL: 'https://auth.example.test',
+  SEVEN_DB_HOST:'db', SEVEN_DB_NAME:'sevendesk', SEVEN_DB_USER:'sevendesk_app', SEVEN_DB_PASSWORD_FILE:'/run/secrets/app_db_password',
+  SEVEN_AUTH_SECRET_FILE:'/run/secrets/auth_secret', SEVEN_SMTP_PASSWORD_FILE:'/run/secrets/smtp_password',
   INFINITEPAY_HANDLE: 'gabriel_1313',
-  INFINITEPAY_API_KEY: 'secret',
-  SEVEN_SITE_URL: 'https://seven-desk-site.vercel.app',
+  INFINITEPAY_API_KEY_FILE: '/run/secrets/infinitepay_api_key',
+  SEVEN_SITE_URL: 'https://www.sevendesk.tech',
 };
 
 test('sales stay disabled unless every production prerequisite is explicitly set', () => {

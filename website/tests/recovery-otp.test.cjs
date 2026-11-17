@@ -8,8 +8,8 @@ const root = join(__dirname, '..');
 const source = readFileSync(join(root, 'conta.js'), 'utf8');
 const html = readFileSync(join(root, 'conta.html'), 'utf8');
 
-test('password recovery uses Neon Auth OTP methods, not unsupported email-link methods', () => {
-  assert.match(source, /auth\.forgetPassword\.emailOtp\(\{email\}\)/);
+test('password recovery uses selfhosted Better Auth OTP methods', () => {
+  assert.match(source, /auth\.emailOtp\.requestPasswordReset\(\{email\}\)/);
   assert.match(source, /auth\.emailOtp\.resetPassword\(\{email,otp,password\}\)/);
   assert.doesNotMatch(source, /auth\.requestPasswordReset\(/);
   assert.doesNotMatch(source, /auth\.resetPassword\(\{/);
@@ -31,7 +31,7 @@ test('unverified account sessions cannot unlock subscription or payment actions'
   assert.match(html, /name="otp"/);
 });
 
-test('email verification resend uses Neon OTP API and handles an unverified login', () => {
+test('email verification resend uses self-hosted OTP API and handles an unverified login', () => {
   assert.match(source, /auth\.emailOtp\.sendVerificationOtp\(\{email:verificationEmail, type:'email-verification'\}\)/);
   assert.doesNotMatch(source, /auth\.sendVerificationEmail\(/);
   assert.match(source, /code === 'EMAIL_NOT_VERIFIED'/);

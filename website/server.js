@@ -68,6 +68,10 @@ const server = http.createServer(async (req, raw) => {
       res.setHeader('Location', '/favicon.svg');
       return res.status(308).end();
     }
+    if (pathname.startsWith('/api/auth/')) {
+      const {handler}=require('./lib/auth-handler');
+      return await handler(req,res,pathname);
+    }
     if (/^\/api\/[a-z-]+$/.test(pathname)) {
       const handler = require(path.join(__dirname, 'api', pathname.slice(5) + '.js'));
       req.query = Object.fromEntries(url.searchParams);
@@ -103,5 +107,6 @@ const server = http.createServer(async (req, raw) => {
   }
 });
 
-if (require.main === module) server.listen(port, '127.0.0.1');
+// Local host binding by default; the Docker network uses HOST=0.0.0.0 without publishing the port.
+if (require.main === module) server.listen(port, process.env.HOST || '127.0.0.1');
 module.exports = server;

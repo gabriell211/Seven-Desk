@@ -1,5 +1,5 @@
-import { createAuthClient } from '@neon/auth';
-import { jwtAuthorization } from './lib/account-api-jwt';
+import {createAuthClient} from 'better-auth/client';
+import {jwtClient} from 'better-auth/client/plugins';
 
 const status = document.getElementById('payment-return-status');
 
@@ -23,15 +23,19 @@ async function reconcileRedirect() {
     const authResponse = await fetch('/api/auth-config', { cache: 'no-store' });
     if (!authResponse.ok) throw new Error('Account unavailable');
     const { authUrl } = await authResponse.json();
-    const auth = createAuthClient(authUrl);
+    if(new URL(authUrl).origin!==window.location.origin)throw new Error('Invalid auth origin');
+    const auth=createAuthClient({baseURL:window.location.origin,basePath:'/api/auth',plugins:[jwtClient()]});
     const { data, error } = await auth.getSession();
     if (error || data?.user?.emailVerified !== true) {
       status.textContent = 'Entre na sua conta para consultar este pagamento. A notificação da InfinitePay também será verificada pelo servidor.';
       return;
     }
+    const jwt=await auth.token();
+    if(jwt.error||typeof jwt.data?.token!=='string')throw new Error('Session expired');
+    const token=jwt.data.token;
     const response = await fetch('/api/confirm-payment', {
       method: 'POST', cache: 'no-store',
-      headers: { 'Content-Type': 'application/json', Authorization: await jwtAuthorization(auth) },
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
       body: JSON.stringify({ order_nsu, transaction_nsu, slug }),
     });
     if (response.ok) {

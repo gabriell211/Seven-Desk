@@ -29,7 +29,7 @@ function fixture({ enabled = true, verified = true } = {}) {
         boundDevices.set(slot, params[1]);
         return {rows:[{user_id:userId}]};
       }
-      if (sql.includes('JOIN neon_auth."user"')) {
+      if (sql.includes('JOIN seven_users')) {
         return { rows: verified && [...storedHashes.values()].includes(params[0]) ? [{ user_id: userId }] : [] };
       }
       if (sql.startsWith('DELETE')) {

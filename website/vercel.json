@@ -49,10 +49,6 @@
   ],
   "rewrites": [
     {
-      "source": "/api/auth-email-webhook",
-      "destination": "/api/auth-config"
-    },
-    {
       "source": "/entrar",
       "destination": "/conta"
     },

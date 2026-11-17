@@ -1,0 +1,25 @@
+{
+    email {$SEVEN_ACME_EMAIL}
+}
+
+{$SEVEN_WEB_DOMAIN} {
+    encode zstd gzip
+    header {
+        X-Content-Type-Options nosniff
+        Referrer-Policy strict-origin-when-cross-origin
+        Permissions-Policy "camera=(), microphone=(), geolocation=()"
+        Strict-Transport-Security "max-age=31536000"
+        -Server
+    }
+    @sensitive path /api/* /conta /cadastro /entrar /recuperar-senha /redefinir-senha /pagamento-retorno
+    header @sensitive Cache-Control "no-store"
+    reverse_proxy site:3100
+}
+
+{$SEVEN_DOWNLOADS_DOMAIN} {
+    header X-Content-Type-Options nosniff
+    root * /srv/downloads
+    @hidden path_regexp hidden (?i)(?:^|/)\.[^/]+
+    respond @hidden 404
+    file_server
+}

@@ -8,11 +8,10 @@ const root = join(__dirname, '..');
 const read = name => readFileSync(join(root,name),'utf8');
 
 test('login, signup and recovery use dedicated accessible URLs', () => {
-  const config = JSON.parse(read('vercel.json'));
-  assert.equal(config.cleanUrls, true);
-  const routes = config.rewrites;
+  const server=read('server.js');
+  assert.match(server,/accountAliases/);
   for (const source of ['/entrar','/cadastro','/recuperar-senha','/redefinir-senha']) {
-    assert.deepEqual(routes.find(x=>x.source===source), {source,destination:'/conta'});
+    assert.ok(server.includes(source),source);
     assert.equal(existsSync(join(root, 'conta.html')), true, 'clean URL destination must exist');
   }
   const home=read('index.html');

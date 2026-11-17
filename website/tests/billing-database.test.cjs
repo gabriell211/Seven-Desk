@@ -11,7 +11,7 @@ test('checkout only creates orders for email-verified identities', async()=>{
     calls:[],
     async query(sql,args){
       this.calls.push([sql,args]);
-      if(sql.startsWith('SELECT 1 FROM neon_auth')) return {rows:[]};
+      if(sql.startsWith('SELECT 1 FROM seven_users')) return {rows:[]};
       return {rows:[]};
     },
   };
@@ -20,7 +20,7 @@ test('checkout only creates orders for email-verified identities', async()=>{
   assert.match(db.calls[0][0],/"emailVerified" IS TRUE/);
   db.query=async function(sql,args){
     this.calls.push([sql,args]);
-    if(sql.startsWith('SELECT 1 FROM neon_auth')) return {rows:[{'?column?':1}]};
+    if(sql.startsWith('SELECT 1 FROM seven_users')) return {rows:[{'?column?':1}]};
     return {rows:[]};
   };
   const id=await createOrder(db,userId,'yearly');
@@ -31,7 +31,7 @@ test('checkout only creates orders for email-verified identities', async()=>{
   assert.equal(last[1][3],40000);
 });
 
-test('payment verification credits exactly once without locking read-only Neon Auth user rows',async()=>{
+test('payment verification credits exactly once without locking restricted Better Auth user rows',async()=>{
   const order={user_id:userId,plan:'monthly',amount_cents:3990,state:'pending',transaction_nsu:null,invoice_slug:null};
   const statements=[];
   let releaseCount=0;

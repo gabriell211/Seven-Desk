@@ -1,0 +1,25 @@
+FROM node:22-alpine AS build
+WORKDIR /app
+COPY website/package.json website/package-lock.json ./
+RUN npm ci --no-audit --no-fund
+COPY website/ ./
+# Public deployment fixtures are required by security tests in the build stage only.
+COPY deploy/vps/compose.yml /deploy/vps/compose.yml
+COPY deploy/vps/Dockerfile.site /deploy/vps/Dockerfile.site
+COPY deploy/vps/Dockerfile.site.dockerignore /deploy/vps/Dockerfile.site.dockerignore
+RUN npm test && npm run build
+
+FROM node:22-alpine AS runtime
+ENV NODE_ENV=production
+WORKDIR /app
+COPY website/package.json website/package-lock.json ./
+RUN npm ci --omit=dev --no-audit --no-fund && npm cache clean --force
+COPY --from=build /app/public ./public
+COPY website/server.js ./server.js
+COPY website/api ./api
+COPY website/lib ./lib
+COPY website/db ./db
+RUN mkdir -p /srv/sevendesk/avatars && chown -R node:node /srv/sevendesk /app
+USER node
+EXPOSE 3100
+CMD ["node", "server.js"]

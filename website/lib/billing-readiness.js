@@ -3,7 +3,7 @@
 // Checkout is intentionally closed until the operator verifies the
 // payment provider, production database and remote-access authorization.
 function isCheckoutReady(env = process.env) {
-  const keys = ['DATABASE_URL', 'NEON_AUTH_BASE_URL', 'INFINITEPAY_HANDLE', 'INFINITEPAY_API_KEY', 'SEVEN_SITE_URL'];
+  const keys = ['SEVEN_DB_HOST','SEVEN_DB_NAME','SEVEN_DB_USER','SEVEN_DB_PASSWORD_FILE','SEVEN_AUTH_SECRET_FILE','SEVEN_SMTP_PASSWORD_FILE','INFINITEPAY_HANDLE','INFINITEPAY_API_KEY_FILE','SEVEN_SITE_URL'];
   if (env.SEVEN_BILLING_ENABLED !== '1' ||
       env.SEVEN_WEBHOOK_ENABLED !== '1' ||
       env.SEVEN_ACCOUNT_STATUS_ENABLED !== '1' ||
