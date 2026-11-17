@@ -202,6 +202,12 @@ class ConnectionManagerState extends State<ConnectionManager>
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       if (!mounted) return;
       try {
+        if (floating) {
+          // Restore before placing bounds: restoring afterwards can undo
+          // the lower-right location on Windows.
+          await windowManager.restore();
+          await windowManager.setAlwaysOnTop(true);
+        }
         if (isWindows) {
           await setWindowsCmWindowBounds(size, bottomRight: floating);
         } else {
@@ -209,10 +215,7 @@ class ConnectionManagerState extends State<ConnectionManager>
             size, floating ? Alignment.bottomRight : Alignment.topRight);
         }
         if (floating) {
-          // A compact panel must never hide the active remote session.
-          await windowManager.setAlwaysOnTop(true);
           await windowManager.show();
-          await windowManager.restore();
         }
       } catch (error) {
         debugPrint('Failed to place receiver session panel: $error');
@@ -236,7 +239,7 @@ class ConnectionManagerState extends State<ConnectionManager>
     });
   }
 
-  Widget _buildConnectedPanel(Client client) {
+  Widget _buildConnectedPanel(Client client, List<Client> active) {
     final content = switch (_panelView) {
       ReceiverPanelView.chat => ChatPage(type: ChatPageType.desktopCM),
       ReceiverPanelView.transfers => _FileTransferLogPage(),
@@ -269,6 +272,12 @@ class ConnectionManagerState extends State<ConnectionManager>
       onTransfers: () => _changePanelView(ReceiverPanelView.transfers, client),
       onControls: () => _changePanelView(ReceiverPanelView.controls, client),
       onCloseDetails: () => setState(() => _panelView = ReceiverPanelView.none),
+      onNextSession: active.length < 2 ? null : () {
+        final current = active.indexWhere((item) => item.id == client.id);
+        final next = active[(current + 1) % active.length];
+        gFFI.serverModel.jumpTo(next.id);
+        setState(() => _panelClientId = null);
+      },
       onNextMonitor: () => checkClickTime(client.id, () {
         // Reuses the existing Flutter FFI bridge. The native receiver and
         // server both enforce authorization and valid remote-desktop scope.
@@ -305,7 +314,7 @@ class ConnectionManagerState extends State<ConnectionManager>
         });
       }
       _resizeFloatingWindow(floating: true);
-      return _buildConnectedPanel(selected);
+      return _buildConnectedPanel(selected, active);
     }
     _resizeFloatingWindow(floating: false);
     pointerHandler(PointerEvent e) {

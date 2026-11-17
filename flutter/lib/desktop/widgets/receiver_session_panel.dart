@@ -26,6 +26,7 @@ class ReceiverSessionPanel extends StatelessWidget {
     this.details,
     this.unreadMessages = 0,
     this.canChangeMonitor = true,
+    this.onNextSession,
   });
 
   final IncomingSupportIdentity identity;
@@ -42,6 +43,7 @@ class ReceiverSessionPanel extends StatelessWidget {
   final VoidCallback onControls;
   final VoidCallback onCloseDetails;
   final VoidCallback onDisconnect;
+  final VoidCallback? onNextSession;
   final Widget? details;
 
   @override
@@ -127,6 +129,15 @@ class ReceiverSessionPanel extends StatelessWidget {
                     ),
                   ),
                 ),
+                if (onNextSession != null)
+                  IconButton(
+                    tooltip: 'Alternar sessão conectada',
+                    onPressed: onNextSession,
+                    icon: const Icon(Icons.swap_horiz_rounded, size: 19),
+                    color: muted,
+                    constraints: const BoxConstraints.tightFor(width: 32, height: 32),
+                    padding: EdgeInsets.zero,
+                  ),
                 IconButton(
                   tooltip: minimized ? 'Restaurar painel' : 'Minimizar painel',
                   onPressed: minimized ? onRestore : onMinimize,

@@ -19,6 +19,7 @@ void main() {
     required VoidCallback onDisconnect,
     required VoidCallback onMinimize,
     required VoidCallback onRestore,
+    VoidCallback? onNextSession,
   }) {
     return MaterialApp(
       home: Scaffold(
@@ -32,6 +33,7 @@ void main() {
               view: view,
               onMinimize: onMinimize,
               onRestore: onRestore,
+              onNextSession: onNextSession,
               onChat: onChat,
               onTransfers: onFiles,
               onNextMonitor: onScreen,
@@ -85,5 +87,21 @@ void main() {
     await tester.tap(find.text('Desconectar'));
     expect(restore,1);
     expect(disconnect,1);
+  });
+
+  testWidgets('multiple sessions can be selected without disconnecting', (tester) async {
+    var changes = 0;
+    var disconnect = 0;
+    await tester.pumpWidget(app(
+      compact:false,
+      view:ReceiverPanelView.none,
+      onChat:(){},onFiles:(){},onScreen:(){},
+      onDisconnect:()=>disconnect++,
+      onMinimize:(){},onRestore:(){},
+      onNextSession:()=>changes++,
+    ));
+    await tester.tap(find.byTooltip('Alternar sessão conectada'));
+    expect(changes, 1);
+    expect(disconnect, 0);
   });
 }
