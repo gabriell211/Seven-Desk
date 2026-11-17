@@ -249,7 +249,7 @@ class ConnectionManagerState extends State<ConnectionManager>
         ),
       ReceiverPanelView.none => const SizedBox.shrink(),
     };
-    return ReceiverSessionPanel(
+    return Obx(() => ReceiverSessionPanel(
       identity: incomingSupportIdentity(
         requesterName: client.name,
         requesterAvatar: client.avatar,
@@ -268,6 +268,7 @@ class ConnectionManagerState extends State<ConnectionManager>
       onChat: () => _changePanelView(ReceiverPanelView.chat, client),
       onTransfers: () => _changePanelView(ReceiverPanelView.transfers, client),
       onControls: () => _changePanelView(ReceiverPanelView.controls, client),
+      onCloseDetails: () => setState(() => _panelView = ReceiverPanelView.none),
       onNextMonitor: () => checkClickTime(client.id, () {
         // Reuses the existing Flutter FFI bridge. The native receiver and
         // server both enforce authorization and valid remote-desktop scope.
@@ -276,7 +277,7 @@ class ConnectionManagerState extends State<ConnectionManager>
       }),
       onDisconnect: () => checkClickTime(
         client.id, () => bind.cmCloseConnection(connId: client.id)),
-    );
+    ));
   }
 
   @override
@@ -286,6 +287,7 @@ class ConnectionManagerState extends State<ConnectionManager>
     final active = clients.where((c) => c.authorized && !c.disconnected).toList();
     final pending = clients.any((c) => !c.authorized && !c.disconnected);
     final floating = active.isNotEmpty && !pending;
+    gFFI.chatModel.receiverPanelActive = floating;
     if (floating) {
       final key = serverModel.tabController.state.value.selectedTabInfo.key;
       final selected = active.firstWhereOrNull((c) => c.id.toString() == key)

@@ -36,6 +36,7 @@ void main() {
               onTransfers: onFiles,
               onNextMonitor: onScreen,
               onControls: () {},
+              onCloseDetails: () {},
               onDisconnect: onDisconnect,
               details: const Text('Detalhes de sessão'),
             ),

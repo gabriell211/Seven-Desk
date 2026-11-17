@@ -21,6 +21,7 @@ class ReceiverSessionPanel extends StatelessWidget {
     required this.onTransfers,
     required this.onNextMonitor,
     required this.onControls,
+    required this.onCloseDetails,
     required this.onDisconnect,
     this.details,
     this.unreadMessages = 0,
@@ -39,6 +40,7 @@ class ReceiverSessionPanel extends StatelessWidget {
   final VoidCallback onTransfers;
   final VoidCallback onNextMonitor;
   final VoidCallback onControls;
+  final VoidCallback onCloseDetails;
   final VoidCallback onDisconnect;
   final Widget? details;
 
@@ -46,7 +48,6 @@ class ReceiverSessionPanel extends StatelessWidget {
   Widget build(BuildContext context) {
     const background = Color(0xFF171326);
     const border = Color(0xFF403752);
-    const purple = Color(0xFFBA64FD);
     const green = Color(0xFF23E693);
     const muted = Color(0xFFC3BDD4);
     final fallback = CircleAvatar(
@@ -209,7 +210,7 @@ class ReceiverSessionPanel extends StatelessWidget {
                     IconButton(
                       tooltip: 'Fechar detalhes',
                       icon: const Icon(Icons.close_rounded, size: 19),
-                      onPressed: onControls,
+                      onPressed: onCloseDetails,
                       color: muted,
                     ),
                   ],
@@ -240,24 +241,17 @@ class ReceiverSessionPanel extends StatelessWidget {
     int unread = 0,
     String? tooltip,
   }) {
-    return Tooltip(
-      message: tooltip ?? label,
-      child: Semantics(
-        label: label,
-        button: true,
-        child: Badge(
-          isLabelVisible: unread > 0,
-          label: Text(unread > 99 ? '99+' : '$unread'),
-          child: IconButton(
-            tooltip: label,
-            onPressed: callback,
-            style: IconButton.styleFrom(
-              foregroundColor: selected ? const Color(0xFFBA64FD) : Colors.white,
-              backgroundColor: selected ? const Color(0xFF342149) : Colors.transparent,
-            ),
-            icon: Icon(icon, size: 20),
-          ),
+    return Badge(
+      isLabelVisible: unread > 0,
+      label: Text(unread > 99 ? '99+' : '$unread'),
+      child: IconButton(
+        tooltip: tooltip ?? label,
+        onPressed: callback,
+        style: IconButton.styleFrom(
+          foregroundColor: selected ? const Color(0xFFBA64FD) : Colors.white,
+          backgroundColor: selected ? const Color(0xFF342149) : Colors.transparent,
         ),
+        icon: Icon(icon, size: 20),
       ),
     );
   }
