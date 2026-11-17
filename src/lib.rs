@@ -50,6 +50,7 @@ mod clipboard;
 pub mod core_main;
 mod custom_server;
 pub mod seven_server;
+pub mod seven_license;
 mod lang;
 #[cfg(not(any(target_os = "android", target_os = "ios")))]
 mod port_forward;

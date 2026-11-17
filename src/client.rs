@@ -390,7 +390,8 @@ impl Client {
         debug_assert!(peer == interface.get_id());
         interface.update_direct(None);
         interface.update_received(false);
-        match Self::_start(peer, key, token, conn_type, interface.clone()).await {
+        let seven_token = crate::seven_license::outbound_token(token);
+        match Self::_start(peer, key, &seven_token, conn_type, interface.clone()).await {
             Err(err) => {
                 let err_str = err.to_string();
                 if err_str.starts_with("Failed") {
