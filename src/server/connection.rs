@@ -789,6 +789,27 @@ impl Connection {
                                 break;
                             }
                         }
+                        #[cfg(not(any(target_os = "android", target_os = "ios")))]
+                        ipc::Data::CmCycleDisplay => {
+                            // Only the receiving operator, after local authorization,
+                            // may switch which physical monitor is shared.
+                            if conn.authorized
+                                && conn.file_transfer.is_none()
+                                && !conn.terminal
+                                && !conn.view_camera
+                                && conn.port_forward_socket.is_none()
+                                && conn.port_forward_mux.is_none()
+                            {
+                                let count = Connection::video_source_count(conn.video_source());
+                                if count > 1 {
+                                    let next = (conn.display_idx + 1) % count;
+                                    conn.handle_switch_display(SwitchDisplay {
+                                        display: next as _,
+                                        ..Default::default()
+                                    }).await;
+                                }
+                            }
+                        }
                         ipc::Data::ChatMessage{text} => {
                             let mut misc = Misc::new();
                             misc.set_chat_message(ChatMessage {

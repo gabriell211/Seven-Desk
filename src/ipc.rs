@@ -368,6 +368,9 @@ pub enum Data {
         name: String,
         enabled: bool,
     },
+    /// Receiver's local operator requests the next connected monitor.
+    #[cfg(not(any(target_os = "android", target_os = "ios")))]
+    CmCycleDisplay,
     SystemInfo(Option<String>),
     ClickTime(i64),
     #[cfg(not(any(target_os = "android", target_os = "ios")))]
