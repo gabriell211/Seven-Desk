@@ -1,66 +1,103 @@
-# Seven Desk — Docker na VPS (preparação isolada)
+# Seven Desk — VPS Docker self-host (PR #20)
 
-## Importante: esta é a etapa de infraestrutura, não a migração completa
+## Objetivo e limites de segurança
 
-O usuário confirmou que não existem clientes nem usuários reais. Não há motivo para importar contas fictícias, pedidos simulados ou tokens de homologação.
+A instalação pretendida é **100% própria**: website e API Node.js, Better Auth local,
+PostgreSQL, SMTP Hostinger, InfinitePay, licenças, downloads e Seven ID/Relay. Nenhum
+cliente real foi registrado, portanto **não importar** contas de testes do Neon.
 
-Este compose prepara PostgreSQL local, site Node.js e Caddy opcional. Conta, cobrança, webhooks e licenciamento continuam fechados. As APIs atuais ainda usam Neon Auth e não podem ser ativadas até concluir a migração para autenticação própria. Não exclua ainda os recursos antigos nem altere o DNS.
+O Docker Compose usa serviços privados com três perfis:
+- Por padrão: banco e site, sem portas públicas, cadastros e pagamentos desativados
+- setup: migração do Better Auth e criação transacional das tabelas comerciais
+- signaling: os binários Seven ID/Relay em host network (NÃO ligar sem auditoria de portas)
+- cutover: Caddy 80/443 para servir www e downloads após verificar o DNS e o TLS
 
-## Proteções
+**Ainda não houve deploy nem homologação real na VPS**. Um build CI aprovado não prova
+que SMTP, pagamentos, P2P ou UAC funcionem. Não remover a origem antiga antes de
+ser possível fazer rollback para ela.
 
-- PostgreSQL 17 em rede interna, senha via Docker Secret em /etc/sevendesk/secrets/pg_password e sem expor 5432.
-- Site não publica portas, root filesystem de somente leitura, processo não-root, limites de PIDs e volume para avatar.
-- Caddy HTTPS somente no profile cutover, desativado na preparação. Antes de iniciá-lo, verifique Caddy/Nginx e portas 80/443 ocupadas.
-- Volumes persistentes para PostgreSQL, TLS, uploads e downloads. Não versionar segredos ou chaves do servidor remoto.
-- Servidores ID e relay remotos não são substituídos neste compose inicial. Testar P2P, relay e UAC antes da troca.
+## Arquivos privados e pré-requisitos
 
-## Preparação na VPS
-
-Instale Docker Engine e Compose plugin atualizados, configure firewall, SSH por chave e mantenha o daemon Docker inacessível pela internet. Prepare o arquivo de configuracao (somente valores publicos; as flags do Compose permanecem desligadas):
+No servidor Linux, configurar usuário com SSH por chave, firewall e Docker Engine +
+plugin Compose. Nunca expor 5432, API Docker, Postgres ou diretórios de segredos.
 
     cd deploy/vps
     cp .env.example .env
     chmod 600 .env
-
-Os dominios do arquivo .env sao consumidos pelo Caddy apenas no futuro profile cutover. Alterar .env NAO libera cadastro, cobranca ou licenciamento. As senhas permanecem exclusivamente em arquivos de segredos no host.
-
-Crie o segredo localmente:
-
     sudo install -d -m 0700 /etc/sevendesk/secrets
     sudo sh -c 'umask 077; openssl rand -hex 32 > /etc/sevendesk/secrets/pg_password'
+    sudo sh -c 'umask 077; openssl rand -hex 32 > /etc/sevendesk/secrets/app_db_password'
+    sudo sh -c 'umask 077; openssl rand -hex 48 > /etc/sevendesk/secrets/auth_secret'
 
-Prepare o clone do repositório e valide sem publicar portas:
+Inserir as credenciais reais **diretamente na VPS** (nunca aqui ou no Git):
 
-    cd deploy/vps
+    sudo install -m 600 -o root -g root /dev/null /etc/sevendesk/secrets/smtp_password
+    sudo install -m 600 -o root -g root /dev/null /etc/sevendesk/secrets/infinitepay_api_key
+
+Os arquivos acima devem ser preenchidos de forma segura no terminal da VPS; nunca
+colocar senhas na linha de comando, em comentários, mensagens ou em logs. A senha SMTP
+corresponde à conta Hostinger sevendesk@sevendesk.tech. A chave InfinitePay não será
+utilizada até serem ativadas todas as flags após a homologação.
+
+## Instalação isolada e migração de banco
+
     docker compose config -q
-    docker compose up -d --build db site
+    docker compose build site
+    docker compose up -d db
+    docker compose --profile setup run --rm migrate
+    docker compose up -d site
     docker compose ps
     docker compose exec site node -e "fetch('http://127.0.0.1:3100/api/account-availability').then(r=>r.json()).then(console.log)"
-    docker compose exec db pg_isready -U sevendesk -d sevendesk
 
-É intencional que cadastro e cobrança estejam desativados. O serviço edge exige profile cutover e não é iniciado por padrão. Para interromper sem perder dados use docker compose stop. Nunca use docker compose down -v em produção, pois apaga volumes.
+A migração programática do Better Auth cria tabelas de contas, sessões, OTP, JWKS e
+limites de requisição. O migrador aplica 001_billing.sql, 002_app_tokens.sql e
+003_technician_slots.sql uma única vez por transação e cria a role sevendesk_app
+sem permissão para modificar DDL.
 
-## Próximas etapas para retirar Neon e Vercel
+O site continua com as flags fechadas; nenhum usuário pode ser registrado até
+verificar a infraestrutura e ativar a configuração de homologação.
+Não usar docker compose down -v: apaga volumes.
 
-1. Migrar frontend de @neon/auth para Better Auth auto-hospedado, com PostgreSQL local, JWT, OTP, recuperação e SMTP Hostinger sevendesk@sevendesk.tech.
-2. Migrar SQL de usuários, assinaturas, pedidos e códigos de ativação de neon_auth para esquema próprio; gerar migrações e validar integridade e privilégio mínimo.
-3. Concluir a integração do aplicativo com autenticação e licenças antes de abrir cadastro e cobrança.
-4. Validar InfinitePay, webhook, estornos e idempotência sem cobrar usuários reais.
-5. Migrar seven-id e seven-relay para imagens construídas de fontes fixadas; testar em duas máquinas e portas alternativas antes de substituir serviços.
-6. Hospedar downloads e manifesto na VPS, com instaladores verdadeiros.
-7. Testar rollback, backup/restauração e HTTPS; só então ativar cutover e mudar DNS.
-8. Depois de tudo aprovado, desativar e remover recursos de Neon e Vercel, em operação explícita e revisada, nunca antes do novo sistema funcionar.
+## Testes obrigatórios para liberação
 
-## Backups
+1. Acesso HTTPS sem vazamento de secrets, cookies seguros e renovação TLS
+2. OTP recebido de Seven Desk <sevendesk@sevendesk.tech> por SMTP Hostinger
+3. Cadastro, confirmação, login, logout, sessões, recuperação e mudança de senha
+4. Emissão/revogação de códigos (até cinco slots) e sincronização do perfil
+5. InfinitePay: pedido único, notificação válida, reenvio idempotente, falha, reembolso
+   e atualização/expiração de assinatura; não criar pagamentos reais só para testar
+6. Seven ID/Relay: conexão entre dois equipamentos, NAT/P2P, fallback relay e UAC
+7. Distribuição dos arquivos verdadeiros e hashes do manifesto pelo domínio downloads
+8. Backup externo cifrado, restauração isolada, falha de disco, rollback e reinício
 
-Instale age e mantenha chave privada de restauração fora da VPS. Grave dumps cifrados em destino remoto montado:
+## Servidores de conexão remota
+
+O perfil signaling usa o upstream OSS fixado em signaling/build.sh e aplica a alteração
+de licença do Seven Desk. O build inicial usa Rust, **não uma imagem :latest**.
+Ele faz bind das portas 21115–21117 do host. Não iniciar até conferir:
+
+    sudo ss -ltnup | grep -E ':2111[5-9]'
+    docker compose --profile signaling config -q
+
+Salvar e transferir as chaves ED25519 já existentes para o volume novo, verificando
+permissões do UID 10001 antes do corte. Não substituir as chaves privadas do servidor.
+O bloqueio de licença fica desativado até clientes e endpoint estarem homologados.
+As licenças e atribuições legais dos componentes upstream permanecem válidas.
+
+## Liberação / eliminação dos serviços anteriores
+
+Só ativar o profile cutover após concluir todo o checklist e auditar portas/DNS.
+Depois de HTTPS, banco, contas, pagamento, ID/relay e downloads funcionarem na VPS,
+desligar as integrações externas e excluir os recursos antigos, mantendo backups
+por tempo compatível com a política de segurança. Não excluir repositórios nem
+credenciais de suporte até a continuidade ter sido comprovada.
+
+## Backup criptografado
+
+Guardar a chave privada age de recuperação **fora da VPS** e o destino de backup em
+armazenamento remoto:
 
     BACKUP_DIR=/mnt/backup-offsite AGE_RECIPIENT='age1...' bash backup-encrypted.sh
 
-Faça também backups cifrados de downloads, avatares, certificados e chave privada do servidor ID. Teste a recuperação em outra máquina. Backup no mesmo disco não é offsite.
-
-## Corte final
-
-    docker compose --profile cutover config -q
-
-A ativação do edge publica 80/443 e pode conflitar com o Caddy ou Nginx em execução. Nunca inicie o profile cutover sem auditoria das portas, validação TLS e plano de rollback. Sem acesso SSH à VPS, o corte não é executável daqui.
+O script atual cobre o banco. Certificados TLS, arquivos de download, avatares e
+chaves privadas de ID exigem rotina cifrada adicional e testes de restauração.

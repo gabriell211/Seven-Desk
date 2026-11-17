@@ -1,18 +1,13 @@
 'use strict';
-const { Pool } = require('pg');
+const {pool}=require('../lib/db-pool');
 const { getEntitlement } = require('../lib/billing');
 const { createLicenseHandler } = require('../lib/license-routes');
 const { appTokenUser } = require('../lib/app-tokens');
 
-let pool;
 module.exports = createLicenseHandler({
   enabled: () => process.env.SEVEN_ACCOUNT_STATUS_ENABLED === '1' &&
     process.env.SEVEN_LICENSE_API_ENABLED === '1',
   authenticate: header => appTokenUser(pool(), header, true),
-  pool: () => {
-    if (!process.env.DATABASE_URL) throw new Error('Database unavailable');
-    if (!pool) pool = new Pool({connectionString: process.env.DATABASE_URL, max:3, idleTimeoutMillis:5000});
-    return pool;
-  },
+  pool,
   getEntitlement,
 });

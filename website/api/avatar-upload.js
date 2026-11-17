@@ -2,7 +2,7 @@
 
 const fs = require('node:fs/promises');
 const path = require('node:path');
-const { Pool } = require('pg');
+const {pool}=require('../lib/db-pool');
 const { authenticatedUser } = require('../lib/server-auth');
 
 const formats = {
@@ -10,7 +10,6 @@ const formats = {
   'image/png': {ext:'png', valid: bytes => bytes.subarray(0, 8).equals(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]))},
   'image/webp': {ext:'webp', valid: bytes => bytes.subarray(0, 4).toString() === 'RIFF' && bytes.subarray(8, 12).toString() === 'WEBP'},
 };
-let db;
 
 module.exports = async (req, res) => {
   res.setHeader('Cache-Control', 'no-store');
@@ -25,9 +24,7 @@ module.exports = async (req, res) => {
   try {
     const userId = await authenticatedUser(req.headers.authorization);
     if (!userId) return res.status(401).json({error:'Entre na sua conta'});
-    if (!process.env.DATABASE_URL) throw new Error('Database unavailable');
-    if (!db) db = new Pool({connectionString:process.env.DATABASE_URL, max:3, idleTimeoutMillis:5000});
-    const verified = await db.query('SELECT 1 FROM neon_auth."user" WHERE id = $1 AND "emailVerified" IS TRUE', [userId]);
+    const verified = await pool().query('SELECT 1 FROM seven_users WHERE id = $1 AND "emailVerified" IS TRUE', [userId]);
     if (!verified.rows.length) return res.status(403).json({error:'Confirme seu e-mail'});
     const directory = path.join(process.env.SEVEN_AVATAR_DIR, userId);
     await fs.mkdir(directory, {recursive:true, mode:0o750});

@@ -1,13 +1,13 @@
--- Run against a Neon branch with Managed Auth enabled before deploying billing.
+-- Run against the self-hosted PostgreSQL after Better Auth tables before deploying billing.
 CREATE TABLE IF NOT EXISTS seven_desk_subscriptions (
-    user_id uuid PRIMARY KEY REFERENCES neon_auth."user"(id) ON DELETE RESTRICT,
+    user_id uuid PRIMARY KEY REFERENCES seven_users(id) ON DELETE RESTRICT,
     paid_through timestamptz NOT NULL,
     updated_at timestamptz NOT NULL DEFAULT now()
 );
 
 CREATE TABLE IF NOT EXISTS seven_desk_payment_orders (
     order_id uuid PRIMARY KEY,
-    user_id uuid NOT NULL REFERENCES neon_auth."user"(id) ON DELETE RESTRICT,
+    user_id uuid NOT NULL REFERENCES seven_users(id) ON DELETE RESTRICT,
     plan text NOT NULL CHECK (plan IN ('monthly', 'yearly')),
     amount_cents integer NOT NULL,
     state text NOT NULL DEFAULT 'pending' CHECK (state IN ('pending', 'paid')),

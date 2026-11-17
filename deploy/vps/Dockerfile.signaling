@@ -1,0 +1,20 @@
+FROM rust:1.90-bookworm AS builder
+ENV CARGO_NET_GIT_FETCH_WITH_CLI=true
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    git ca-certificates pkg-config libssl-dev libsqlite3-dev protobuf-compiler cmake \
+    clang libclang-dev && rm -rf /var/lib/apt/lists/*
+WORKDIR /src
+COPY signaling/ ./signaling/
+RUN chmod 755 signaling/build.sh && signaling/build.sh /tmp/seven-upstream
+RUN test -x signaling/dist/seven-id && test -x signaling/dist/seven-relay
+
+FROM debian:bookworm-slim
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ca-certificates libssl3 libsqlite3-0 && rm -rf /var/lib/apt/lists/* \
+    && groupadd -g 10001 seven && useradd -u 10001 -g seven -M -s /usr/sbin/nologin seven \
+    && install -d -o seven -g seven -m 0700 /var/lib/sevendesk/server
+COPY --from=builder /src/signaling/dist/seven-id /usr/local/bin/seven-id
+COPY --from=builder /src/signaling/dist/seven-relay /usr/local/bin/seven-relay
+USER 10001:10001
+WORKDIR /var/lib/sevendesk/server
+CMD ["seven-id"]

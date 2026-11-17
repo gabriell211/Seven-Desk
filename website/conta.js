@@ -1,4 +1,5 @@
-import { createAuthClient } from '@neon/auth';
+import {createAuthClient} from 'better-auth/client';
+import {emailOTPClient,jwtClient} from 'better-auth/client/plugins';
 
 const el = id => document.getElementById(id);
 const form = el('account-form');
@@ -109,10 +110,11 @@ async function refresh() {
   if (data?.user?.emailVerified === true) await Promise.all([loadSubscription(), loadCheckoutAvailability(), loadAppAccess()]);
 }
 async function appAuthorization() {
-  const {data, error} = await auth.getSession();
-  const token = data?.session?.token;
-  if (error || typeof token !== 'string' || token.split('.').length !== 3) throw new Error('Invalid session');
-  return 'Bearer ' + token;
+  const {data,error}=await auth.token();
+  const token=data?.token;
+  if(error||typeof token!=='string'||!/^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/.test(token))
+    throw new Error('Authentication required');
+  return 'Bearer '+token;
 }
 async function loadAppAccess() {
   try {
@@ -189,10 +191,7 @@ async function loadSubscription() {
   const target = el('account-subscription');
   target.textContent = 'Consultando período de acesso...';
   try {
-    const {data, error} = await auth.getSession();
-    const token = data?.session?.token;
-    if (error || typeof token !== 'string' || token.split('.').length !== 3) throw new Error('Invalid session');
-    const response = await fetch('/api/subscription', {headers: {Authorization: `Bearer ${token}`}, cache: 'no-store'});
+    const response = await fetch('/api/subscription', {headers: {Authorization: await appAuthorization()}, cache:'no-store'});
     if (!response.ok) throw new Error('Unavailable');
     const subscription = await response.json();
     const date = new Date(subscription.status === 'trial' ? subscription.trialEndsAt : subscription.accessEndsAt);
@@ -218,12 +217,9 @@ async function startCheckout(plan) {
   for (const button of paymentButtons) button.disabled = true;
   notice.textContent = 'Preparando pagamento seguro...';
   try {
-    const {data, error} = await auth.getSession();
-    const token = data?.session?.token;
-    if (error || typeof token !== 'string' || token.split('.').length !== 3) throw new Error('Not authenticated');
     const response = await fetch('/api/checkout', {
       method:'POST', cache:'no-store',
-      headers:{'Content-Type':'application/json', Authorization:`Bearer ${token}`},
+      headers:{'Content-Type':'application/json', Authorization:await appAuthorization()},
       body:JSON.stringify({plan}),
     });
     if (!response.ok) throw new Error('Checkout unavailable');
@@ -375,7 +371,7 @@ el('account-recovery-form').addEventListener('submit', async event=>{
     return;
   }
   try {
-    const {error} = await auth.forgetPassword.emailOtp({email});
+    const {error} = await auth.emailOtp.requestPasswordReset({email});
     if (error) throw error;
     el('reset-email').value = email;
     setRecoveryMode(true);
@@ -432,7 +428,8 @@ el('account-signout').addEventListener('click',async()=>{
     const settings = await fetch('/api/auth-config', {cache:'no-store'});
     if (!settings.ok) throw new Error('Authentication configuration unavailable');
     const {authUrl} = await settings.json();
-    auth = createAuthClient(authUrl);
+    if(new URL(authUrl).origin!==window.location.origin)throw new Error('Invalid auth origin');
+    auth=createAuthClient({baseURL:window.location.origin,basePath:'/api/auth',plugins:[emailOTPClient(),jwtClient()]});
     await refresh();
     if (!el('account-signed-in').hidden) { status(''); return; }
     if (isResetPage) setRecoveryMode(true);

@@ -14,6 +14,7 @@ COPY --from=build /app/public ./public
 COPY website/server.js ./server.js
 COPY website/api ./api
 COPY website/lib ./lib
+COPY website/db ./db
 RUN mkdir -p /srv/sevendesk/avatars && chown -R node:node /srv/sevendesk /app
 USER node
 EXPOSE 3100

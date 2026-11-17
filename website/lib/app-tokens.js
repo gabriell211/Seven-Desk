@@ -19,12 +19,12 @@ async function appTokenUser(pool, header, bindDevice = false) {
   const result = bindDevice
     ? await pool.query(
       `UPDATE seven_desk_app_tokens t SET device_hash = COALESCE(t.device_hash, $2)
-         FROM neon_auth."user" u WHERE t.token_hash = $1 AND u.id = t.user_id
+         FROM seven_users u WHERE t.token_hash = $1 AND u.id = t.user_id
           AND u."emailVerified" IS TRUE AND (t.device_hash IS NULL OR t.device_hash = $2)
         RETURNING t.user_id`, [tokenHash(token), deviceHash])
     : await pool.query(
       `SELECT t.user_id FROM seven_desk_app_tokens t
-         JOIN neon_auth."user" u ON u.id = t.user_id
+         JOIN seven_users u ON u.id = t.user_id
         WHERE t.token_hash = $1 AND u."emailVerified" IS TRUE`, [tokenHash(token)]);
   return result.rows[0]?.user_id || null;
 }
@@ -58,7 +58,7 @@ function createAppTokenHandler({ enabled, authenticate, pool, random = randomByt
       const token = 'sd_' + random(32).toString('base64url');
       const result = await db.query(
         `INSERT INTO seven_desk_app_tokens (user_id, slot, label, token_hash)
-         SELECT id, $2, $3, $4 FROM neon_auth."user" WHERE id = $1 AND "emailVerified" IS TRUE
+         SELECT id, $2, $3, $4 FROM seven_users WHERE id = $1 AND "emailVerified" IS TRUE
          ON CONFLICT (user_id, slot) DO UPDATE SET label = EXCLUDED.label,
            token_hash = EXCLUDED.token_hash, device_hash = NULL, created_at = now()
          RETURNING user_id`,
