@@ -33,7 +33,7 @@ body.account-page{min-height:100vh;background:radial-gradient(ellipse at 12% 14%
 .account-plan-actions label{display:block;font-size:12px;font-weight:700;color:#e7ddf5;margin:14px 0}
 .account-plan-actions label input{display:block;width:100%;box-sizing:border-box;margin-top:8px;border:1px solid #504365;border-radius:10px;padding:11px 14px;font:inherit;color:#fff;background:#181427}
 #account-profile-photo{object-fit:cover;border-radius:50%;margin:12px 0}
-.account-device-row{padding:12px 0;border-bottom:1px solid #403752}
+.account-device-row{padding:16px 0;border-bottom:1px solid #403752}.technician-preview{object-fit:cover;border-radius:50%;width:64px;height:64px;display:block;margin:12px 0}
 .account-device-row .account-signout{margin:5px 8px 5px 0}
 .account-app-token-label{display:block;margin-top:16px;font-size:12px;font-weight:700;color:#e7ddf5}
 .account-app-token-label input{display:block;width:100%;box-sizing:border-box;margin-top:8px;border:1px solid #504365;border-radius:10px;padding:11px 14px;font:inherit;color:#fff;background:#181427}
