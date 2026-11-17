@@ -40,15 +40,25 @@ function createAppTokenHandler({ enabled, authenticate, pool, random = randomByt
       const userId = await authenticate(req.headers?.authorization);
       if (!userId) return res.status(401).json({ error: 'Entre na sua conta' });
       const db = pool();
+      let maxSlots = 5;
+      try {
+        const allowance = await db.query(
+          'SELECT 5 + COALESCE((SELECT extra_slots FROM seven_desk_subscriptions WHERE user_id = $1), 0) AS max_slots',
+          [userId],
+        );
+        maxSlots = Number(allowance.rows[0]?.max_slots || 5);
+      } catch {
+        // Keep the original five-slot safety limit if the optional entitlement column is unavailable.
+      }
       if (req.method === 'GET') {
         const result = await db.query(
           'SELECT slot, label FROM seven_desk_app_tokens WHERE user_id = $1 ORDER BY slot',
           [userId],
         );
-        return res.status(200).json({ devices: result.rows });
+        return res.status(200).json({ devices: result.rows, maxSlots });
       }
       const slot = Number(req.body?.slot);
-      if (!Number.isInteger(slot) || slot < 1 || slot > 5) return res.status(400).json({ error: 'Computador inválido' });
+      if (!Number.isInteger(slot) || slot < 1 || slot > maxSlots) return res.status(400).json({ error: 'Computador inválido' });
       if (req.method === 'DELETE') {
         await db.query('DELETE FROM seven_desk_app_tokens WHERE user_id = $1 AND slot = $2', [userId, slot]);
         return res.status(200).json({ active: false, slot });
