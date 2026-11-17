@@ -128,6 +128,10 @@
           <p class="account-intro">Cada código fica vinculado ao primeiro dispositivo que iniciar suporte com ele. Os nomes e fotos dos técnicos são gerenciados aqui e aparecem no aplicativo e nas solicitações de acesso. Para trocar o dispositivo, gere um novo código na mesma vaga.</p>
           <p id="account-app-notice" class="account-intro" aria-live="polite"></p>
           <div id="account-device-list"></div>
+          <label id="account-tech-code-label" class="account-app-token-label" hidden>Código exclusivo do técnico (tec_)
+            <input id="account-tech-code" type="text" readonly spellcheck="false" autocomplete="off" aria-label="Código do técnico" />
+          </label>
+          <button id="account-tech-code-copy" class="account-signout" type="button" hidden>Copiar código do técnico</button>
           <label id="account-app-token-label" class="account-app-token-label" hidden>Código de ativação
             <input id="account-app-token" type="text" readonly spellcheck="false" autocomplete="off" />
           </label>

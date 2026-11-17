@@ -46,6 +46,7 @@ function setMode(create) {
   el('account-document').required = create;
   el('account-name').required = create;
   el('account-password').autocomplete = create ? 'new-password' : 'current-password';
+  el('account-password').minLength = create ? 12 : 8;
   updateDocumentFields();
   el('account-submit').textContent = create ? 'Criar conta' : 'Entrar';
   el('account-submit').disabled = create ? !availability.registrationEnabled : !availability.loginEnabled;
@@ -109,6 +110,9 @@ function displaySession(session) {
   el('account-app-token').value = '';
   el('account-app-token-label').hidden = true;
   el('account-app-copy').hidden = true;
+  el('account-tech-code').value = '';
+  el('account-tech-code-label').hidden = true;
+  el('account-tech-code-copy').hidden = true;
   el('account-device-list').replaceChildren();
   if (!user) el('account-subscription').textContent = '';
   if (user) {
@@ -140,14 +144,15 @@ async function loadAppAccess() {
     if (!Array.isArray(devices)) return;
     el('account-app-access').hidden = false;
     el('account-app-notice').textContent =
-      'Cadastre nome e foto para cada técnico. Gere um código de ativação para seu dispositivo; alterações no perfil não trocam o código.';
+      'Cadastre o técnico e gere o código tec_ exclusivo. Depois gere o código sd_ de ativação do computador. Um código não substitui o outro.';
     const list = el('account-device-list');
     list.replaceChildren();
     const availableSlots = Number.isInteger(maxSlots) ? Math.max(1,Math.min(maxSlots,500)) : 5;
     for (let slot = 1; slot <= availableSlots; slot++) {
       const device = devices.find(item => Number(item.slot) === slot);
-      const row = document.createElement('div');
+      const row = document.createElement('section');
       row.className = 'account-device-row';
+      row.setAttribute('aria-label', `Técnico e computador ${slot}`);
       const label = document.createElement('label');
       label.textContent = `Computador ${slot}`;
       const input = document.createElement('input');
@@ -155,7 +160,7 @@ async function loadAppAccess() {
       input.value = device?.label || (slot === 1 ? 'Meu computador' : `Computador ${slot}`);
       label.append(input);
       row.append(label);
-      if (device) {
+      {
         const techLabel = document.createElement('label');
         techLabel.textContent = 'Nome do técnico';
         const techInput = document.createElement('input');
@@ -163,11 +168,11 @@ async function loadAppAccess() {
         techInput.minLength = 2;
         techInput.autocomplete = 'off';
         techInput.placeholder = 'Nome exibido no Seven Desk';
-        techInput.value = device.technician_name || '';
+        techInput.value = device?.technician_name || '';
         techLabel.append(techInput);
         row.append(techLabel);
 
-        const imageUrl = device.technician_image;
+        const imageUrl = device?.technician_image;
         if (typeof imageUrl === 'string' &&
             imageUrl.startsWith('https://www.sevendesk.tech/avatars/')) {
           const photo = document.createElement('img');
@@ -188,18 +193,33 @@ async function loadAppAccess() {
         const save = document.createElement('button');
         save.type = 'button';
         save.className = 'account-signout';
-        save.textContent = 'Salvar nome e foto';
+        save.textContent = device?.technician_name ? 'Atualizar técnico' : 'Cadastrar técnico e gerar código';
         save.addEventListener('click', () =>
           updateTechnicianProfile(slot,techInput.value,photoInput.files?.[0],save));
         row.append(save);
+        if (device?.technician_name) {
+          const notice=document.createElement('small');
+          notice.className='technician-code-status';
+          notice.textContent=device.has_technician_code
+            ? 'Código exclusivo do técnico criado.'
+            : 'Gere o código exclusivo do técnico.';
+          row.append(notice);
+          const rotate=document.createElement('button');
+          rotate.type='button';
+          rotate.className='account-signout';
+          rotate.textContent=device.has_technician_code
+            ? 'Trocar código do técnico' : 'Gerar código do técnico';
+          rotate.addEventListener('click',()=>rotateTechnicianCode(slot,rotate));
+          row.append(rotate);
+        }
       }
       const generate = document.createElement('button');
       generate.type = 'button';
       generate.className = 'account-signout';
-      generate.textContent = device ? 'Trocar código de ativação' : 'Gerar código de ativação';
+      generate.textContent = device?.activated ? 'Trocar código de ativação' : 'Gerar código de ativação';
       generate.addEventListener('click', () => updateAppDevice(slot,input.value,false));
       row.append(generate);
-      if (device) {
+      if (device?.activated) {
         const revoke = document.createElement('button');
         revoke.type = 'button';
         revoke.className = 'account-signout';
@@ -210,6 +230,33 @@ async function loadAppAccess() {
       list.append(row);
     }
   } catch { /* Account activation stays unavailable if the service cannot be reached. */ }
+}
+
+function showTechnicianCode(code,slot){
+  if(typeof code!=='string'||!/^tec_[A-Za-z0-9_-]{32}$/.test(code))
+    throw new Error('Código do técnico inválido');
+  el('account-tech-code').value=code;
+  el('account-tech-code-label').hidden=false;
+  el('account-tech-code-copy').hidden=false;
+  el('account-app-notice').textContent=
+    `Código exclusivo do técnico ${slot}: copie e guarde agora. `
+    +'Não será exibido novamente e não permite acesso remoto sozinho.';
+}
+async function rotateTechnicianCode(slot,button){
+  button.disabled=true;
+  try{
+    const response=await fetch('/api/technician-code',{
+      method:'POST',cache:'no-store',
+      headers:{'Content-Type':'application/json',Authorization:await appAuthorization()},
+      body:JSON.stringify({slot}),
+    });
+    if(!response.ok)throw new Error('Código indisponível');
+    const result=await response.json();
+    await loadAppAccess();
+    showTechnicianCode(result.technicianCode,slot);
+  }catch{
+    el('account-app-notice').textContent='Não foi possível atualizar o código do técnico.';
+  }finally{button.disabled=false;}
 }
 
 async function updateTechnicianProfile(slot, value, file, button) {
@@ -231,6 +278,8 @@ async function updateTechnicianProfile(slot, value, file, button) {
       body:JSON.stringify({slot,name}),
     });
     if (!saved.ok) throw new Error('Unable to save technician');
+    const profile = await saved.json();
+    if(profile.technicianCode)showTechnicianCode(profile.technicianCode,slot);
     if (file) {
       const uploaded = await fetch(`/api/technician-photo?slot=${slot}`, {
         method:'POST',cache:'no-store',
@@ -240,7 +289,8 @@ async function updateTechnicianProfile(slot, value, file, button) {
       if (!uploaded.ok) throw new Error('Unable to save technician photo');
     }
     await loadAppAccess();
-    notice.textContent = `Nome e foto do técnico ${slot} sincronizados com o aplicativo.`;
+    if(profile.technicianCode)showTechnicianCode(profile.technicianCode,slot);
+    else notice.textContent = `Nome e foto do técnico ${slot} sincronizados com o aplicativo.`;
   } catch {
     notice.textContent = 'Não foi possível concluir o perfil. Confira os dados e tente novamente.';
   } finally {
@@ -360,6 +410,16 @@ el('account-profile-form').addEventListener('submit', async event => {
   } catch { message.textContent = 'Não foi possível salvar seu perfil agora.'; }
   finally { button.disabled = false; }
 });
+el('account-tech-code-copy').addEventListener('click',async()=>{
+  const input=el('account-tech-code');
+  input.select();
+  try{
+    await navigator.clipboard.writeText(input.value);
+    el('account-app-notice').textContent='Código do técnico copiado com segurança.';
+  }catch{
+    el('account-app-notice').textContent='Selecione e copie o código do técnico.';
+  }
+});
 el('account-app-copy').addEventListener('click', async()=>{
   const field=el('account-app-token');
   field.select();
@@ -383,7 +443,7 @@ form.addEventListener('submit', async event=>{
     const email = el('account-email').value.trim();
     const password = el('account-password').value;
     const name = el('account-name').value.trim();
-    if (!email || password.length < 8 || password.length > 128 ||
+    if (!email || password.length < (signup ? 12 : 8) || password.length > 128 ||
         (signup && (name.length < 2 || name.length > 100))) throw new Error('Invalid input');
     const response = signup
       ? await (async()=>{
