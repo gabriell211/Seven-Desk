@@ -117,6 +117,7 @@ class _SevenDeskActivationDialog extends StatefulWidget {
 class _SevenDeskActivationDialogState
     extends State<_SevenDeskActivationDialog> {
   late final TextEditingController _controller;
+  late final TextEditingController _technicianController;
   bool _showToken = false;
   bool _saving = false;
   String _error = '';
@@ -126,11 +127,13 @@ class _SevenDeskActivationDialogState
     super.initState();
     _controller =
         TextEditingController(text: bind.mainGetLocalOption(key: _optionKey));
+    _technicianController = TextEditingController();
   }
 
   @override
   void dispose() {
     _controller.dispose();
+    _technicianController.dispose();
     super.dispose();
   }
 
@@ -144,7 +147,9 @@ class _SevenDeskActivationDialogState
       _error = '';
     });
     try {
-      if (token.isNotEmpty && !await sevenDeskHasValidAccount(token)) {
+      if (token.isNotEmpty && !await sevenDeskHasValidAccount(token) &&
+          (!await claimSevenDeskTechnician(token, _technicianController.text.trim()) ||
+              !await sevenDeskHasValidAccount(token))) {
         if (mounted) {
           setState(() {
             _saving = false;
@@ -185,8 +190,9 @@ class _SevenDeskActivationDialogState
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Entre na sua conta Seven Desk, gere o código do dispositivo '
-                'e cole aqui para iniciar suporte. Quem recebe suporte não precisa entrar.'),
+            const Text('Na sua conta Seven Desk, copie o código de ativação sd_ '
+                'do computador e o código tec_ do técnico. Ambos são necessários '
+                'no primeiro vínculo. Quem recebe suporte não precisa entrar.'),
             const SizedBox(height: 14),
             TextField(
               controller: _controller,
@@ -201,6 +207,18 @@ class _SevenDeskActivationDialogState
                   onPressed: () => setState(() => _showToken = !_showToken),
                   icon: Icon(_showToken ? Icons.visibility_off : Icons.visibility),
                 ),
+              ),
+            ),
+            const SizedBox(height: 6),
+            TextField(
+              controller: _technicianController,
+              maxLength: 36,
+              obscureText: !_showToken,
+              autocorrect: false,
+              enableSuggestions: false,
+              decoration: const InputDecoration(
+                labelText: 'Código do técnico (tec_)',
+                helperText: 'Usado uma vez para vincular o técnico. Não fica salvo.',
               ),
             ),
             TextButton(

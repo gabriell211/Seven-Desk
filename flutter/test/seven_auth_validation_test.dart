@@ -44,4 +44,33 @@ void main() {
     expect(await sevenDeskHasValidAccount(token, client: offline), isFalse);
     offline.close();
   });
+  test('a technician code must match the device and is not a login token',
+      () async {
+    final technicianCode = 'tec_${List.filled(32, 'b').join()}';
+    final client = MockClient((request) async {
+      expect(request.url.toString(),
+          'https://www.sevendesk.tech/api/technician-claim');
+      expect(request.method, 'POST');
+      final body = jsonDecode(request.body);
+      expect(body['activationToken'], token);
+      expect(body['technicianCode'], technicianCode);
+      return http.Response('{"verified":true}', 200);
+    });
+    expect(await claimSevenDeskTechnician(token, technicianCode, client: client),
+        isTrue);
+    client.close();
+  });
+  test('cannot claim with wrong codes or rejected/expired technician',
+      () async {
+    final technicianCode = 'tec_${List.filled(32, 'b').join()}';
+    final client = MockClient((_) async => http.Response('{}', 401));
+    expect(await claimSevenDeskTechnician(token, technicianCode, client: client),
+        isFalse);
+    expect(await claimSevenDeskTechnician('invalid', technicianCode, client: client),
+        isFalse);
+    expect(await claimSevenDeskTechnician(token, token, client: client),
+        isFalse);
+    client.close();
+  });
+
 }
