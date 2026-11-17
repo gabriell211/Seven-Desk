@@ -47,7 +47,7 @@ class SevenDeskProfile {
         final uri = Uri.tryParse(imageUrl);
         final path = uri?.path ?? '';
         if (uri?.scheme != 'https' || uri?.host != 'www.sevendesk.tech' ||
-            uri?.userInfo.isNotEmpty != true ||
+            uri == null || uri.userInfo.isNotEmpty ||
             uri?.hasQuery == true || uri?.hasFragment == true ||
             !RegExp(r'^/avatars/[0-9a-f-]{36}/(?:profile|technician-[1-9][0-9]{0,4})\.(?:jpg|png|webp)$').hasMatch(path)) {
           return false;
