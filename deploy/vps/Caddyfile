@@ -1,0 +1,23 @@
+{
+    email sevendesk@sevendesk.tech
+}
+
+www.sevendesk.tech {
+    encode zstd gzip
+    header {
+        X-Content-Type-Options nosniff
+        Referrer-Policy strict-origin-when-cross-origin
+        Permissions-Policy "camera=(), microphone=(), geolocation=()"
+        Strict-Transport-Security "max-age=31536000"
+        -Server
+    }
+    @sensitive path /api/* /conta /cadastro /entrar /recuperar-senha /redefinir-senha /pagamento-retorno
+    header @sensitive Cache-Control "no-store"
+    reverse_proxy site:3100
+}
+
+downloads.sevendesk.tech {
+    header X-Content-Type-Options nosniff
+    root * /srv/downloads
+    file_server
+}

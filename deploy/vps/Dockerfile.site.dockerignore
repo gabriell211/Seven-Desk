@@ -1,0 +1,13 @@
+# Build context: repository root, allow only website source.
+**
+!website/
+!website/**
+website/node_modules/
+website/.env
+website/.env.*
+website/secrets/
+website/public/
+website/conta.bundle.js
+website/pagamento-retorno.bundle.js
+website/*.pem
+website/*.key

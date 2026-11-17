@@ -103,5 +103,6 @@ const server = http.createServer(async (req, raw) => {
   }
 });
 
-if (require.main === module) server.listen(port, '127.0.0.1');
+// Local host binding by default; the Docker network uses HOST=0.0.0.0 without publishing the port.
+if (require.main === module) server.listen(port, process.env.HOST || '127.0.0.1');
 module.exports = server;
