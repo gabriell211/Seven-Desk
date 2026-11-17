@@ -2,7 +2,7 @@ use hbb_common::config;
 
 pub const HOST: &str = "sevendesk.tech";
 pub const API: &str = "https://sevendesk.tech";
-pub const PUBLIC_KEY: &str = "WBN+UTprTneKrxbbLyXYo6ASD5shFIhShmA+pbjafvA=";
+pub const PUBLIC_KEY: &str = "jt0evEER+Pzo4dPZwGx8iuJoO8BRw7CzM+92eK6ixwc=";
 
 pub fn allows_server(server: &str) -> bool {
     server.is_empty()
