@@ -14,7 +14,6 @@ import 'package:flutter_hbb/common/widgets/keyboard_shortcuts/page_body.dart';
 import 'package:flutter_hbb/desktop/pages/desktop_keyboard_shortcuts_page.dart';
 import 'package:flutter_hbb/desktop/pages/desktop_tab_page.dart';
 import 'package:flutter_hbb/desktop/widgets/remote_toolbar.dart';
-import 'package:flutter_hbb/desktop/widgets/session_toolbar_avatar.dart';
 import 'package:flutter_hbb/mobile/widgets/dialog.dart';
 import 'package:flutter_hbb/models/platform_model.dart';
 import 'package:flutter_hbb/models/printer_model.dart';
@@ -419,11 +418,6 @@ class _GeneralState extends State<_General> {
       children: [
         if (!isWeb) service(),
         theme(),
-        if (!isWeb && !bind.isIncomingOnly())
-          _Card(
-            title: sessionToolbarPhotoLabel,
-            children: const [SessionToolbarAvatarSettings()],
-          ),
         _Card(title: 'Language', children: [language()]),
         if (!isWeb) hwcodec(),
         if (!isWeb) audio(context),
@@ -2312,7 +2306,9 @@ class _AccountState extends State<_Account> {
                 title: Text(sevenDeskProfile.name.value.isEmpty
                     ? 'Suporte sem login'
                     : sevenDeskProfile.name.value),
-                subtitle: const Text('Nome e foto sincronizados com o site'),
+                subtitle: Obx(() => Text(sevenDeskProfile.companyName.value.isEmpty
+                    ? 'Nome e foto sincronizados com o site'
+                    : sevenDeskProfile.companyName.value)),
               )),
         ]),
       ],
