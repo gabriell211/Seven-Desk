@@ -21,6 +21,43 @@ fn token_for_device(original: &str, activation: &str, uuid: &[u8]) -> String {
     format!("{activation}:{hash}")
 }
 
+
+/// Identity displayed to the receiving user is synchronized from the Seven Desk
+/// account site before outgoing connections. It is still client-supplied
+/// metadata; server-enforced authorization is a separate requirement.
+pub fn operator_profile() -> Option<(String, String, String)> {
+    let activation = LocalConfig::get_option(ACTIVATION_OPTION);
+    if !valid_activation(&activation) {
+        return None;
+    }
+    let profile: serde_json::Value =
+        serde_json::from_str(&LocalConfig::get_option("seven-site-profile")).ok()?;
+    let name = profile.get("name")?.as_str()?.trim();
+    if name.chars().count() < 2
+        || name.chars().count() > 100
+        || name.chars().any(|c| c.is_control())
+    {
+        return None;
+    }
+    let image = profile.get("image").and_then(|v| v.as_str()).unwrap_or("");
+    if !image.is_empty()
+        && (!image.starts_with("https://www.sevendesk.tech/avatars/")
+            || image.len() > 512
+            || image.contains(['?', '#', '@', '\\n', '\\r']))
+    {
+        return None;
+    }
+    let company = profile
+        .get("companyName")
+        .and_then(|v| v.as_str())
+        .unwrap_or("")
+        .trim();
+    if company.chars().count() > 100 || company.chars().any(|c| c.is_control()) {
+        return None;
+    }
+    Some((name.to_owned(), image.to_owned(), company.to_owned()))
+}
+
 /// Replaces a legacy rendezvous credential only when an operator has explicitly
 /// configured a valid Seven Desk activation code. Never log the returned token.
 pub fn outbound_token(original: &str) -> String {
