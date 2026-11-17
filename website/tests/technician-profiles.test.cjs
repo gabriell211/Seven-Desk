@@ -106,7 +106,7 @@ test('photo upload validates ownership and format then updates the VPS profile',
   const options={headers:{authorization:'Bearer signed-session','content-type':'image/png'},
     query:{slot:'1'},body:png};
   const bad=response();
-  await upload(request('POST','',options),bad);
+  await upload(request('POST',undefined,{...options,headers:{...options.headers,authorization:''}}),bad);
   assert.equal(bad.code,401);
   const notOwned=response();
   await upload(request('POST',undefined,{...options,query:{slot:'2'}}),notOwned);
