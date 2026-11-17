@@ -5,6 +5,8 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_hbb/common/widgets/audio_input.dart';
+import 'package:flutter_hbb/common/widgets/incoming_support_identity.dart';
+import 'package:flutter_hbb/common/widgets/incoming_support_request_bubble.dart';
 import 'package:flutter_hbb/consts.dart';
 import 'package:flutter_hbb/desktop/widgets/tabbar_widget.dart';
 import 'package:flutter_hbb/models/chat_model.dart';
@@ -367,7 +369,10 @@ Widget buildConnectionCard(Client client) {
       crossAxisAlignment: CrossAxisAlignment.start,
       key: ValueKey(client.id),
       children: [
-        _CmHeader(client: client),
+        if (client.authorized || client.disconnected)
+          _CmHeader(client: client),
+        if (!client.authorized && !client.disconnected)
+          _CmControlPanel(client: client),
         client.type_() == ClientType.file ||
                 client.type_() == ClientType.portForward ||
                 client.type_() == ClientType.terminal ||
@@ -375,10 +380,12 @@ Widget buildConnectionCard(Client client) {
             ? Offstage()
             : _PrivilegeBoard(client: client),
         Expanded(
-          child: Align(
-            alignment: Alignment.bottomCenter,
-            child: _CmControlPanel(client: client),
-          ),
+          child: (client.authorized || client.disconnected)
+              ? Align(
+                  alignment: Alignment.bottomCenter,
+                  child: _CmControlPanel(client: client),
+                )
+              : const SizedBox.shrink(),
         )
       ],
     ).paddingSymmetric(vertical: 4.0, horizontal: 8.0),
@@ -1068,69 +1075,46 @@ class _CmControlPanel extends StatelessWidget {
     ).marginOnly(bottom: buttonBottomMargin);
   }
 
-  buildUnAuthorized(BuildContext context) {
-    final bool canElevate = bind.cmCanElevate();
+  Widget buildUnAuthorized(BuildContext context) {
     final model = Provider.of<ServerModel>(context);
-    final showElevation = canElevate &&
-        model.showElevation &&
-        client.type_() == ClientType.remote &&
-        bind.mainGetBuildinOption(
-                key: kOptionHideElevateButtonInAcceptWindow) !=
-            'Y';
-    final showAccept = model.approveMode != 'password';
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.end,
-      children: [
-        Offstage(
-          offstage: !showElevation || !showAccept,
-          child: buildButton(context, color: Colors.green[700], onClick: () {
-            handleAccept(context);
-            handleElevate(context);
-            windowManager.minimize();
-          },
-              text: 'Accept and Elevate',
-              icon: Icon(
-                Icons.security_rounded,
-                color: Colors.white,
-                size: 14,
-              ),
-              textColor: Colors.white,
-              tooltip: 'accept_and_elevate_btn_tooltip'),
-        ),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            if (showAccept)
-              Expanded(
-                child: Column(
-                  children: [
-                    buildButton(
-                      context,
-                      color: MyTheme.accent,
-                      onClick: () {
-                        handleAccept(context);
-                        windowManager.minimize();
-                      },
-                      text: 'Accept',
-                      textColor: Colors.white,
-                    ),
-                  ],
-                ),
-              ),
-            Expanded(
-              child: buildButton(
-                context,
-                color: Colors.transparent,
-                border: Border.all(color: Colors.grey),
-                onClick: handleDisconnect,
-                text: 'Cancel',
-                textColor: null,
-              ),
-            ),
-          ],
-        ),
-      ],
-    ).marginOnly(bottom: buttonBottomMargin);
+    final canAccept = model.approveMode != 'password';
+    final canAcceptAsAdmin = canAcceptRemoteAsAdministrator(
+      isWindows: isWindows,
+      canElevate: bind.cmCanElevate(),
+      showElevation: model.showElevation,
+      isRemoteDesktop: client.type_() == ClientType.remote,
+      policyAllowsElevation: bind.mainGetBuildinOption(
+            key: kOptionHideElevateButtonInAcceptWindow,
+          ) !=
+          'Y',
+      clickApprovalAllowed: canAccept,
+    );
+    return IncomingSupportRequestBubble(
+      identity: incomingSupportIdentity(
+        requesterName: client.name,
+        requesterAvatar: client.avatar,
+      ),
+      requesterId: client.peerId,
+      onAcceptAsAdministrator: canAcceptAsAdmin
+          ? () => checkClickTime(client.id, () {
+                // Uses the existing portable Windows service/UAC request.
+                // Does not bypass local Windows approval or security policy.
+                handleAccept(context);
+                handleElevate(context);
+                windowManager.minimize();
+              })
+          : null,
+      onAccept: canAccept
+          ? () => checkClickTime(client.id, () {
+                handleAccept(context);
+                windowManager.minimize();
+              })
+          : null,
+      onReject: () => checkClickTime(client.id, handleDisconnect),
+      acceptanceDisabledReason: canAccept
+          ? null
+          : 'Este dispositivo exige senha para autorizar conexões.',
+    );
   }
 
   Widget buildButton(BuildContext context,
