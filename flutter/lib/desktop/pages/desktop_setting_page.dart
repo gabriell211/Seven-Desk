@@ -28,6 +28,7 @@ import 'package:url_launcher/url_launcher_string.dart';
 import '../../common/widgets/dialog.dart';
 import '../../common/widgets/login.dart';
 import '../../common/widgets/seven_access.dart';
+import '../../utils/seven_access_policy.dart';
 
 const double _kTabWidth = 200;
 const double _kTabHeight = 42;
@@ -1310,11 +1311,10 @@ class _SafetyState extends State<_Safety> with AutomaticKeepAliveClientMixin {
         final installed = bind.mainIsInstalled();
         final onlyOpen =
             installed && mainGetBoolOptionSync('allow-only-conn-window-open');
-        final current = model.approveMode == 'password'
-            ? 2
-            : onlyOpen
-                ? 1
-                : 0;
+        final current = sevenDeskInteractiveMode(
+          approveMode: model.approveMode,
+          onlyWhenWindowOpen: onlyOpen,
+        );
         final enabled = !locked && !isOptionFixed(kOptionApproveMode);
         Future<void> choose(int mode) async {
           if (!enabled) return;
@@ -1520,9 +1520,11 @@ class _SafetyState extends State<_Safety> with AutomaticKeepAliveClientMixin {
                   return const Text('Verificando senha local...')
                       .marginOnly(left: _kContentHMargin);
                 }
-                final active = snapshot.data == 'true' &&
-                    model.approveMode != 'click' &&
-                    model.verificationMethod != kUseTemporaryPassword;
+                final active = sevenDeskUnattendedEnabled(
+                  passwordConfigured: snapshot.data == 'true',
+                  approveMode: model.approveMode,
+                  verificationMethod: model.verificationMethod,
+                );
                 return Text(active
                         ? 'Acesso não supervisionado ativo.'
                         : snapshot.data == 'true'
