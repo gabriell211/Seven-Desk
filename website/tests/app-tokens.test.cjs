@@ -17,6 +17,8 @@ function fixture({ enabled = true, verified = true } = {}) {
   let count = 0;
   const db = {
     async query(sql, params) {
+      if (sql.startsWith('SELECT 5 +')) return {rows:[{max_slots:5}]};
+      if (sql.includes('seven_desk_technicians')) return {rows:[]};
       if (sql.includes('INSERT INTO seven_desk_app_tokens')) {
         if (!verified) return { rows: [] };
         storedHashes.set(params[1], params[3]);

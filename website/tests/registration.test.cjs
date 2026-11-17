@@ -3,6 +3,7 @@ const {test}=require('node:test');
 const assert=require('node:assert/strict');
 const {createRegistrationHandler}=require('../api/registration');
 const {registrationIdentity,isValidCPF,isValidCNPJ}=require('../lib/registration');
+process.env.SEVEN_SITE_URL='https://www.sevendesk.tech';
 function response(){return {setHeader(){},status(code){this.code=code;return this},json(body){this.body=body;return this}}}
 const request=(data,origin='https://www.sevendesk.tech')=>({
   method:'POST',headers:{origin},body:{

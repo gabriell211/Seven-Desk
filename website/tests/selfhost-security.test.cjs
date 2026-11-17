@@ -17,7 +17,8 @@ test('selfhost authentication denies account access until all prerequisites are 
   assert.equal(ready(base),true);
   for(const name of Object.keys(base))assert.equal(ready({...base,[name]:''}),false,name);
   assert.equal(allowed('/api/auth/sign-up/email',base),false);
-  assert.equal(allowed('/api/auth/sign-up/email',{...base,SEVEN_REGISTRATION_ENABLED:'1'}),true);
+  // All public registrations must use /api/registration for PF/PJ identity checks.
+  assert.equal(allowed('/api/auth/sign-up/email',{...base,SEVEN_REGISTRATION_ENABLED:'1'}),false);
   assert.equal(allowed('/api/auth/email-otp/request-password-reset',base),false);
   assert.equal(allowed('/api/auth/email-otp/request-password-reset',{...base,SEVEN_PASSWORD_RECOVERY_ENABLED:'1'}),true);
 });

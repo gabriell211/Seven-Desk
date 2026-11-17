@@ -12,8 +12,12 @@ function createRegistrationHandler({signUp,hash=documentHash,enabled=()=>ready()
     if(req.method!=='POST')return res.status(405).json({error:'Método não permitido'});
     if(!enabled())return res.status(503).json({error:'Cadastro temporariamente indisponível'});
     const origin=req.headers?.origin;
-    if(origin&&origin!==new URL(process.env.SEVEN_SITE_URL).origin)
-      return res.status(403).json({error:'Origem inválida'});
+    if(origin){
+      let expected;
+      try{expected=new URL(process.env.SEVEN_SITE_URL).origin}
+      catch{return res.status(503).json({error:'Cadastro indisponível'});}
+      if(origin!==expected)return res.status(403).json({error:'Origem inválida'});
+    }
     const candidate=registrationIdentity(req.body);
     if(!candidate)return res.status(400).json({error:'Informe dados PF/PJ válidos e senha com 12 caracteres ou mais'});
     try {
