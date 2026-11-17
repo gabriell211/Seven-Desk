@@ -83,7 +83,7 @@ test('only a signed-in account can create a technician within its 5 free slots',
   await technician(request('POST',''),rejected);
   assert.equal(rejected.code,401);
   const invalid=response();
-  await technician(request('POST',undefined,{body:{slot:1,name:'\\n'}}),invalid);
+  await technician(request('POST',undefined,{body:{slot:1,name:'a'.repeat(101)}}),invalid);
   assert.equal(invalid.code,400);
   const outside=response();
   await technician(request('POST',undefined,{body:{slot:6,name:'Invasor'}}),outside);

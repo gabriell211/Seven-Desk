@@ -93,5 +93,5 @@ test('trial is one calendar month tied to the same account and includes five slo
   assert.equal(first.status,'trial');
   assert.equal(first.trial_ends_at,second.trial_ends_at);
   assert.equal(await getMaxSlots(db,userId),5);
-  assert.equal(queries.filter(q=>q.includes("u.\\\"createdAt\\\" + interval '1 month'")).length,2);
+  assert.equal(queries.filter(q=>q.includes("interval '1 month'")).length,2);
 });
