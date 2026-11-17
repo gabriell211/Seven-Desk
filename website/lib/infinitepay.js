@@ -4,6 +4,7 @@
 const PLANS = Object.freeze({
   monthly: Object.freeze({ amount: 3990, description: 'Seven Desk - 1 usuario - 1 mes' }),
   yearly: Object.freeze({ amount: 40000, description: 'Seven Desk - 1 usuario - 1 ano' }),
+  extra_slot: Object.freeze({ amount: 700, description: 'Seven Desk - slot adicional - 1 computador' }),
 });
 const API = 'https://api.checkout.infinitepay.io';
 const TRUSTED_CHECKOUT_HOSTS = new Set(['checkout.infinitepay.io', 'checkout.infinitepay.com.br']);
@@ -26,7 +27,7 @@ function checkoutPayload({ handle, orderId, plan, siteUrl }) {
   if (origin.protocol !== 'https:' || origin.username || origin.password ||
       origin.pathname !== '/' || origin.search || origin.hash) throw new Error('Invalid site URL');
   return {
-    handle: requiredText(requiredText(handle, 'handle').replace(/^\$/, ''), 'handle'),
+    handle: requiredText(requiredText(handle, 'handle').replace(/^\\$/, ''), 'handle'),
     order_nsu: requiredText(orderId, 'order'),
     items: [{ quantity: 1, price: selected.amount, description: selected.description }],
     options: { single_payment: true, valid_until: new Date(Date.now() + 30 * 60_000).toISOString() },
@@ -60,7 +61,7 @@ async function createCheckout(input, options) {
 async function verifyPayment({ handle, orderId, transactionId, slug, plan }, options) {
   const selected = planFor(plan);
   const result = await postJson('/payment_check', {
-    handle: requiredText(requiredText(handle, 'handle').replace(/^\$/, ''), 'handle'),
+    handle: requiredText(requiredText(handle, 'handle').replace(/^\\$/, ''), 'handle'),
     order_nsu: requiredText(orderId, 'order'),
     transaction_nsu: requiredText(transactionId, 'transaction'),
     slug: requiredText(slug, 'invoice'),
