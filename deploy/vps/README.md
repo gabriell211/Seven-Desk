@@ -101,3 +101,16 @@ armazenamento remoto:
 
 O script atual cobre o banco. Certificados TLS, arquivos de download, avatares e
 chaves privadas de ID exigem rotina cifrada adicional e testes de restauração.
+
+## Publicação dos instaladores na VPS
+
+O Caddy usa o caminho de host `/srv/sevendesk/downloads` em modo somente leitura.
+Prepare este diretório antes do profile `cutover` e publique somente releases
+homologadas com `scripts/publish_vps_release.py` usando o argumento
+`--root /srv/sevendesk/downloads`. O script valida SHA-256, commit e artefatos
+assinados antes de alterar o `manifest.json`. Não coloque secrets nesse diretório.
+
+    sudo install -d -m 0755 /srv/sevendesk/downloads
+
+O diretório não fica dentro da imagem Docker, permitindo atualizar instaladores
+sem reconstruir a aplicação. Nenhum arquivo fictício deve ser anunciado.

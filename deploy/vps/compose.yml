@@ -119,7 +119,7 @@ services:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy_data:/data
       - caddy_config:/config
-      - downloads:/srv/downloads:ro
+      - /srv/sevendesk/downloads:/srv/downloads:ro
     networks: [frontend]
     read_only: true
     tmpfs:
@@ -168,7 +168,6 @@ networks:
 volumes:
   pgdata: {}
   avatars: {}
-  downloads: {}
   caddy_data: {}
   caddy_config: {}
   signaling_data: {}

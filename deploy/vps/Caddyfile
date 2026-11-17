@@ -19,5 +19,7 @@
 {$SEVEN_DOWNLOADS_DOMAIN} {
     header X-Content-Type-Options nosniff
     root * /srv/downloads
+    @hidden path_regexp hidden (?i)(?:^|/)\.[^/]+
+    respond @hidden 404
     file_server
 }
