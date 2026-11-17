@@ -1,0 +1,75 @@
+name: Seven Desk VPS Docker Integration
+
+on:
+  pull_request:
+    paths:
+      - "deploy/vps/**"
+      - "website/**"
+      - ".github/workflows/vps-docker.yml"
+  push:
+    branches: [main]
+    paths:
+      - "deploy/vps/**"
+      - "website/**"
+      - ".github/workflows/vps-docker.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  isolated-stack:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - name: Check out source
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+
+      - name: Prepare synthetic CI secrets (not actual credentials)
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo install -d -m 0700 /etc/sevendesk/secrets
+          for secret in pg_password app_db_password auth_secret; do
+            openssl rand -hex 32 | sudo tee "/etc/sevendesk/secrets/$secret" >/dev/null
+          done
+          printf 'CI-fake-SMTP-password-not-used\n' | sudo tee /etc/sevendesk/secrets/smtp_password >/dev/null
+          printf 'CI-fake-payment-key-disabled\n' | sudo tee /etc/sevendesk/secrets/infinitepay_api_key >/dev/null
+          sudo chmod 0600 /etc/sevendesk/secrets/*
+          docker compose version
+
+      - name: Validate Compose and build the site image
+        run: |
+          set -euo pipefail
+          docker compose -f deploy/vps/compose.yml config -q
+          docker compose -f deploy/vps/compose.yml build site
+
+      - name: Run PostgreSQL and Better Auth schema migration
+        run: |
+          set -euo pipefail
+          docker compose -f deploy/vps/compose.yml up -d db
+          docker compose -f deploy/vps/compose.yml --profile setup run --rm migrate
+
+      - name: Start isolated site and test disabled endpoints
+        run: |
+          set -euo pipefail
+          docker compose -f deploy/vps/compose.yml up -d site
+          docker compose -f deploy/vps/compose.yml exec -T site node -e \
+            "fetch('http://127.0.0.1:3100/api/account-availability').then(async r => { const x=await r.json(); if(r.status!==200||x.loginEnabled!==false||x.registrationEnabled!==false)process.exit(1) }).catch(e=>{console.error(e.message);process.exit(1)})"
+          docker compose -f deploy/vps/compose.yml exec -T site node -e \
+            "const {pool}=require('./lib/db-pool'); pool().query('SELECT count(*)::int AS total FROM seven_users').then(r=>{if(r.rows[0].total!==0)process.exitCode=1}).catch(e=>{console.error(e.message);process.exitCode=1}).finally(()=>pool().end())"
+          docker compose -f deploy/vps/compose.yml exec -T db sh -c \
+            'PGPASSWORD="$(cat /run/secrets/pg_password)" psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -Atqc "SELECT count(*) FROM seven_desk_payment_orders"'
+          docker compose -f deploy/vps/compose.yml exec -T site node -e \
+            "fetch('http://127.0.0.1:3100/api/billing-status').then(r=>r.json()).then(x=>{if(x.checkoutAvailable!==false)process.exit(1)})"
+
+      - name: Show diagnostics on failure
+        if: failure()
+        run: |
+          docker compose -f deploy/vps/compose.yml ps || true
+          docker compose -f deploy/vps/compose.yml logs --tail=70 db site || true
+
+      - name: Stop temporary test stack
+        if: always()
+        run: docker compose -f deploy/vps/compose.yml down --remove-orphans || true

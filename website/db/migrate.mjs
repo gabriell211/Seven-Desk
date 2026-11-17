@@ -31,9 +31,8 @@ try{
   if(!appPasswordFile)throw new Error('Runtime DB password file missing');
   const appPassword=(await fs.readFile(appPasswordFile,'utf8')).trim();
   if(appPassword.length<24)throw new Error('Invalid runtime database password');
-  await client.query(
-    "DO $ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname='sevendesk_app') THEN CREATE ROLE sevendesk_app LOGIN; END IF; END $"
-  );
+  const role=(await client.query("SELECT 1 FROM pg_roles WHERE rolname='sevendesk_app'")).rows;
+  if(role.length===0)await client.query('CREATE ROLE sevendesk_app LOGIN');
   const quoted=(await client.query('SELECT quote_literal($1::text) AS literal',[appPassword])).rows[0].literal;
   await client.query('ALTER ROLE sevendesk_app PASSWORD '+quoted);
   await client.query('GRANT USAGE ON SCHEMA public TO sevendesk_app');
