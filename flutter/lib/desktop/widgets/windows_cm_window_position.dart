@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:window_manager/window_manager.dart';
 import 'package:window_size/window_size.dart' as window_size;
 
-Future<void> setWindowsCmWindowBounds(Size size) async {
+Future<void> setWindowsCmWindowBounds(Size size, {bool bottomRight = false}) async {
   window_size.PlatformWindow? window;
   try {
     window = await window_size.getWindowInfo();
@@ -11,7 +11,8 @@ Future<void> setWindowsCmWindowBounds(Size size) async {
   }
   final screen = window?.screen;
   if (window == null || screen == null) {
-    await windowManager.setSizeAlignment(size, Alignment.topRight);
+    await windowManager.setSizeAlignment(
+        size, bottomRight ? Alignment.bottomRight : Alignment.topRight);
     return;
   }
 
@@ -20,7 +21,9 @@ Future<void> setWindowsCmWindowBounds(Size size) async {
   await windowManager.setBounds(
     Rect.fromLTWH(
       screen.visibleFrame.right - scaledSize.width,
-      screen.visibleFrame.top,
+      bottomRight
+          ? screen.visibleFrame.bottom - scaledSize.height - 12
+          : screen.visibleFrame.top,
       scaledSize.width,
       scaledSize.height,
     ),
