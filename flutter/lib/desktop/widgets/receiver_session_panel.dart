@@ -182,7 +182,7 @@ class ReceiverSessionPanel extends StatelessWidget {
                     Icons.monitor_rounded,
                     canChangeMonitor ? onNextMonitor : null,
                     tooltip: canChangeMonitor
-                        ? 'Compartilhar próximo monitor disponível'
+                        ? null
                         : 'Troca de monitor não disponível nesta sessão',
                   ),
                   const SizedBox(width: 5),
