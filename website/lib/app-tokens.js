@@ -52,7 +52,7 @@ function createAppTokenHandler({ enabled, authenticate, pool, random = randomByt
       }
       if (req.method === 'GET') {
         const result = await db.query(
-          'SELECT slot, label FROM seven_desk_app_tokens WHERE user_id = $1 ORDER BY slot',
+          'SELECT slot, label, technician_name, technician_image FROM seven_desk_app_tokens WHERE user_id = $1 ORDER BY slot',
           [userId],
         );
         return res.status(200).json({ devices: result.rows, maxSlots });
@@ -82,4 +82,4 @@ function createAppTokenHandler({ enabled, authenticate, pool, random = randomByt
   };
 }
 
-module.exports = { appTokenUser, createAppTokenHandler };
+module.exports = { appTokenUser, createAppTokenHandler, tokenHash };
