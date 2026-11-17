@@ -142,16 +142,16 @@ class HomeDashboard extends StatelessWidget {
                                     const SizedBox(height: 18),
                                     _quickAccess(),
                                     const SizedBox(height: 22),
-                                    const Row(
+                                    Row(
                                       children: [
-                                        Icon(Icons.desktop_windows_outlined,
+                                        const Icon(Icons.desktop_windows_outlined,
                                             color: HomeDashboardTheme.purple,
                                             size: 24),
-                                        SizedBox(width: 10),
+                                        const SizedBox(width: 10),
                                         Expanded(
                                           child: Text(
-                                            'Computadores de clientes',
-                                            style: TextStyle(
+                                            _peerListHeading,
+                                            style: const TextStyle(
                                               fontSize: 20,
                                               fontWeight: FontWeight.w700,
                                             ),
@@ -160,11 +160,9 @@ class HomeDashboard extends StatelessWidget {
                                       ],
                                     ),
                                     const SizedBox(height: 5),
-                                    const Text(
-                                      'Computadores recentes e salvos. '
-                                      'Use o lápis para atribuir um nome a cada PC '
-                                      'sem alterar seu ID de acesso.',
-                                      style: TextStyle(
+                                    Text(
+                                      _peerListHint,
+                                      style: const TextStyle(
                                         color: HomeDashboardTheme.muted,
                                         fontSize: 13,
                                       ),
@@ -209,6 +207,22 @@ class HomeDashboard extends StatelessWidget {
       ),
     );
   }
+
+  String get _peerListHeading => switch (section) {
+        HomeDashboardSection.computers => 'Computadores na rede',
+        HomeDashboardSection.contacts => 'Contatos e clientes',
+        HomeDashboardSection.groups => 'Grupos de computadores',
+        HomeDashboardSection.sessions => 'Sessões recentes',
+        _ => 'Computadores de clientes',
+      };
+
+  String get _peerListHint => switch (section) {
+        HomeDashboardSection.computers => 'Computadores identificados na sua rede local.',
+        HomeDashboardSection.contacts => 'Seus contatos e computadores cadastrados.',
+        HomeDashboardSection.groups => 'Dispositivos organizados por grupo.',
+        _ => 'PCs recentes e salvos. Use o lápis para nomear cada computador '
+            'sem alterar o ID de conexão.',
+      };
 
   /// Shortcuts follow the original application's navigation and security
   /// flows instead of creating parallel connection or credential handling.
