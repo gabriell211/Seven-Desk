@@ -29,9 +29,10 @@
     <aside class="account-intro-panel">
       <span class="account-eyebrow">SEVEN DESK • SUA CONTA</span>
       <h2>Seu acesso remoto começa <span>por aqui.</span></h2>
-      <p>Uma conta para acompanhar o período gratuito, seus planos e os próximos passos do Seven Desk.</p>
+      <p>Cadastro para pessoa física ou empresa, com um mês grátis e cinco vagas de dispositivos para sua equipe.</p>
       <ul>
-        <li>Um mês de teste a partir da liberação das novas contas</li>
+        <li>Primeiro mês gratuito por CPF ou CNPJ cadastrado</li>
+        <li>Cinco computadores/técnicos incluídos no primeiro mês</li>
         <li>Planos mensal e anual com valores transparentes</li>
         <li>Controle da assinatura no mesmo lugar</li>
       </ul>
@@ -49,8 +50,19 @@
           <button id="show-signup" type="button" aria-pressed="false">Criar conta</button>
         </div>
         <form id="account-form">
+          <div id="account-type-section" class="account-type-section" hidden>
+            <span id="account-type-title">Tipo de cadastro</span>
+            <div class="account-type-choices" role="radiogroup" aria-labelledby="account-type-title">
+              <label><input id="account-type-pf" type="radio" name="account-type" value="PF" checked /> Pessoa física</label>
+              <label><input id="account-type-pj" type="radio" name="account-type" value="PJ" /> Pessoa jurídica</label>
+            </div>
+          </div>
           <label id="account-name-label" hidden>Nome completo
             <input id="account-name" name="name" autocomplete="name" minlength="2" maxlength="100" />
+          </label>
+          <label id="account-document-label" hidden>CPF
+            <input id="account-document" name="document" inputmode="numeric" autocomplete="off" maxlength="24" required disabled aria-describedby="account-document-hint" />
+            <small id="account-document-hint">Usado somente para identificar o período gratuito. Não aparecerá no perfil público.</small>
           </label>
           <label>E-mail
             <input id="account-email" name="email" type="email" autocomplete="email" inputmode="email" required maxlength="254" />
@@ -112,7 +124,7 @@
         <p id="account-subscription" class="account-intro" aria-live="polite">Consultando seu acesso...</p>
         <div id="account-app-access" class="account-plan-actions" hidden>
           <h2>Equipe de técnicos e dispositivos</h2>
-          <p class="account-intro">Sua conta permite até cinco computadores para prestar suporte. Compre slots adicionais por R$ 7,00 quando precisar de mais vagas. Clientes atendidos não precisam de cadastro.</p>
+          <p class="account-intro">O primeiro mês inclui cinco vagas para computadores e técnicos. Após o teste, o acesso depende de assinatura ativa. Sua conta permite até cinco computadores para prestar suporte. Compre slots adicionais por R$ 7,00 quando precisar de mais vagas. Clientes atendidos não precisam de cadastro.</p>
           <p class="account-intro">Cada código fica vinculado ao primeiro dispositivo que iniciar suporte com ele. Os nomes e fotos dos técnicos são gerenciados aqui e aparecem no aplicativo e nas solicitações de acesso. Para trocar o dispositivo, gere um novo código na mesma vaga.</p>
           <p id="account-app-notice" class="account-intro" aria-live="polite"></p>
           <div id="account-device-list"></div>

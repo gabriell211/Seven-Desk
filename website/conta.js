@@ -20,6 +20,15 @@ function showServiceMessage(text) {
   banner.textContent = text;
   banner.hidden = !text;
 }
+function updateDocumentFields() {
+  const company = el('account-type-pj').checked;
+  el('account-name-label').firstChild.textContent = company ? 'Razão social' : 'Nome completo';
+  el('account-name').autocomplete = company ? 'organization' : 'name';
+  el('account-document-label').firstChild.textContent = company ? 'CNPJ' : 'CPF';
+  el('account-document').inputMode = company ? 'text' : 'numeric';
+  el('account-document').placeholder = company ? 'CNPJ (14 caracteres; aceita letras)' : 'CPF (11 dígitos)';
+  el('account-document').value = '';
+}
 function setMode(create) {
   signup = create;
   el('account-signed-out').hidden = false;
@@ -31,8 +40,13 @@ function setMode(create) {
   el('show-login').setAttribute('aria-pressed', String(!create));
   el('show-signup').setAttribute('aria-pressed', String(create));
   el('account-name-label').hidden = !create;
+  el('account-type-section').hidden = !create;
+  el('account-document-label').hidden = !create;
+  el('account-document').disabled = !create;
+  el('account-document').required = create;
   el('account-name').required = create;
   el('account-password').autocomplete = create ? 'new-password' : 'current-password';
+  updateDocumentFields();
   el('account-submit').textContent = create ? 'Criar conta' : 'Entrar';
   el('account-submit').disabled = create ? !availability.registrationEnabled : !availability.loginEnabled;
   el('account-forgot-link').hidden = create;
@@ -354,6 +368,8 @@ el('account-app-copy').addEventListener('click', async()=>{
     el('account-app-notice').textContent='Código copiado. Cole no aplicativo Seven Desk.';
   } catch {el('account-app-notice').textContent='Selecione e copie o código mostrado acima.';}
 });
+el('account-type-pf').addEventListener('change',updateDocumentFields);
+el('account-type-pj').addEventListener('change',updateDocumentFields);
 el('show-login').addEventListener('click',()=>setMode(false));
 el('show-signup').addEventListener('click',()=>setMode(true));
 
@@ -370,7 +386,19 @@ form.addEventListener('submit', async event=>{
     if (!email || password.length < 8 || password.length > 128 ||
         (signup && (name.length < 2 || name.length > 100))) throw new Error('Invalid input');
     const response = signup
-      ? await auth.signUp.email({name,email,password})
+      ? await (async()=>{
+          const accountType=el('account-type-pj').checked ? 'PJ' : 'PF';
+          const document=el('account-document').value.trim();
+          if (!document || document.length > 24) throw new Error('Invalid document');
+          const created=await fetch('/api/registration',{
+            method:'POST',cache:'no-store',
+            headers:{'Content-Type':'application/json'},
+            body:JSON.stringify({name,email,password,accountType,document}),
+          });
+          const body=await created.json();
+          if(!created.ok)return {error:{code:body.code||'REGISTRATION_ERROR'}};
+          return {data:body};
+        })()
       : await auth.signIn.email({email,password});
     if (response.error) {
       const code = String(response.error.code || '').toUpperCase();
@@ -384,6 +412,7 @@ form.addEventListener('submit', async event=>{
     }
     el('account-password').value = '';
     if (signup) {
+      el('account-document').value = '';
       if (response.data?.user?.emailVerified !== true) {
         setVerificationMode(email);
         status('Cadastro recebido. Informe o código enviado ao seu e-mail.');

@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import {betterAuth} from 'better-auth';
+import {APIError} from 'better-auth/api';
 import {emailOTP,jwt} from 'better-auth/plugins';
 import {Pool} from 'pg';
 import {createRequire} from 'node:module';
@@ -21,7 +22,34 @@ const auth=betterAuth({
   secret:secret('SEVEN_AUTH_SECRET_FILE'),
   trustedOrigins:[origin.origin],
   database:new Pool(options()),
-  user:{modelName:'seven_users'},
+  user:{
+    modelName:'seven_users',
+    additionalFields:{
+      accountType:{type:'string',required:false,input:true,returned:true},
+      // The document itself is never stored or included in a user/session payload.
+      taxIdHash:{type:'string',required:false,input:true,returned:false},
+    },
+  },
+  databaseHooks:{
+    user:{
+      create:{
+        before:async user=>{
+          if(!['PF','PJ'].includes(user.accountType) ||
+             !/^[a-f0-9]{64}$/.test(user.taxIdHash||'')){
+            throw new APIError('BAD_REQUEST',{message:'Cadastro PF/PJ obrigatório'});
+          }
+          return {data:user};
+        },
+      },
+      update:{
+        before:async data=>{
+          // Identity and its one-month trial cannot be reassigned by /update-user.
+          const {accountType:ignoredType,taxIdHash:ignoredHash,...safe}=data;
+          return {data:safe};
+        },
+      },
+    },
+  },
   session:{modelName:'seven_sessions',expiresIn:604800,updateAge:86400},
   account:{modelName:'seven_accounts'},
   verification:{modelName:'seven_verifications'},
