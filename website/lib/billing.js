@@ -23,6 +23,7 @@ async function getEntitlement(pool, userId) {
   const result = await pool.query(
     `SELECT u."createdAt" + interval '1 month' AS trial_ends_at,
             GREATEST(u."createdAt" + interval '1 month', COALESCE(s.paid_through, u."createdAt" + interval '1 month')) AS access_ends_at,
+            COALESCE(s.extra_slots, 0) AS extra_slots,
             CASE WHEN now() < u."createdAt" + interval '1 month' THEN 'trial'
                  WHEN s.paid_through > now() THEN 'paid' ELSE 'expired' END AS status
        FROM seven_users u LEFT JOIN seven_desk_subscriptions s ON s.user_id = u.id
@@ -63,15 +64,26 @@ async function reconcilePayment(pool, event, { handle, apiKey, fetchImpl } = {})
     }
     const account = await client.query('SELECT "createdAt" AS created_at FROM seven_users WHERE id = $1 AND "emailVerified" IS TRUE', [locked.user_id]);
     if (!account.rows[0]) throw new Error('Account unavailable');
-    const interval = locked.plan === 'monthly' ? '1 month' : '1 year';
-    await client.query(
-      `INSERT INTO seven_desk_subscriptions (user_id, paid_through)
-       VALUES ($1, GREATEST(now(), $3::timestamptz + interval '1 month') + $2::interval)
-       ON CONFLICT (user_id) DO UPDATE SET
-         paid_through = GREATEST(seven_desk_subscriptions.paid_through, now(), $3::timestamptz + interval '1 month') + $2::interval,
-         updated_at = now()`,
-      [locked.user_id, interval, account.rows[0].created_at],
-    );
+    if (locked.plan === 'extra_slot') {
+      await client.query(
+        `INSERT INTO seven_desk_subscriptions (user_id, paid_through, extra_slots)
+         VALUES ($1, GREATEST(now(), $2::timestamptz + interval '1 month'), 1)
+         ON CONFLICT (user_id) DO UPDATE SET
+           extra_slots = seven_desk_subscriptions.extra_slots + 1,
+           updated_at = now()`,
+        [locked.user_id, account.rows[0].created_at],
+      );
+    } else {
+      const interval = locked.plan === 'monthly' ? '1 month' : '1 year';
+      await client.query(
+        `INSERT INTO seven_desk_subscriptions (user_id, paid_through)
+         VALUES ($1, GREATEST(now(), $3::timestamptz + interval '1 month') + $2::interval)
+         ON CONFLICT (user_id) DO UPDATE SET
+           paid_through = GREATEST(seven_desk_subscriptions.paid_through, now(), $3::timestamptz + interval '1 month') + $2::interval,
+           updated_at = now()`,
+        [locked.user_id, interval, account.rows[0].created_at],
+      );
+    }
     await client.query(
       `UPDATE seven_desk_payment_orders SET state = 'paid', transaction_nsu = $2,
        invoice_slug = $3, paid_at = now() WHERE order_id = $1`,
