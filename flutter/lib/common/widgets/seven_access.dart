@@ -15,44 +15,76 @@ final sevenDeskProfile = SevenDeskProfile()..refresh();
 class SevenDeskProfile {
   final name = ''.obs;
   final image = ''.obs;
+  final companyName = ''.obs;
 
-  Future<void> refresh() async {
+  /// Refreshes exclusively from the authenticated profile on our site.
+  /// Cached identity is cleared on failure to avoid showing a revoked profile.
+  Future<bool> refresh() async {
     name.value = '';
     image.value = '';
-    final token = bind.mainGetLocalOption(key: _optionKey);
-    if (!isSevenDeskActivationCode(token)) return;
+    companyName.value = '';
     try {
+      await bind.mainSetLocalOption(key: 'seven-site-profile', value: '');
+      final token = bind.mainGetLocalOption(key: _optionKey);
+      if (!isSevenDeskActivationCode(token)) return false;
+
       final response = await http.get(
         Uri.parse('https://www.sevendesk.tech/api/app-profile'),
         headers: {'Authorization': 'Bearer $token'},
       ).timeout(const Duration(seconds: 8));
-      if (bind.mainGetLocalOption(key: _optionKey) != token) return;
-      if (response.statusCode != 200) return;
+      if (bind.mainGetLocalOption(key: _optionKey) != token ||
+          response.statusCode != 200) return false;
+
       final profile = jsonDecode(response.body);
-      if (profile is! Map) return;
-      final profileName = profile['name'];
-      final profileImage = profile['image'];
-      if (profileName is String) name.value = profileName;
-      if (profileImage is String) {
-        final uri = Uri.tryParse(profileImage);
-        if (uri?.scheme == 'https') image.value = profileImage;
+      if (profile is! Map) return false;
+      final displayName = profile['name'];
+      final company = profile['companyName'];
+      final imageUrl = profile['image'];
+      if (displayName is! String || displayName.trim().length < 2 ||
+          displayName.trim().length > 100) return false;
+      var verifiedImage = '';
+      if (imageUrl is String && imageUrl.isNotEmpty) {
+        final uri = Uri.tryParse(imageUrl);
+        final path = uri?.path ?? '';
+        if (uri?.scheme != 'https' || uri?.host != 'www.sevendesk.tech' ||
+            uri?.userInfo.isNotEmpty != true ||
+            uri?.hasQuery == true || uri?.hasFragment == true ||
+            !RegExp(r'^/avatars/[0-9a-f-]{36}/(?:profile|technician-[1-9][0-9]{0,4})\.(?:jpg|png|webp)$').hasMatch(path)) {
+          return false;
+        }
+        verifiedImage = imageUrl;
       }
+      final cleanCompany = company is String && company.trim().length <= 100
+          ? company.trim()
+          : '';
+      final operatorIdentity = jsonEncode({
+        'name': displayName.trim(),
+        'image': verifiedImage,
+        'companyName': cleanCompany,
+      });
+      await bind.mainSetLocalOption(
+        key: 'seven-site-profile',
+        value: operatorIdentity,
+      );
+      name.value = displayName.trim();
+      image.value = verifiedImage;
+      companyName.value = cleanCompany;
+      return true;
     } catch (_) {
-      // An offline receiver can still accept support without a profile.
+      // No identity is shown as verified when the VPS cannot confirm it.
+      return false;
     }
   }
 }
 
 
 Future<bool> ensureSevenDeskAuthenticated(BuildContext context) async {
-  var token = bind.mainGetLocalOption(key: _optionKey);
-  if (await sevenDeskHasValidAccount(token)) return true;
+  if (await sevenDeskProfile.refresh()) return true;
   if (!context.mounted) return false;
 
   await showSevenDeskActivationDialog(context);
   if (!context.mounted) return false;
-  token = bind.mainGetLocalOption(key: _optionKey);
-  if (await sevenDeskHasValidAccount(token)) return true;
+  if (await sevenDeskProfile.refresh()) return true;
   if (!context.mounted) return false;
 
   ScaffoldMessenger.maybeOf(context)?.showSnackBar(
