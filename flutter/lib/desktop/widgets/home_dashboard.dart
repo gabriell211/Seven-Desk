@@ -466,6 +466,7 @@ class HomeDashboard extends StatelessWidget {
               onOpened: () => sevenDeskProfile.refresh(),
               enabled: !bind.isDisableSettings() &&
                   (pages.contains(SettingsTabKey.general) ||
+                      pages.contains(SettingsTabKey.safety) ||
                       pages.contains(SettingsTabKey.account)),
               onSelected: DesktopSettingPage.switch2page,
               itemBuilder: (context) => [
@@ -473,6 +474,11 @@ class HomeDashboard extends StatelessWidget {
                   PopupMenuItem(
                     value: SettingsTabKey.general,
                     child: const Text('Configurações gerais'),
+                  ),
+                if (pages.contains(SettingsTabKey.safety))
+                  const PopupMenuItem(
+                    value: SettingsTabKey.safety,
+                    child: Text('Segurança e acesso'),
                   ),
                 if (pages.contains(SettingsTabKey.account))
                   PopupMenuItem(

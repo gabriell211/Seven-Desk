@@ -1,5 +1,3 @@
-enum SevenDeskInteractiveMode { alwaysAsk, onlyWhenOpen, passwordOnly }
-
 /// Model the actual receiver policy, never enable password access implicitly.
 int sevenDeskInteractiveMode({
   required String approveMode,
