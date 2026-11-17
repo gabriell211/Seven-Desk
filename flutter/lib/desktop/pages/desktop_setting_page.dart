@@ -2306,9 +2306,9 @@ class _AccountState extends State<_Account> {
                 title: Text(sevenDeskProfile.name.value.isEmpty
                     ? 'Suporte sem login'
                     : sevenDeskProfile.name.value),
-                subtitle: Obx(() => Text(sevenDeskProfile.companyName.value.isEmpty
+                subtitle: Text(sevenDeskProfile.companyName.value.isEmpty
                     ? 'Nome e foto sincronizados com o site'
-                    : sevenDeskProfile.companyName.value)),
+                    : sevenDeskProfile.companyName.value),
               )),
         ]),
       ],
