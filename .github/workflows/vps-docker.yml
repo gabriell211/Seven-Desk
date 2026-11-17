@@ -36,7 +36,7 @@ jobs:
           done
           printf 'CI-fake-SMTP-password-not-used\n' | sudo tee /etc/sevendesk/secrets/smtp_password >/dev/null
           printf 'CI-fake-payment-key-disabled\n' | sudo tee /etc/sevendesk/secrets/infinitepay_api_key >/dev/null
-          sudo chmod 0600 /etc/sevendesk/secrets/*
+          sudo find /etc/sevendesk/secrets -type f -exec chmod 0600 {} +
           docker compose version
 
       - name: Validate Compose and build the site image
