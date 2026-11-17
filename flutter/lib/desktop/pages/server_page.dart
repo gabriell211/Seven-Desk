@@ -314,7 +314,16 @@ class ConnectionManagerState extends State<ConnectionManager>
         });
       }
       _resizeFloatingWindow(floating: true);
-      return _buildConnectedPanel(selected, active);
+      final panel = _buildConnectedPanel(selected, active);
+      // Retain the existing protection against remote-injected clicks/keys
+      // operating the receiver's local approval and disconnect controls.
+      return allowRemoteCMModification()
+          ? panel
+          : buildRemoteBlock(
+              child: _buildKeyEventBlock(panel),
+              block: _controlPageBlock,
+              mask: false,
+            );
     }
     _resizeFloatingWindow(floating: false);
     pointerHandler(PointerEvent e) {
