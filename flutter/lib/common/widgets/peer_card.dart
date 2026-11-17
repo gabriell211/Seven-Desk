@@ -32,12 +32,14 @@ class _PeerCard extends StatefulWidget {
   final PeerTabIndex tab;
   final Function(BuildContext, String) connect;
   final PopupMenuEntryBuilder popupMenuEntryBuilder;
+  final Future<void> Function(String id) renamePeer;
 
   const _PeerCard(
       {required this.peer,
       required this.tab,
       required this.connect,
       required this.popupMenuEntryBuilder,
+      required this.renamePeer,
       Key? key})
       : super(key: key);
 
@@ -186,6 +188,17 @@ class _PeerCardState extends State<_PeerCard>
               left: 32,
               child: Icon(Icons.key, size: 13, color: Colors.white70),
             ),
+          if (!model.multiSelectionMode)
+            Positioned(
+              right: 44,
+              top: 6,
+              child: IconButton(
+                tooltip: 'Nomear computador do cliente',
+                icon: const Icon(Icons.edit_outlined, size: 20),
+                color: Colors.white,
+                onPressed: () => widget.renamePeer(peer.id),
+              ),
+            ),
           Positioned(
             right: 7,
             top: 6,
@@ -214,6 +227,13 @@ class _PeerCardState extends State<_PeerCard>
                                   fontWeight: FontWeight.w700,
                                   fontSize: 19)),
                         ),
+                        if (peer.alias.isNotEmpty)
+                          Text('ID: ${formatID(peer.id)}',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                  color: HomeDashboardTheme.muted,
+                                  fontSize: 12)),
                         if (name.isNotEmpty)
                           Tooltip(
                             message: name,
@@ -765,6 +785,7 @@ abstract class BasePeerCard extends StatelessWidget {
       connect: (BuildContext context, String id) =>
           connectInPeerTab(context, peer, tab),
       popupMenuEntryBuilder: _buildPopupMenuEntry,
+      renamePeer: _renamePeer,
     );
   }
 
@@ -1072,29 +1093,33 @@ abstract class BasePeerCard extends StatelessWidget {
   }
 
   @protected
+  Future<void> _renamePeer(String id) async {
+    final oldName = await _getAlias(id);
+    renameDialog(
+      oldName: oldName,
+      onSubmit: (String newName) async {
+        // A friendly alias is UI-only; never modify the remote connection ID.
+        if (newName == oldName) return;
+        if (tab == PeerTabIndex.ab) {
+          await gFFI.abModel.changeAlias(id: id, alias: newName);
+          await bind.mainSetPeerAlias(id: id, alias: newName);
+        } else {
+          await bind.mainSetPeerAlias(id: id, alias: newName);
+          _update();
+        }
+        showToast(translate('Successful'));
+      },
+    );
+  }
+
+  @protected
   MenuEntryBase<String> _renameAction(String id) {
     return MenuEntryButton<String>(
       childBuilder: (TextStyle? style) => Text(
         translate('Rename'),
         style: style,
       ),
-      proc: () async {
-        String oldName = await _getAlias(id);
-        renameDialog(
-            oldName: oldName,
-            onSubmit: (String newName) async {
-              if (newName != oldName) {
-                if (tab == PeerTabIndex.ab) {
-                  await gFFI.abModel.changeAlias(id: id, alias: newName);
-                  await bind.mainSetPeerAlias(id: id, alias: newName);
-                } else {
-                  await bind.mainSetPeerAlias(id: id, alias: newName);
-                  showToast(translate('Successful'));
-                  _update();
-                }
-              }
-            });
-      },
+      proc: () => _renamePeer(id),
       padding: menuPadding,
       dismissOnClicked: true,
     );
