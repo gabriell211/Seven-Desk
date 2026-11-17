@@ -37,6 +37,11 @@ jobs:
           printf 'CI-fake-SMTP-password-not-used\n' | sudo tee /etc/sevendesk/secrets/smtp_password >/dev/null
           printf 'CI-fake-payment-key-disabled\n' | sudo tee /etc/sevendesk/secrets/infinitepay_api_key >/dev/null
           sudo find /etc/sevendesk/secrets -type f -exec chmod 0600 {} +
+          # Docker Compose file-backed secrets retain host permissions on Linux.
+          # Grant read-only access solely to the non-root Node runtime UID (1000).
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq acl
+          sudo find /etc/sevendesk/secrets -type f -exec setfacl -m u:1000:r-- {} +
           docker compose version
 
       - name: Validate Compose and build the site image
