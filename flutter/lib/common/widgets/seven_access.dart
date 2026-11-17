@@ -43,6 +43,51 @@ class SevenDeskProfile {
   }
 }
 
+
+/// Every outbound session must be associated with a verified Seven Desk account.
+/// The installed app receives a device activation after the owner signs in on the site.
+/// Incoming support never invokes this guard.
+Future<bool> sevenDeskHasValidAccount(String token, {http.Client? client}) async {
+  if (!_tokenPattern.hasMatch(token)) return false;
+  try {
+    final uri = Uri.parse('https://www.sevendesk.tech/api/app-profile');
+    final headers = <String, String>{'Authorization': 'Bearer $token'};
+    final response = await (client == null
+            ? http.get(uri, headers: headers)
+            : client.get(uri, headers: headers))
+        .timeout(const Duration(seconds: 8));
+    if (response.statusCode != 200) return false;
+    final profile = jsonDecode(response.body);
+    return profile is Map &&
+        profile['name'] is String &&
+        profile['image'] is String;
+  } catch (_) {
+    // Never start an outgoing connection when account validation is unavailable.
+    return false;
+  }
+}
+
+Future<bool> ensureSevenDeskAuthenticated(BuildContext context) async {
+  var token = bind.mainGetLocalOption(key: _optionKey);
+  if (await sevenDeskHasValidAccount(token)) return true;
+  if (!context.mounted) return false;
+
+  await showSevenDeskActivationDialog(context);
+  if (!context.mounted) return false;
+  token = bind.mainGetLocalOption(key: _optionKey);
+  if (await sevenDeskHasValidAccount(token)) return true;
+  if (!context.mounted) return false;
+
+  ScaffoldMessenger.maybeOf(context)?.showSnackBar(
+    const SnackBar(
+      content: Text(
+        'Entre na sua conta Seven Desk e ative este dispositivo para iniciar a conexão.',
+      ),
+    ),
+  );
+  return false;
+}
+
 Future<void> showSevenDeskActivationDialog(BuildContext context) {
   return showDialog<void>(
     context: context,
@@ -88,6 +133,15 @@ class _SevenDeskActivationDialogState
       _error = '';
     });
     try {
+      if (token.isNotEmpty && !await sevenDeskHasValidAccount(token)) {
+        if (mounted) {
+          setState(() {
+            _saving = false;
+            _error = 'Código não autorizado ou servidor indisponível.';
+          });
+        }
+        return;
+      }
       await bind.mainSetLocalOption(key: _optionKey, value: token);
       await sevenDeskProfile.refresh();
       if (mounted) Navigator.of(context).pop();
@@ -111,8 +165,8 @@ class _SevenDeskActivationDialogState
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Gere o código na sua conta e cole aqui para iniciar suporte. '
-                'Quem recebe suporte não precisa entrar na conta.'),
+            const Text('Entre na sua conta Seven Desk, gere o código do dispositivo '
+                'e cole aqui para iniciar suporte. Quem recebe suporte não precisa entrar.'),
             const SizedBox(height: 14),
             TextField(
               controller: _controller,
