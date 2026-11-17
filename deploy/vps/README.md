@@ -39,6 +39,26 @@ colocar senhas na linha de comando, em comentários, mensagens ou em logs. A sen
 corresponde à conta Hostinger sevendesk@sevendesk.tech. A chave InfinitePay não será
 utilizada até serem ativadas todas as flags após a homologação.
 
+### Permissões dos segredos para o processo sem root
+
+A imagem do site e o migrador executam como `node` (UID 1000). No Docker Compose
+com segredos baseados em arquivos, o bind mount mantém as permissões do host:
+arquivos `root:root` com modo `0600` causam `EACCES` dentro do contêiner.
+Mantenha o diretório `/etc/sevendesk/secrets` em `0700` e os arquivos em `0600`,
+mas conceda leitura **somente** ao UID 1000 por ACL, após preencher todos os segredos:
+
+    sudo apt-get install -y acl
+    sudo find /etc/sevendesk/secrets -maxdepth 1 -type f -exec setfacl -m u:1000:r-- {} +
+    sudo getfacl /etc/sevendesk/secrets/auth_secret
+
+Não use `chmod 644`, não execute o site como root e não registre o conteúdo dos
+segredos nos logs. Repita a ACL sempre que substituir um arquivo de segredo por
+outro inode (por exemplo, durante rotação). Verifique no host se o UID 1000 já
+pertence a um usuário local: a ACL concede leitura desse arquivo a esse UID,
+embora o diretório `0700` impeça acesso por caminho normal. Para ambientes com
+requisitos mais rígidos, utilize um mecanismo de provisionamento de segredos
+que preserve o isolamento por UID e faça auditoria de acesso.
+
 ## Instalação isolada e migração de banco
 
     docker compose config -q
