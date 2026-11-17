@@ -16,7 +16,15 @@ Este compose prepara PostgreSQL local, site Node.js e Caddy opcional. Conta, cob
 
 ## Preparação na VPS
 
-Instale Docker Engine e Compose plugin atualizados, configure firewall, SSH por chave e mantenha o daemon Docker inacessível pela internet. Crie o segredo localmente:
+Instale Docker Engine e Compose plugin atualizados, configure firewall, SSH por chave e mantenha o daemon Docker inacessível pela internet. Prepare o arquivo de configuracao (somente valores publicos; as flags do Compose permanecem desligadas):
+
+    cd deploy/vps
+    cp .env.example .env
+    chmod 600 .env
+
+Os dominios do arquivo .env sao consumidos pelo Caddy apenas no futuro profile cutover. Alterar .env NAO libera cadastro, cobranca ou licenciamento. As senhas permanecem exclusivamente em arquivos de segredos no host.
+
+Crie o segredo localmente:
 
     sudo install -d -m 0700 /etc/sevendesk/secrets
     sudo sh -c 'umask 077; openssl rand -hex 32 > /etc/sevendesk/secrets/pg_password'

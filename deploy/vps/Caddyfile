@@ -1,8 +1,8 @@
 {
-    email sevendesk@sevendesk.tech
+    email {$SEVEN_ACME_EMAIL}
 }
 
-www.sevendesk.tech {
+{$SEVEN_WEB_DOMAIN} {
     encode zstd gzip
     header {
         X-Content-Type-Options nosniff
@@ -16,7 +16,7 @@ www.sevendesk.tech {
     reverse_proxy site:3100
 }
 
-downloads.sevendesk.tech {
+{$SEVEN_DOWNLOADS_DOMAIN} {
     header X-Content-Type-Options nosniff
     root * /srv/downloads
     file_server

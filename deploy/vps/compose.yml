@@ -4,14 +4,14 @@ services:
     image: postgres:17.12-alpine3.24
     restart: unless-stopped
     environment:
-      POSTGRES_DB: sevendesk
-      POSTGRES_USER: sevendesk
+      POSTGRES_DB: ${POSTGRES_DB:-sevendesk}
+      POSTGRES_USER: ${POSTGRES_USER:-sevendesk}
       POSTGRES_PASSWORD_FILE: /run/secrets/pg_password
     secrets: [pg_password]
     volumes: [pgdata:/var/lib/postgresql/data]
     networks: [data]
     healthcheck:
-      test: [CMD-SHELL, 'pg_isready -U sevendesk -d sevendesk']
+      test: [CMD-SHELL, 'pg_isready -U "$POSTGRES_USER" -d "$POSTGRES_DB"']
       interval: 10s
       timeout: 4s
       retries: 10
@@ -38,7 +38,7 @@ services:
       SEVEN_WEBHOOK_ENABLED: '0'
       SEVEN_LICENSE_API_ENABLED: '0'
       SEVEN_SALES_LAUNCH_APPROVED: '0'
-      SEVEN_SITE_URL: https://www.sevendesk.tech
+      SEVEN_SITE_URL: ${SEVEN_SITE_URL:-https://www.sevendesk.tech}
       SEVEN_AVATAR_DIR: /srv/sevendesk/avatars
     volumes: [avatars:/srv/sevendesk/avatars]
     depends_on:
@@ -64,6 +64,10 @@ services:
     depends_on:
       site:
         condition: service_healthy
+    environment:
+      SEVEN_WEB_DOMAIN: ${SEVEN_WEB_DOMAIN:-www.sevendesk.tech}
+      SEVEN_DOWNLOADS_DOMAIN: ${SEVEN_DOWNLOADS_DOMAIN:-downloads.sevendesk.tech}
+      SEVEN_ACME_EMAIL: ${SEVEN_ACME_EMAIL:-sevendesk@sevendesk.tech}
     ports: ['80:80/tcp', '443:443/tcp', '443:443/udp']
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
