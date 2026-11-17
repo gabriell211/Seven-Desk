@@ -53,6 +53,8 @@ class SevenDeskProfile {
           return false;
         }
         verifiedImage = imageUrl;
+        // The website may replace a picture at the same URL.
+        await NetworkImage(verifiedImage).evict();
       }
       final cleanCompany = company is String && company.trim().length <= 100
           ? company.trim()
@@ -152,7 +154,16 @@ class _SevenDeskActivationDialogState
         return;
       }
       await bind.mainSetLocalOption(key: _optionKey, value: token);
-      await sevenDeskProfile.refresh();
+      final profileReady = await sevenDeskProfile.refresh();
+      if (token.isNotEmpty && !profileReady) {
+        if (mounted) {
+          setState(() {
+            _saving = false;
+            _error = 'Não foi possível validar seu perfil no site.';
+          });
+        }
+        return;
+      }
       if (mounted) Navigator.of(context).pop();
     } catch (_) {
       if (mounted) {
