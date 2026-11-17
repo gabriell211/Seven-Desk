@@ -1,6 +1,7 @@
 'use strict';
 
 const { createHash, randomBytes } = require('node:crypto');
+const {getMaxSlots}=require('./technicians');
 
 const TOKEN_RE = /^sd_[A-Za-z0-9_-]{43}$/;
 const DEVICE_RE = /^[0-9a-f]{64}$/;
@@ -40,22 +41,22 @@ function createAppTokenHandler({ enabled, authenticate, pool, random = randomByt
       const userId = await authenticate(req.headers?.authorization);
       if (!userId) return res.status(401).json({ error: 'Entre na sua conta' });
       const db = pool();
-      let maxSlots = 5;
-      try {
-        const allowance = await db.query(
-          'SELECT 5 + COALESCE((SELECT extra_slots FROM seven_desk_subscriptions WHERE user_id = $1), 0) AS max_slots',
-          [userId],
-        );
-        maxSlots = Number(allowance.rows[0]?.max_slots || 5);
-      } catch {
-        // Keep the original five-slot safety limit if the optional entitlement column is unavailable.
-      }
-      if (req.method === 'GET') {
-        const result = await db.query(
-          'SELECT slot, label, technician_name, technician_image FROM seven_desk_app_tokens WHERE user_id = $1 ORDER BY slot',
-          [userId],
-        );
-        return res.status(200).json({ devices: result.rows, maxSlots });
+      const maxSlots=await getMaxSlots(db,userId);
+      if(req.method==='GET'){
+        const [machines,team]=await Promise.all([
+          db.query('SELECT slot, label FROM seven_desk_app_tokens WHERE user_id = $1 ORDER BY slot',[userId]),
+          db.query('SELECT slot, technician_name, technician_image, (code_hash IS NOT NULL) AS has_technician_code FROM seven_desk_technicians WHERE user_id = $1 ORDER BY slot',[userId]),
+        ]);
+        const bySlot=new Map();
+        for(const m of machines.rows)bySlot.set(Number(m.slot),{...m,activated:true});
+        for(const t of team.rows){
+          const key=Number(t.slot);
+          bySlot.set(key,{...bySlot.get(key),...t,slot:key,activated:bySlot.has(key)});
+        }
+        return res.status(200).json({
+          devices:[...bySlot.values()].sort((a,b)=>Number(a.slot)-Number(b.slot)),
+          maxSlots,
+        });
       }
       const slot = Number(req.body?.slot);
       if (!Number.isInteger(slot) || slot < 1 || slot > maxSlots) return res.status(400).json({ error: 'Computador inválido' });

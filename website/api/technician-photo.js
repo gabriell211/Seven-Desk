@@ -31,7 +31,7 @@ module.exports = async (req, res) => {
     if (!userId) return res.status(401).json({error:'Entre na sua conta'});
     const db = pool();
     const exists = await db.query(
-      'SELECT 1 FROM seven_desk_app_tokens t JOIN seven_users u ON u.id = t.user_id WHERE t.user_id = $1 AND t.slot = $2 AND u."emailVerified" IS TRUE',
+      'SELECT 1 FROM seven_desk_technicians t JOIN seven_users u ON u.id = t.user_id WHERE t.user_id = $1 AND t.slot = $2 AND u."emailVerified" IS TRUE',
       [userId, slot],
     );
     if (!exists.rowCount) return res.status(404).json({error:'Computador não encontrado'});
@@ -50,7 +50,7 @@ module.exports = async (req, res) => {
     if (origin.protocol !== 'https:') throw new Error('Invalid site URL');
     const url = `${origin.origin}/avatars/${userId}/${filename}`;
     const updated = await db.query(
-      'UPDATE seven_desk_app_tokens SET technician_image = $3 WHERE user_id = $1 AND slot = $2 RETURNING slot',
+      'UPDATE seven_desk_technicians SET technician_image = $3 WHERE user_id = $1 AND slot = $2 RETURNING slot',
       [userId, slot, url],
     );
     if (!updated.rowCount) return res.status(404).json({error:'Computador não encontrado'});
