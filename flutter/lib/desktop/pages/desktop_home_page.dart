@@ -104,7 +104,7 @@ class _DesktopHomePageState extends State<DesktopHomePage>
         final canEdit = !bind.isDisableSettings() &&
             DesktopSettingPage.tabKeys.contains(SettingsTabKey.safety);
         final id = _dashboardCredential(
-          label: 'Seu ID',
+          label: 'Seu endereço (ID)',
           controller: model.serverId,
           actions: canEdit ? [buildPopupMenu(context)] : const [],
         );
