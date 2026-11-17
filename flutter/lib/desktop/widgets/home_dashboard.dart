@@ -134,19 +134,52 @@ class HomeDashboard extends StatelessWidget {
                                   children: [
                                     _welcome(wide),
                                     if (credentials != null) ...[
-                                      const SizedBox(height: 25),
+                                      const SizedBox(height: 16),
                                       credentials!,
                                     ],
-                                    if (notices != null) notices!,
-                                    const SizedBox(height: 22),
+                                    const SizedBox(height: 16),
                                     connection,
-                                    const SizedBox(height: 26),
+                                    const SizedBox(height: 18),
+                                    _quickAccess(),
+                                    const SizedBox(height: 22),
+                                    const Row(
+                                      children: [
+                                        Icon(Icons.desktop_windows_outlined,
+                                            color: HomeDashboardTheme.purple,
+                                            size: 24),
+                                        SizedBox(width: 10),
+                                        Expanded(
+                                          child: Text(
+                                            'Computadores de clientes',
+                                            style: TextStyle(
+                                              fontSize: 20,
+                                              fontWeight: FontWeight.w700,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 5),
+                                    const Text(
+                                      'Computadores recentes e salvos. '
+                                      'Use o lápis para atribuir um nome a cada PC '
+                                      'sem alterar seu ID de acesso.',
+                                      style: TextStyle(
+                                        color: HomeDashboardTheme.muted,
+                                        fontSize: 13,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 12),
                                     SizedBox(
-                                      height: (body.maxHeight - 410)
-                                          .clamp(224.0, double.infinity)
+                                      height: (body.maxHeight - 590)
+                                          .clamp(245.0, double.infinity)
                                           .toDouble(),
                                       child: peers,
                                     ),
+                                    if (notices != null) ...[
+                                      const SizedBox(height: 20),
+                                      notices!,
+                                    ],
                                   ],
                                 ),
                               ),
@@ -171,6 +204,103 @@ class HomeDashboard extends StatelessWidget {
                 ],
               );
             },
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Shortcuts follow the original application's navigation and security
+  /// flows instead of creating parallel connection or credential handling.
+  Widget _quickAccess() {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final columns = constraints.maxWidth >= 880
+            ? 3
+            : constraints.maxWidth >= 520
+                ? 2
+                : 1;
+        final itemWidth =
+            (constraints.maxWidth - 12 * (columns - 1)) / columns;
+        return Wrap(
+          spacing: 12,
+          runSpacing: 12,
+          children: [
+            _quickAction(
+              width: itemWidth,
+              title: 'Nova sessão',
+              description: 'Conectar pelo ID remoto',
+              icon: Icons.add_to_queue_rounded,
+              onTap: () => onSection(HomeDashboardSection.home),
+            ),
+            _quickAction(
+              width: itemWidth,
+              title: 'Sessões recentes',
+              description: 'PCs e clientes atendidos',
+              icon: Icons.history_rounded,
+              onTap: () => onSection(HomeDashboardSection.sessions),
+            ),
+            if (DesktopSettingPage.tabKeys.contains(SettingsTabKey.safety))
+              _quickAction(
+                width: itemWidth,
+                title: 'Acesso e segurança',
+                description: 'Senhas e autorizações',
+                icon: Icons.verified_user_outlined,
+                onTap: () => DesktopSettingPage.switch2page(
+                  SettingsTabKey.safety,
+                ),
+              ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _quickAction({
+    required double width,
+    required String title,
+    required String description,
+    required IconData icon,
+    required VoidCallback onTap,
+  }) {
+    return SizedBox(
+      width: width,
+      child: Material(
+        color: HomeDashboardTheme.surface,
+        borderRadius: BorderRadius.circular(14),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(14),
+          onTap: onTap,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            decoration: BoxDecoration(
+              border: Border.all(color: HomeDashboardTheme.border),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Row(
+              children: [
+                Icon(icon, size: 27, color: HomeDashboardTheme.purple),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(title,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                              fontSize: 15, fontWeight: FontWeight.w700)),
+                      const SizedBox(height: 2),
+                      Text(description,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                              color: HomeDashboardTheme.muted, fontSize: 12)),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -557,25 +687,17 @@ class HomeDashboard extends StatelessWidget {
   }
 
   Widget _welcome(bool wide) {
-    final title = Column(
+    final title = const Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text.rich(
-          TextSpan(
-            children: [
-              const TextSpan(text: 'Bem-vindo ao '),
-              const TextSpan(
-                text: 'Seven Desk',
-                style: TextStyle(color: HomeDashboardTheme.purple),
-              ),
-            ],
-          ),
-          style: const TextStyle(fontSize: 35, fontWeight: FontWeight.w700),
-        ),
-        const SizedBox(height: 4),
         Text(
-          'Acesse e gerencie seus computadores de forma rápida, segura e estável.',
-          style: const TextStyle(color: HomeDashboardTheme.muted, fontSize: 18),
+          'Acesso remoto',
+          style: TextStyle(fontSize: 29, fontWeight: FontWeight.w700),
+        ),
+        SizedBox(height: 4),
+        Text(
+          'Seu endereço, novas conexões e computadores dos clientes em um só lugar.',
+          style: TextStyle(color: HomeDashboardTheme.muted, fontSize: 15),
         ),
       ],
     );
