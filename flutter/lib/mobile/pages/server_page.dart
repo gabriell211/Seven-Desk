@@ -818,7 +818,7 @@ class ConnectionManager extends StatelessWidget {
       children: [
         Tooltip(
           message: 'A elevação administrativa só está disponível no Windows.',
-          child: const OutlinedButton.icon(
+          child: OutlinedButton.icon(
             onPressed: null,
             icon: Icon(Icons.admin_panel_settings_outlined),
             label: Text('Aceitar como administrador'),
