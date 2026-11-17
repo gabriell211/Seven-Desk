@@ -43,7 +43,7 @@ pub fn operator_profile() -> Option<(String, String, String)> {
     if !image.is_empty()
         && (!image.starts_with("https://www.sevendesk.tech/avatars/")
             || image.len() > 512
-            || image.contains(['?', '#', '@', '\\n', '\\r']))
+            || image.chars().any(|c| c == '?' || c == '#' || c == '@' || c.is_control()))
     {
         return None;
     }
