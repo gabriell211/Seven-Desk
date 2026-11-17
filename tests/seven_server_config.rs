@@ -16,6 +16,8 @@ fn seven_server_replaces_old_configured_endpoints_and_key() {
     assert_eq!(Config::get_option("relay-server"), "sevendesk.tech");
     assert_eq!(Config::get_option("api-server"), "https://sevendesk.tech");
     assert_eq!(Config::get_option("key"), seven_server::PUBLIC_KEY);
+    // Identidade pública do servidor ativo; não trocar sem migração dos clientes.
+    assert_eq!(seven_server::PUBLIC_KEY, "jt0evEER+Pzo4dPZwGx8iuJoO8BRw7CzM+92eK6ixwc=");
     assert_eq!(
         librustdesk::common::get_api_server(
             "https://old.example".to_owned(),
