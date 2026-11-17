@@ -7,7 +7,7 @@ import {createRequire} from 'node:module';
 import {auth} from '../lib/selfhost-auth.mjs';
 const require=createRequire(import.meta.url);
 const {options}=require('../lib/db-pool.js');
-const scripts=['001_billing.sql','002_app_tokens.sql','003_technician_slots.sql'];
+const scripts=['001_billing.sql','002_app_tokens.sql','003_technician_slots.sql','004_extra_slots.sql'];
 const db=new Pool(options());
 const directory=path.dirname(fileURLToPath(import.meta.url));
 let client;
@@ -39,9 +39,9 @@ try{
   await client.query('GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO sevendesk_app');
   await client.query('GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO sevendesk_app');
   await client.query('COMMIT');
-  process.stdout.write('Seven Desk auth/billing schema ready\n');
+  process.stdout.write('Seven Desk auth/billing schema ready\\n');
 }catch(error){
   if(client)await client.query('ROLLBACK').catch(()=>{});
-  process.stderr.write('Migration failed; inspect Postgres logs and retry before cutover\n');
+  process.stderr.write('Migration failed; inspect Postgres logs and retry before cutover\\n');
   process.exitCode=1;
 }finally{client?.release();await db.end();}
