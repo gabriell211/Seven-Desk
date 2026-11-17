@@ -11,6 +11,8 @@ import 'package:flutter_hbb/consts.dart';
 import 'package:flutter_hbb/desktop/widgets/tabbar_widget.dart';
 import 'package:flutter_hbb/models/chat_model.dart';
 import 'package:flutter_hbb/models/cm_file_model.dart';
+import 'package:flutter_hbb/desktop/widgets/receiver_session_panel.dart';
+import 'package:flutter_hbb/desktop/widgets/windows_cm_window_position.dart';
 import 'package:flutter_hbb/utils/platform_channel.dart';
 import 'package:get/get.dart';
 import 'package:percent_indicator/linear_percent_indicator.dart';
@@ -127,6 +129,11 @@ class ConnectionManagerState extends State<ConnectionManager>
     with WidgetsBindingObserver {
   final RxBool _controlPageBlock = false.obs;
   final RxBool _sidePageBlock = false.obs;
+  ReceiverPanelView _panelView = ReceiverPanelView.none;
+  bool _panelMinimized = false;
+  String _lastWindowLayout = '';
+  int? _panelClientId;
+
 
   ConnectionManagerState() {
     gFFI.serverModel.tabController.onSelected = (client_id_str) {
@@ -139,7 +146,14 @@ class ConnectionManagerState extends State<ConnectionManager>
           if (client.unreadChatMessageCount.value > 0) {
             WidgetsBinding.instance.addPostFrameCallback((_) {
               client.unreadChatMessageCount.value = 0;
-              gFFI.chatModel.showChatPage(MessageKey(client.peerId, client.id));
+              if (mounted && client.authorized && !client.disconnected) {
+                setState(() {
+                  _panelMinimized = false;
+                  _panelView = ReceiverPanelView.chat;
+                });
+              } else {
+                gFFI.chatModel.showChatPage(MessageKey(client.peerId, client.id));
+              }
             });
           }
           windowManager.setTitle(getWindowNameWithId(client.peerId));
@@ -174,9 +188,124 @@ class ConnectionManagerState extends State<ConnectionManager>
     super.dispose();
   }
 
+  void _resizeFloatingWindow({required bool floating}) {
+    final size = floating
+        ? _panelMinimized
+            ? const Size(315, 130)
+            : _panelView == ReceiverPanelView.none
+                ? const Size(430, 196)
+                : const Size(520, 520)
+        : kConnectionManagerWindowSizeClosedChat;
+    final signature = '${floating ? 'floating' : 'pending'}:${size.width}x${size.height}';
+    if (_lastWindowLayout == signature) return;
+    _lastWindowLayout = signature;
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!mounted) return;
+      try {
+        if (isWindows) {
+          await setWindowsCmWindowBounds(size, bottomRight: floating);
+        } else {
+          await windowManager.setSizeAlignment(
+            size, floating ? Alignment.bottomRight : Alignment.topRight);
+        }
+        if (floating) {
+          // A compact panel must never hide the active remote session.
+          await windowManager.setAlwaysOnTop(true);
+          await windowManager.show();
+          await windowManager.restore();
+        }
+      } catch (error) {
+        debugPrint('Failed to place receiver session panel: $error');
+      }
+    });
+  }
+
+  void _changePanelView(ReceiverPanelView next, Client client) {
+    if (_panelView == next && !_panelMinimized) {
+      next = ReceiverPanelView.none;
+    }
+    if (next == ReceiverPanelView.chat) {
+      gFFI.chatModel.changeCurrentKey(MessageKey(client.peerId, client.id));
+      client.unreadChatMessageCount.value = 0;
+    } else if (next == ReceiverPanelView.transfers) {
+      gFFI.cmFileModel.updateCurrentClientId(client.id);
+    }
+    setState(() {
+      _panelMinimized = false;
+      _panelView = next;
+    });
+  }
+
+  Widget _buildConnectedPanel(Client client) {
+    final content = switch (_panelView) {
+      ReceiverPanelView.chat => ChatPage(type: ChatPageType.desktopCM),
+      ReceiverPanelView.transfers => _FileTransferLogPage(),
+      ReceiverPanelView.controls => SingleChildScrollView(
+          child: Column(children: [
+            if (client.type_() == ClientType.remote)
+              _PrivilegeBoard(client: client),
+            _CmControlPanel(client: client),
+          ]),
+        ),
+      ReceiverPanelView.none => const SizedBox.shrink(),
+    };
+    return ReceiverSessionPanel(
+      identity: incomingSupportIdentity(
+        requesterName: client.name,
+        requesterAvatar: client.avatar,
+      ),
+      peerId: client.peerId,
+      minimized: _panelMinimized,
+      view: _panelView,
+      unreadMessages: client.unreadChatMessageCount.value,
+      details: content,
+      canChangeMonitor: client.type_() == ClientType.remote,
+      onMinimize: () => setState(() {
+        _panelMinimized = true;
+        _panelView = ReceiverPanelView.none;
+      }),
+      onRestore: () => setState(() => _panelMinimized = false),
+      onChat: () => _changePanelView(ReceiverPanelView.chat, client),
+      onTransfers: () => _changePanelView(ReceiverPanelView.transfers, client),
+      onControls: () => _changePanelView(ReceiverPanelView.controls, client),
+      onNextMonitor: () => checkClickTime(client.id, () {
+        // Reuses the existing Flutter FFI bridge. The native receiver and
+        // server both enforce authorization and valid remote-desktop scope.
+        bind.cmSwitchPermission(
+          connId: client.id, name: 'seven-cycle-display', enabled: true);
+      }),
+      onDisconnect: () => checkClickTime(
+        client.id, () => bind.cmCloseConnection(connId: client.id)),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final serverModel = Provider.of<ServerModel>(context);
+    final clients = serverModel.clients;
+    final active = clients.where((c) => c.authorized && !c.disconnected).toList();
+    final pending = clients.any((c) => !c.authorized && !c.disconnected);
+    final floating = active.isNotEmpty && !pending;
+    if (floating) {
+      final key = serverModel.tabController.state.value.selectedTabInfo.key;
+      final selected = active.firstWhereOrNull((c) => c.id.toString() == key)
+          ?? active.first;
+      if (_panelClientId != selected.id) {
+        _panelClientId = selected.id;
+        _panelMinimized = false;
+        _panelView = ReceiverPanelView.none;
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            gFFI.chatModel.changeCurrentKey(
+                MessageKey(selected.peerId, selected.id));
+            gFFI.cmFileModel.updateCurrentClientId(selected.id);
+          }
+        });
+      }
+      _resizeFloatingWindow(floating: true);
+      return _buildConnectedPanel(selected);
+    }
+    _resizeFloatingWindow(floating: false);
     pointerHandler(PointerEvent e) {
       if (serverModel.cmHiddenTimer != null) {
         serverModel.cmHiddenTimer!.cancel();
@@ -1101,13 +1230,11 @@ class _CmControlPanel extends StatelessWidget {
                 // Does not bypass local Windows approval or security policy.
                 handleAccept(context);
                 handleElevate(context);
-                windowManager.minimize();
               })
           : null,
       onAccept: canAccept
           ? () => checkClickTime(client.id, () {
                 handleAccept(context);
-                windowManager.minimize();
               })
           : null,
       onReject: () => checkClickTime(client.id, handleDisconnect),
