@@ -22,12 +22,20 @@ function createTechnicianCodeHandler({authenticate=authenticatedUser,db=pool,ran
       const hash=technicianCodeHash(technicianCode);
       if(!hash)throw new Error('Code generation');
       const result=await db().query(
-        `UPDATE seven_desk_technicians t
-            SET code_hash=$3,updated_at=now()
-           FROM seven_users u
-          WHERE t.user_id=$1 AND t.slot=$2 AND u.id=t.user_id
-            AND u."emailVerified" IS TRUE
-          RETURNING t.slot`,[userId,slot,hash],
+        `WITH updated AS (
+            UPDATE seven_desk_technicians t
+              SET code_hash=$3,updated_at=now()
+              FROM seven_users u
+             WHERE t.user_id=$1 AND t.slot=$2 AND u.id=t.user_id
+               AND u."emailVerified" IS TRUE
+             RETURNING t.user_id,t.slot
+          ), invalidated AS (
+            UPDATE seven_desk_app_tokens a SET technician_verified=false
+              FROM updated t
+             WHERE a.user_id=t.user_id AND a.slot=t.slot
+             RETURNING a.slot
+          )
+          SELECT slot FROM updated`,[userId,slot,hash],
       );
       if(!result.rows.length)return res.status(404).json({error:'Técnico não cadastrado'});
       return res.status(200).json({technicianCode});

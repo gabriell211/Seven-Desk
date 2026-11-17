@@ -21,12 +21,14 @@ async function appTokenUser(pool, header, bindDevice = false) {
     ? await pool.query(
       `UPDATE seven_desk_app_tokens t SET device_hash = COALESCE(t.device_hash, $2)
          FROM seven_users u WHERE t.token_hash = $1 AND u.id = t.user_id
-          AND u."emailVerified" IS TRUE AND (t.device_hash IS NULL OR t.device_hash = $2)
+          AND u."emailVerified" IS TRUE AND t.technician_verified IS TRUE
+          AND (t.device_hash IS NULL OR t.device_hash = $2)
         RETURNING t.user_id`, [tokenHash(token), deviceHash])
     : await pool.query(
       `SELECT t.user_id FROM seven_desk_app_tokens t
          JOIN seven_users u ON u.id = t.user_id
-        WHERE t.token_hash = $1 AND u."emailVerified" IS TRUE`, [tokenHash(token)]);
+        WHERE t.token_hash = $1 AND u."emailVerified" IS TRUE
+          AND t.technician_verified IS TRUE`, [tokenHash(token)]);
   return result.rows[0]?.user_id || null;
 }
 
@@ -71,7 +73,8 @@ function createAppTokenHandler({ enabled, authenticate, pool, random = randomByt
         `INSERT INTO seven_desk_app_tokens (user_id, slot, label, token_hash)
          SELECT id, $2, $3, $4 FROM seven_users WHERE id = $1 AND "emailVerified" IS TRUE
          ON CONFLICT (user_id, slot) DO UPDATE SET label = EXCLUDED.label,
-           token_hash = EXCLUDED.token_hash, device_hash = NULL, created_at = now()
+           token_hash = EXCLUDED.token_hash, device_hash = NULL,
+           technician_verified = false, created_at = now()
          RETURNING user_id`,
         [userId, slot, label, tokenHash(token)],
       );
