@@ -1,7 +1,11 @@
 'use strict';
 
-// The Neon Auth URL is public; passwords and payment credentials are never sent here.
-module.exports = (req, res) => {
+const { createWebhookHandler } = require('../lib/neon-email-webhook');
+const sendSignedOtpEmail = createWebhookHandler();
+
+// Reuses the existing Vercel function, preserving the Hobby plan's 12-function limit.
+function authConfigHandler(req, res) {
+  if (req.method === 'POST') return sendSignedOtpEmail(req, res);
   res.setHeader('Cache-Control', 'no-store');
   if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
   try {
@@ -11,4 +15,6 @@ module.exports = (req, res) => {
   } catch {
     return res.status(503).json({ error: 'Account service unavailable' });
   }
-};
+}
+module.exports = authConfigHandler;
+module.exports.config = { api: { bodyParser: false } };
