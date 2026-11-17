@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_hbb/desktop/pages/desktop_home_page.dart';
+import 'package:flutter_hbb/common/widgets/incoming_support_identity.dart';
 import 'package:flutter_hbb/mobile/widgets/dialog.dart';
 import 'package:flutter_hbb/models/chat_model.dart';
 import 'package:get/get.dart';
@@ -812,20 +813,38 @@ class ConnectionManager extends StatelessWidget {
   }
 
   Widget _buildNewConnectionHint(ServerModel serverModel, Client client) {
-    return Row(mainAxisAlignment: MainAxisAlignment.end, children: [
-      TextButton(
-          child: Text(translate("Dismiss")),
-          onPressed: () {
-            serverModel.sendLoginResponse(client, false);
-          }).marginOnly(right: 15),
-      if (serverModel.approveMode != 'password')
-        ElevatedButton.icon(
-            icon: const Icon(Icons.check),
-            label: Text(translate("Accept")),
-            onPressed: () {
-              serverModel.sendLoginResponse(client, true);
-            }),
-    ]);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Tooltip(
+          message: 'A elevação administrativa só está disponível no Windows.',
+          child: const OutlinedButton.icon(
+            onPressed: null,
+            icon: Icon(Icons.admin_panel_settings_outlined),
+            label: Text('Aceitar como administrador'),
+          ),
+        ),
+        Row(
+          children: [
+            Expanded(
+              child: FilledButton(
+                onPressed: serverModel.approveMode == 'password'
+                    ? null
+                    : () => serverModel.sendLoginResponse(client, true),
+                child: const Text('Aceitar'),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: OutlinedButton(
+                onPressed: () => serverModel.sendLoginResponse(client, false),
+                child: const Text('Recusar'),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
   }
 
   List<Widget> _buildNewVoiceCallHint(
@@ -920,7 +939,20 @@ class ClientInfo extends StatelessWidget {
                   child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                    Text(client.name, style: const TextStyle(fontSize: 18)),
+                    Text(
+                      incomingSupportIdentity(
+                        requesterName: client.name,
+                        requesterAvatar: client.avatar,
+                      ).technician,
+                      style: const TextStyle(fontSize: 18),
+                    ),
+                    Text(
+                      incomingSupportIdentity(
+                        requesterName: client.name,
+                        requesterAvatar: client.avatar,
+                      ).company,
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
                     const SizedBox(width: 8),
                     Text(client.peerId, style: const TextStyle(fontSize: 10))
                   ]))
@@ -936,7 +968,10 @@ class ClientInfo extends StatelessWidget {
       child: Text(client.name.isNotEmpty ? client.name[0] : '?'),
     );
     return buildAvatarWidget(
-          avatar: client.avatar,
+          avatar: incomingSupportIdentity(
+            requesterName: client.name,
+            requesterAvatar: client.avatar,
+          ).avatarUrl,
           size: 40,
           fallback: fallback,
         ) ??
