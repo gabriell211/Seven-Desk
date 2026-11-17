@@ -2,6 +2,11 @@
 **
 !website/
 !website/**
+!deploy/
+!deploy/vps/
+!deploy/vps/compose.yml
+!deploy/vps/Dockerfile.site
+!deploy/vps/Dockerfile.site.dockerignore
 website/node_modules/
 website/.env
 website/.env.*
