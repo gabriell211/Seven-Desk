@@ -57,13 +57,13 @@ index 0000000..7aee92a
 +use std::{env, time::Duration};
 +
 +enum Endpoint {
-+    Disabled,
++    Missing,
 +    Invalid,
 +    Enabled(Url),
 +}
 +
 +static ENDPOINT: Lazy<Endpoint> = Lazy::new(|| match env::var("SEVEN_LICENSE_URL") {
-+    Err(env::VarError::NotPresent) => Endpoint::Disabled,
++    Err(env::VarError::NotPresent) => Endpoint::Missing,
 +    Ok(value) => parse_endpoint(&value).map_or(Endpoint::Invalid, Endpoint::Enabled),
 +    Err(_) => Endpoint::Invalid,
 +});
@@ -97,7 +97,7 @@ index 0000000..7aee92a
 +
 +pub async fn allows(token: &str) -> bool {
 +    let url = match &*ENDPOINT {
-+        Endpoint::Disabled => return true,
++        Endpoint::Missing => return false,
 +        Endpoint::Invalid => return false,
 +        Endpoint::Enabled(url) => url,
 +    };
