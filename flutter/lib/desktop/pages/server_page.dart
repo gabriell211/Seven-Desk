@@ -97,10 +97,18 @@ class _DesktopServerPageState extends State<DesktopServerPage>
       ],
       child: Consumer<ServerModel>(
         builder: (context, serverModel, child) {
+          final clients = serverModel.clients;
+          final floating = clients.any((c) => c.authorized && !c.disconnected) &&
+              !clients.any((c) => !c.authorized && !c.disconnected);
           final body = Scaffold(
-            backgroundColor: Theme.of(context).colorScheme.background,
+            backgroundColor: floating
+                ? Colors.transparent
+                : Theme.of(context).colorScheme.background,
             body: ConnectionManager(),
           );
+          // The CM window itself has a transparent native background.
+          // Do not draw the old full-window border behind the compact bubble.
+          if (floating) return body;
           return isLinux
               ? buildVirtualWindowFrame(context, body)
               : workaroundWindowBorder(
