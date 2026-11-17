@@ -472,7 +472,7 @@ class HomeDashboard extends StatelessWidget {
                 if (pages.contains(SettingsTabKey.general))
                   PopupMenuItem(
                     value: SettingsTabKey.general,
-                    child: Text(translate(sessionToolbarPhotoLabel)),
+                    child: const Text('Configurações gerais'),
                   ),
                 if (pages.contains(SettingsTabKey.account))
                   PopupMenuItem(
@@ -516,7 +516,10 @@ class HomeDashboard extends StatelessWidget {
                                     color: Colors.white,
                                     fontSize: 17,
                                     fontWeight: FontWeight.w600)),
-                            Text(name.isEmpty ? 'Suporte sem login' : 'Perfil do site',
+                            Text(name.isEmpty ? 'Suporte sem login' :
+                                (sevenDeskProfile.companyName.value.isEmpty
+                                    ? 'Perfil do site'
+                                    : sevenDeskProfile.companyName.value),
                                 style: const TextStyle(
                                     color: HomeDashboardTheme.muted,
                                     fontSize: 13)),
