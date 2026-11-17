@@ -1,4 +1,5 @@
 import { createAuthClient } from '@neon/auth';
+import { jwtAuthorization } from './lib/account-api-jwt';
 
 const el = id => document.getElementById(id);
 const form = el('account-form');
@@ -109,10 +110,7 @@ async function refresh() {
   if (data?.user?.emailVerified === true) await Promise.all([loadSubscription(), loadCheckoutAvailability(), loadAppAccess()]);
 }
 async function appAuthorization() {
-  const {data, error} = await auth.getSession();
-  const token = data?.session?.token;
-  if (error || typeof token !== 'string' || token.split('.').length !== 3) throw new Error('Invalid session');
-  return 'Bearer ' + token;
+  return jwtAuthorization(auth);
 }
 async function loadAppAccess() {
   try {
@@ -189,10 +187,9 @@ async function loadSubscription() {
   const target = el('account-subscription');
   target.textContent = 'Consultando período de acesso...';
   try {
-    const {data, error} = await auth.getSession();
-    const token = data?.session?.token;
-    if (error || typeof token !== 'string' || token.split('.').length !== 3) throw new Error('Invalid session');
-    const response = await fetch('/api/subscription', {headers: {Authorization: `Bearer ${token}`}, cache: 'no-store'});
+    const response = await fetch('/api/subscription', {
+      headers: {Authorization: await appAuthorization()}, cache: 'no-store',
+    });
     if (!response.ok) throw new Error('Unavailable');
     const subscription = await response.json();
     const date = new Date(subscription.status === 'trial' ? subscription.trialEndsAt : subscription.accessEndsAt);
@@ -218,12 +215,9 @@ async function startCheckout(plan) {
   for (const button of paymentButtons) button.disabled = true;
   notice.textContent = 'Preparando pagamento seguro...';
   try {
-    const {data, error} = await auth.getSession();
-    const token = data?.session?.token;
-    if (error || typeof token !== 'string' || token.split('.').length !== 3) throw new Error('Not authenticated');
     const response = await fetch('/api/checkout', {
       method:'POST', cache:'no-store',
-      headers:{'Content-Type':'application/json', Authorization:`Bearer ${token}`},
+      headers:{'Content-Type':'application/json', Authorization:await appAuthorization()},
       body:JSON.stringify({plan}),
     });
     if (!response.ok) throw new Error('Checkout unavailable');

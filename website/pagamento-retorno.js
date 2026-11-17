@@ -1,4 +1,5 @@
 import { createAuthClient } from '@neon/auth';
+import { jwtAuthorization } from './lib/account-api-jwt';
 
 const status = document.getElementById('payment-return-status');
 
@@ -24,14 +25,13 @@ async function reconcileRedirect() {
     const { authUrl } = await authResponse.json();
     const auth = createAuthClient(authUrl);
     const { data, error } = await auth.getSession();
-    const token = data?.session?.token;
-    if (error || typeof token !== 'string' || token.split('.').length !== 3) {
+    if (error || data?.user?.emailVerified !== true) {
       status.textContent = 'Entre na sua conta para consultar este pagamento. A notificação da InfinitePay também será verificada pelo servidor.';
       return;
     }
     const response = await fetch('/api/confirm-payment', {
       method: 'POST', cache: 'no-store',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      headers: { 'Content-Type': 'application/json', Authorization: await jwtAuthorization(auth) },
       body: JSON.stringify({ order_nsu, transaction_nsu, slug }),
     });
     if (response.ok) {
