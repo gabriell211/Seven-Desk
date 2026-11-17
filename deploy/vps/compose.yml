@@ -56,7 +56,12 @@ services:
         condition: service_healthy
     networks: [data, frontend]
     read_only: true
-    tmpfs: [/tmp:size=32m,mode=1777]
+    tmpfs:
+      - type: tmpfs
+        target: /tmp
+        tmpfs:
+          size: 33554432
+          mode: 1777
     security_opt: [no-new-privileges:true]
     cap_drop: [ALL]
     pids_limit: 150
@@ -89,7 +94,12 @@ services:
         condition: service_healthy
     networks: [data]
     read_only: true
-    tmpfs: [/tmp:size=32m,mode=1777]
+    tmpfs:
+      - type: tmpfs
+        target: /tmp
+        tmpfs:
+          size: 33554432
+          mode: 1777
     security_opt: [no-new-privileges:true]
     cap_drop: [ALL]
 
@@ -112,7 +122,12 @@ services:
       - downloads:/srv/downloads:ro
     networks: [frontend]
     read_only: true
-    tmpfs: [/tmp:size=32m,mode=1777]
+    tmpfs:
+      - type: tmpfs
+        target: /tmp
+        tmpfs:
+          size: 33554432
+          mode: 1777
     security_opt: [no-new-privileges:true]
     cap_drop: [ALL]
     cap_add: [NET_BIND_SERVICE]
