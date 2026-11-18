@@ -132,7 +132,24 @@
       "status": "PENDING",
       "tester": "",
       "evidence": ""
+    },
+    {
+      "id": "LEGACY_INSTALLERS_DENIED",
+      "status": "PENDING",
+      "tester": "",
+      "evidence": ""
+    },
+    {
+      "id": "LATEST_INSTALLERS_CONNECTED",
+      "status": "PENDING",
+      "tester": "",
+      "evidence": ""
+    },
+    {
+      "id": "SERVER_IDENTITY_CUTOVER",
+      "status": "PENDING",
+      "tester": "",
+      "evidence": ""
     }
   ]
 }
-
