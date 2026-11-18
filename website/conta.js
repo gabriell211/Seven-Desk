@@ -95,16 +95,66 @@ function setVerificationMode(email) {
   status('');
 }
 
+const clientViewMeta = Object.freeze({
+  overview:['Visão geral','Gerencie sua conta e acompanhe seus dispositivos em um só lugar.'],
+  devices:['Computadores e técnicos','Gerencie seus acessos e códigos individuais com segurança.'],
+  profile:['Meu perfil','Mantenha seus dados e sua foto atualizados.'],
+  billing:['Assinatura e planos','Acompanhe a validade do seu acesso e as opções de assinatura.'],
+  settings:['Configurações','Controle suas preferências e informações de segurança.'],
+});
+let activeClientView = 'overview';
+function showClientView(view, focus = false) {
+  if (!Object.hasOwn(clientViewMeta,view)) return;
+  activeClientView = view;
+  document.querySelectorAll('[data-account-panel]').forEach(panel => {
+    panel.hidden = panel.dataset.accountPanel !== view;
+  });
+  document.querySelectorAll('.client-nav [data-account-view]').forEach(button => {
+    if (button.dataset.accountView === view) button.setAttribute('aria-current','page');
+    else button.removeAttribute('aria-current');
+  });
+  const [title,description] = clientViewMeta[view];
+  el('account-view-title').textContent = title;
+  el('account-view-breadcrumb').textContent = title;
+  el('account-view-description').textContent = description;
+  if (focus) el('account-view-title').focus();
+}
+document.querySelectorAll('[data-account-view]').forEach(button => {
+  button.addEventListener('click',()=>showClientView(button.dataset.accountView,true));
+});
+
 function displaySession(session) {
   const user = session?.user?.emailVerified === true ? session.user : null;
   el('account-signed-in').hidden = !user;
   el('account-signed-out').hidden = !!user;
+  document.body.classList.toggle('account-authenticated',Boolean(user));
   el('account-user').textContent = user?.email || '';
   el('account-profile-name').value = user?.name || '';
-  const photo = el('account-profile-photo');
-  photo.hidden = !user?.image;
-  if (user?.image) photo.src = user.image;
-  else photo.removeAttribute('src');
+  el('account-sidebar-name').textContent = user?.name?.trim() || 'Minha conta';
+  el('account-sidebar-email').textContent = user?.email || '';
+  el('account-sidebar-initial').textContent = (user?.name?.trim()?.[0] || user?.email?.[0] || 'S').toLocaleUpperCase('pt-BR');
+  // Profile images are hosted by Seven Desk; never render arbitrary image URLs.
+  let safeImage = null;
+  if (typeof user?.image === 'string') {
+    try {
+      const url = new URL(user.image,window.location.origin);
+      if (url.protocol === 'https:' && (url.origin === window.location.origin ||
+          url.hostname === 'www.sevendesk.tech') && url.pathname.startsWith('/avatars/'))
+        safeImage = url.href;
+    } catch { /* Ignore invalid profile images. */ }
+  }
+  for (const id of ['account-profile-photo','account-sidebar-avatar']) {
+    const image = el(id);
+    image.hidden = !safeImage;
+    if (safeImage) image.src = safeImage;
+    else image.removeAttribute('src');
+  }
+  el('account-sidebar-initial').hidden = !!safeImage;
+  for (const id of ['account-summary-slots','account-summary-devices','account-summary-technicians'])
+    el(id).textContent = '—';
+  el('account-summary-status').textContent = user ? 'Consultando...' : '—';
+  el('account-summary-subscription').textContent = user ? 'Consultando período de acesso...' : '';
+  showClientView(user ? activeClientView : 'overview');
   el('account-plan-actions').hidden = !user;
   el('account-app-access').hidden = true;
   el('account-app-token').value = '';
@@ -148,8 +198,18 @@ async function loadAppAccess() {
     const list = el('account-device-list');
     list.replaceChildren();
     const availableSlots = Number.isInteger(maxSlots) ? Math.max(1,Math.min(maxSlots,500)) : 5;
+    const bySlot = new Map(devices.filter(item =>
+      Number.isInteger(item?.slot) && item.slot >= 1 && item.slot <= availableSlots
+    ).map(item => [item.slot,item]));
+    const registered = [...bySlot.values()];
+    const activated = registered.filter(item => item.activated === true).length;
+    el('account-summary-slots').textContent = String(Math.max(0,availableSlots-activated));
+    el('account-summary-devices').textContent = String(activated);
+    el('account-summary-technicians').textContent = String(registered.filter(item =>
+      typeof item.technician_name === 'string' && item.technician_name.trim().length > 0
+    ).length);
     for (let slot = 1; slot <= availableSlots; slot++) {
-      const device = devices.find(item => Number(item.slot) === slot);
+      const device = bySlot.get(slot);
       const row = document.createElement('section');
       row.className = 'account-device-row';
       row.setAttribute('aria-label', `Técnico e computador ${slot}`);
@@ -331,7 +391,9 @@ async function updateAppDevice(slot, label, revoke) {
 }
 async function loadSubscription() {
   const target = el('account-subscription');
+  const summary = el('account-summary-subscription');
   target.textContent = 'Consultando período de acesso...';
+  summary.textContent = target.textContent;
   try {
     const response = await fetch('/api/subscription', {headers: {Authorization: await appAuthorization()}, cache:'no-store'});
     if (!response.ok) throw new Error('Unavailable');
@@ -341,7 +403,14 @@ async function loadSubscription() {
     const formatted = new Intl.DateTimeFormat('pt-BR', {dateStyle:'long', timeStyle:'short'}).format(date);
     target.textContent = subscription.status === 'trial' ? `Período gratuito até ${formatted}.` :
       subscription.status === 'paid' ? `Assinatura ativa até ${formatted}.` : 'Seu período de acesso terminou.';
-  } catch { target.textContent = 'O status da assinatura está temporariamente indisponível.'; }
+    summary.textContent = target.textContent;
+    el('account-summary-status').textContent = subscription.status === 'trial'
+      ? 'Período grátis' : subscription.status === 'paid' ? 'Ativa' : 'Encerrada';
+  } catch {
+    target.textContent = 'O status da assinatura está temporariamente indisponível.';
+    summary.textContent = target.textContent;
+    el('account-summary-status').textContent = 'Indisponível';
+  }
 }
 async function loadCheckoutAvailability() {
   const notice = el('account-checkout-notice');
