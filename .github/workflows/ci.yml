@@ -71,6 +71,22 @@ jobs:
   #       command: test
   #       args: --locked
 
+
+  release-preflight:
+    name: Verify release metadata and AppImage identity
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+      - name: Run release regression checks
+        run: |
+          python3 -m unittest discover -s tests -p 'test_release_version_consistency.py' -v
+          python3 -m unittest discover -s tests -p 'test_appimage_identity.py' -v
+
   build:
     name: ${{ matrix.job.target }} (${{ matrix.job.os }})
     runs-on: ${{ matrix.job.os }}
