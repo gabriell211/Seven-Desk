@@ -67,3 +67,132 @@ body button:focus-visible,body a:focus-visible{outline:3px solid #7838de;outline
 @media(max-width:980px){body .desktop-nav{display:none}body .account-nav{margin-left:auto}body .mobile-menu-button{display:flex}body .hero .hero-grid{padding-top:45px}body .hero h1{font-size:clamp(41px,6vw,65px)}body .hero-shape-left{left:-450px}body .hero-shape-right{right:-175px}body .pricing-banner{gap:16px}body .platform-quickbar-inner{gap:8px}}
 @media(max-width:640px){body .container{width:calc(100% - 32px)}body .announcement{height:auto;min-height:40px;padding:8px 14px}body .announcement a{font-size:12px}body .utility-inner{height:31px;font-size:10px;gap:11px}body .utility-inner a:first-child{display:none}body .header-inner{height:67px;min-height:67px;gap:8px}body .site-header .brand-icon{width:33px;height:33px}body .site-header .brand>span{font-size:19px}body .account-nav-login{display:none!important}body .account-nav a{font-size:12px;padding:9px 11px}body .hero .hero-grid{padding-top:39px}body .hero .eyebrow{font-size:13px;margin-bottom:14px}body .hero h1{font-size:clamp(37px,9vw,53px);line-height:1.12;letter-spacing:-.035em;padding:0 1px;margin-bottom:24px}body .desktop-break{display:none}body .hero-terms{font-size:12px;padding:0 7px;margin-top:17px}body .pricing-banner{flex-wrap:wrap;min-height:0;padding:15px 17px;gap:12px;margin-top:25px}body .pricing-banner-savings{min-width:120px}body .pricing-banner-savings strong{font-size:27px}body .pricing-banner-copy{flex-basis:50%;font-size:12px}body .pricing-banner-copy strong{font-size:12px}body .pricing-banner-copy span{font-size:11px}body .pricing-banner-cta{flex:1;max-width:none;min-height:43px;min-width:0;font-size:12px}body .platform-quickbar-inner{padding-top:16px;gap:2px;flex-wrap:nowrap}body .platform-quickbar button{min-width:0;flex:1;padding:11px 3px;min-height:75px;font-size:11px}body .platform-quickbar button img{width:27px;height:27px}}
 @media(prefers-reduced-motion:reduce){body *,body *:before,body *:after{transition-duration:.01ms!important;animation-duration:.01ms!important}}
+
+
+/* Full-page design continuity — Seven Desk, 18 November 2026.
+   User-approved visual direction: editorial white layout, restrained red accent and warm gradients.
+   This stylesheet only targets the public landing page. */
+body .section{padding:106px 0;scroll-margin-top:40px}
+body .section-kicker{display:inline-block;color:#e94744;font:800 12px/1.4 Arial,Helvetica,sans-serif;letter-spacing:.12em;text-transform:uppercase;margin-bottom:15px}
+body .section-head.centered{max-width:870px;margin:0 auto 49px;text-align:center}
+body .section-head h2,body .split-head h2,body .steps-intro h2,body .pricing-intro h2,body .faq-layout h2{font-family:Arial,Helvetica,sans-serif;font-weight:400;letter-spacing:-.055em;line-height:1.12;font-size:clamp(39px,4.1vw,62px);color:#161616;margin:0 0 20px}
+body .muted-heading{color:#a84c59}
+body .section-head p,body .split-head p,body .steps-intro>p,body .pricing-intro>p,body .faq-layout>div>p{color:#66616a;font-size:16px;line-height:1.8}
+body .section-head p{max-width:720px;margin:0 auto}
+body .intro{background:linear-gradient(180deg,#fff 0%,#fffafa 100%)}
+body .intro .solutions-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:24px}
+body .intro .solution-card,body .intro .solution-card.accent-card{position:relative;display:flex;flex-direction:column;align-items:flex-start;background:#fff;border:1px solid #eee2e2;border-radius:14px;padding:30px;min-height:395px;box-shadow:0 12px 32px rgba(91,31,41,.045);color:#181818;transform:none;isolation:isolate;overflow:hidden}
+body .intro .solution-card:before{content:'';position:absolute;right:-40px;top:-50px;width:175px;height:175px;background:radial-gradient(circle,rgba(242,83,80,.13),transparent 70%);z-index:-1}
+body .intro .solution-card:nth-child(2):before{background:radial-gradient(circle,rgba(242,147,69,.14),transparent 70%)}
+body .intro .solution-card:nth-child(3):before{background:radial-gradient(circle,rgba(182,60,111,.13),transparent 70%)}
+body .intro .solution-card:hover{border-color:#e9a9a6;box-shadow:0 21px 50px rgba(91,31,41,.1);transform:translateY(-3px)}
+body .intro .solution-number{font-size:11px;letter-spacing:.13em;color:#bb474c;font-weight:800}
+body .intro .solution-icon,body .intro .solution-icon.blue,body .intro .solution-icon.white,body .intro .solution-icon.aqua{background:#fff0ed;color:#e64a43;border:1px solid #ffe0da;border-radius:12px;width:57px;height:57px;display:grid;place-items:center;font-size:29px;margin:25px 0 17px}
+body .intro .solution-card h3{color:#171717;font-size:clamp(22px,2vw,28px);line-height:1.22;letter-spacing:-.043em;font-weight:700;margin:0 0 14px}
+body .intro .solution-card p{color:#706970;font-size:14px;line-height:1.8;max-width:340px;margin:0 0 18px}
+body .intro .solution-card>a{font-size:13px;font-weight:750;color:#e74842;text-decoration:none;margin-top:auto}
+body .intro .solution-deco{display:none!important}
+body .feature-section{background:#f8f7f8}
+body .feature-section .split-head{display:flex;align-items:flex-end;justify-content:space-between;gap:44px;margin-bottom:39px}
+body .feature-section .split-head h2{max-width:750px;margin:0}
+body .feature-section .split-head p{max-width:335px;margin:0}
+body .feature-section .features-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
+body .feature-section .feature-card{background:#fff;border:1px solid #ece4e6;border-radius:12px;padding:30px;min-height:222px;box-shadow:none;transition:border-color .2s,transform .2s,box-shadow .2s}
+body .feature-section .feature-card:hover{border-color:#f0ada7;box-shadow:0 18px 43px rgba(79,33,43,.075);transform:translateY(-3px)}
+body .feature-section .feature-icon{width:49px;height:49px;display:grid;place-items:center;border-radius:12px;background:#fff0ed;color:#eb4a43;margin:0 0 21px}
+body .feature-section .feature-icon svg{width:25px;height:25px;stroke:#ec4b46}
+body .feature-section .feature-card h3{font-size:18px;line-height:1.25;color:#211b21;letter-spacing:-.03em;margin:0 0 10px}
+body .feature-section .feature-card p{color:#706970;font-size:14px;line-height:1.65;margin:0}
+body .steps-section{background:#fff}
+body .steps-section .steps-layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.12fr);gap:85px;align-items:center}
+body .steps-section .steps-intro h2{color:#1a1819;margin:0 0 24px}
+body .steps-section .steps-intro>p{color:#6e666a;font-size:16px;max-width:440px;line-height:1.85;margin:0 0 30px}
+body .steps-section .steps-intro .btn-dark{display:inline-flex;align-items:center;min-height:49px;border-radius:6px;background:#ee4b43;border:1px solid #ee4b43;color:#fff;font-weight:750;box-shadow:none;padding:12px 20px}
+body .steps-section .steps-intro .btn-dark:hover{background:#c83e39}
+body .steps-section .step-list{position:relative;border-radius:15px;padding:9px 30px;background:#fff9f9;border:1px solid #f1e2e3}
+body .steps-section .step{display:flex;align-items:flex-start;gap:23px;padding:24px 0;border:0;border-bottom:1px solid #eddddd}
+body .steps-section .step:last-child{border-bottom:0}
+body .steps-section .step-index{font-size:35px;font-weight:300;color:#e54b4b;min-width:59px;line-height:1}
+body .steps-section .step h3{color:#241b1e;font-size:19px;font-weight:700;margin:0 0 8px}
+body .steps-section .step p{color:#6c6568;font-size:14px;line-height:1.7;margin:0}
+body .steps-section .step-glyph{margin-left:auto;color:#dc7472;font-size:24px}
+body .pricing-section{background:linear-gradient(180deg,#fff9f8,#fff 95%)}
+body .pricing-section .pricing-layout{display:block;max-width:1160px;margin:0 auto}
+body .pricing-section .pricing-intro{text-align:center;max-width:770px;margin:0 auto 47px}
+body .pricing-section .pricing-intro h2{margin:0 0 17px}
+body .pricing-section .pricing-intro>p{margin:0 auto 13px;max-width:700px}
+body .pricing-section .pricing-intro .pricing-renewal{font-size:13px;font-weight:500;color:#857579;max-width:720px}
+body .pricing-section .pricing-cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:22px;align-items:stretch}
+body .pricing-section .pricing-card{position:relative;display:flex;flex-direction:column;min-width:0;padding:39px 36px 32px;background:#fff;border:1px solid #e9dadc;border-radius:13px;box-shadow:0 17px 45px rgba(78,26,39,.045);color:#242024}
+body .pricing-section .pricing-card-featured{border:2px solid #e5494c;box-shadow:0 20px 60px rgba(163,31,67,.1)}
+body .pricing-section .pricing-card-featured:before{content:'RECOMENDADO PARA QUEM USA O ANO TODO';position:absolute;top:-15px;left:30px;border-radius:4px;background:linear-gradient(90deg,#f26522,#d8335e);padding:8px 13px;color:white;font-size:10px;font-weight:800;letter-spacing:.07em}
+body .pricing-section .pricing-label{color:#b43f4a;font-size:12px;font-weight:800;letter-spacing:.13em;display:flex;justify-content:space-between;align-items:center;gap:8px}
+body .pricing-section .pricing-label span{color:#c13a45;background:#fff0ef;border:1px solid #ffe2e1;padding:6px 9px;border-radius:5px;letter-spacing:0;font-size:11px}
+body .pricing-section .pricing-card h3{color:#21191e;font-size:29px;line-height:1.2;letter-spacing:-.045em;margin:18px 0 9px}
+body .pricing-section .pricing-description{color:#7c6f76;font-size:14px;margin:0 0 20px}
+body .pricing-section .pricing-price{color:#121212;font-size:clamp(34px,3vw,49px);font-weight:650;letter-spacing:-.055em;margin:0 0 24px}
+body .pricing-section .pricing-price span{color:#e84942;font-size:21px;letter-spacing:0}
+body .pricing-section .pricing-price small{font-size:13px;color:#746870;font-weight:400;letter-spacing:0}
+body .pricing-section .pricing-card ul{list-style:none;border-top:1px solid #f0e7e7;padding:22px 0 14px;margin:0;flex:1}
+body .pricing-section .pricing-card li{position:relative;color:#504750;font-size:14px;line-height:1.65;margin:0 0 12px;padding:0 0 0 25px}
+body .pricing-section .pricing-card li:before{content:'✓';position:absolute;left:0;top:0;color:#e54a4a;font-weight:850}
+body .pricing-section .pricing-card a.pricing-button{display:flex;align-items:center;justify-content:center;min-height:51px;border-radius:6px;margin-top:12px;background:#fff;color:#db3c42;border:1px solid #e94744;font-weight:800;box-shadow:none}
+body .pricing-section .pricing-card-featured a.pricing-button{color:#fff;background:#e84742;border-color:#e84742}
+body .pricing-section .pricing-card a.pricing-button:hover{filter:brightness(.94);transform:none}
+body .download-section{background:#fff;padding:108px 0}
+body .download-section .downloads-panel{background:#f8f7f9;color:#211b20;border:1px solid #eee1e6;border-radius:17px;padding:54px;box-shadow:none;overflow:hidden}
+body .download-section .downloads-heading{display:flex;align-items:center;justify-content:space-between;gap:28px;margin-bottom:32px}
+body .download-section .downloads-heading h2{font:400 clamp(36px,3.7vw,57px)/1.13 Arial,Helvetica,sans-serif;letter-spacing:-.06em;color:#1b171a;margin:0 0 15px}
+body .download-section .downloads-heading p{font-size:15px;color:#746c73;line-height:1.75;max-width:680px;margin:0}
+body .download-section .downloads-spark{width:140px;height:140px;opacity:.84}
+body .download-section .section-kicker.light{color:#e74743}
+body .download-section .platform-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:15px}
+body .download-section .platform-card{background:#fff;border:1px solid #e8dfe4;border-radius:10px;min-height:99px;display:flex;align-items:center;gap:17px;padding:20px 24px;color:#171717;cursor:pointer;transition:border-color .2s,background .2s}
+body .download-section .platform-card:hover{border-color:#e94b46;background:#fff8f8;transform:none}
+body .download-section .platform-card.platform-selected,body .download-section .platform-card[aria-pressed='true']{border-color:#e94b46;background:#fff3f1;box-shadow:inset 3px 0 0 #e94b46}
+body .download-section .platform-symbol.official-platform-logo{height:35px;width:35px;object-fit:contain;filter:brightness(0);opacity:.77;background:transparent;border:0;padding:0;border-radius:0}
+body .download-section .platform-card strong{color:#191919;font-size:18px;letter-spacing:-.03em}
+body .download-section .platform-card small{color:#8a7c83;font-size:12px;margin-top:6px}
+body .download-section .platform-arrow{font-size:22px;color:#df5852;margin-left:auto}
+body .download-section .download-notice{font-size:13px;color:#755a60;background:#fff;border:1px solid #ebe0e3;border-radius:8px;padding:14px 18px;margin:24px 0 18px;position:relative}
+body .download-section .downloads-footer{border-top:1px solid #e7dce1;padding-top:16px;display:flex;justify-content:space-between;align-items:center;gap:20px;font-size:13px;color:#7e7077}
+body .download-section .downloads-footer a{color:#d94342;font-size:13px;font-weight:800}
+body .faq-section{background:linear-gradient(180deg,#fff9f9,#fff);padding:94px 0 106px}
+body .faq-section .faq-layout{display:grid;grid-template-columns:minmax(0,.78fr) minmax(0,1.22fr);align-items:start;gap:95px}
+body .faq-section .faq-layout h2{color:#1f181d;margin:0 0 20px}
+body .faq-section .faq-layout>div>p{max-width:420px;color:#6e616b}
+body .faq-section .text-link{font-size:13px;font-weight:750;color:#dd4446;text-decoration:none}
+body .faq-section .faq-list{border-top:1px solid #e8dce0}
+body .faq-section .faq-list details{border-bottom:1px solid #e8dce0;padding:21px 0;background:transparent;color:#332b32}
+body .faq-section .faq-list summary{font-size:16px;color:#2f282d;cursor:pointer;font-weight:750;line-height:1.4}
+body .faq-section .faq-list summary span{color:#e5494a;font-size:24px;font-weight:400}
+body .faq-section .faq-list details[open] summary span{transform:rotate(45deg)}
+body .faq-section .faq-list details p{font-size:14px;line-height:1.75;color:#6d6469;margin:14px 45px 5px 0}
+body .final-cta{background:linear-gradient(112deg,#ff690a,#e54532 46%,#9e195b 100%);color:#fff;padding:74px 0}
+body .final-cta .final-cta-inner{display:flex;align-items:center;justify-content:space-between;gap:35px}
+body .final-cta .final-eyebrow{font-size:11px;letter-spacing:.16em;color:#ffe1df;font-weight:800}
+body .final-cta h2{font:400 clamp(34px,3.8vw,56px)/1.15 Arial,Helvetica,sans-serif;letter-spacing:-.045em;color:#fff;margin:12px 0 0}
+body .footer{background:#242127;color:#cfc8d1}
+body .footer .footer-top{padding:74px 0 53px;display:flex;align-items:flex-start;justify-content:space-between;gap:42px}
+body .footer .brand-footer{display:inline-flex;align-items:center;gap:8px;color:#fff;text-decoration:none}
+body .footer .brand-footer>span{color:#fff;font-size:25px;letter-spacing:-.04em;font-weight:850}
+body .footer .brand-footer .brand-accent{color:#ff6660}
+body .footer .footer-brand>p{color:#beb5bf;font-size:14px;line-height:1.8;max-width:260px;margin:19px 0 0}
+body .footer .footer-links{display:flex;gap:75px;justify-content:flex-end}
+body .footer .footer-links>div{display:flex;flex-direction:column;gap:12px}
+body .footer .footer-links strong{color:#fff;font-weight:800;font-size:14px;margin-bottom:5px}
+body .footer .footer-links a{color:#c9c0ca;text-decoration:none;font-size:13px}
+body .footer .footer-links a:hover{color:#ff857d}
+body .footer .footer-bottom{border-top:1px solid #484049;padding:24px 0;display:flex;justify-content:space-between;gap:20px;font-size:12px;color:#aaa3ae}
+body .footer .footer-bottom a{color:#ff8981}
+@media(max-width:1050px){body .section{padding:82px 0}body .feature-section .split-head{align-items:flex-start;flex-direction:column;gap:18px}body .feature-section .split-head p{max-width:730px}body .steps-section .steps-layout{gap:38px}body .faq-section .faq-layout{gap:39px}body .footer .footer-links{gap:36px}}
+@media(max-width:800px){body .intro .solutions-grid,body .feature-section .features-grid{grid-template-columns:repeat(2,minmax(0,1fr))}body .intro .solution-card:nth-child(3){grid-column:1/-1;min-height:320px}body .steps-section .steps-layout,body .faq-section .faq-layout{grid-template-columns:1fr;gap:34px}body .pricing-section .pricing-cards{gap:14px}body .pricing-section .pricing-card{padding:31px 25px 27px}body .footer .footer-top{flex-direction:column;gap:32px}body .footer .footer-links{justify-content:flex-start;gap:50px}}
+@media(max-width:600px){body .section{padding:67px 0}body .section-head h2,body .split-head h2,body .steps-intro h2,body .pricing-intro h2,body .faq-layout h2{font-size:clamp(34px,9vw,45px);line-height:1.14}body .section-head p,body .split-head p,body .steps-intro>p,body .faq-layout>div>p{font-size:14px}body .intro .solutions-grid,body .feature-section .features-grid,body .pricing-section .pricing-cards,body .download-section .platform-grid{grid-template-columns:1fr}body .intro .solution-card,body .intro .solution-card:nth-child(3){grid-column:auto;min-height:330px;padding:26px}body .intro .solution-card h3{font-size:24px}body .feature-section .feature-card{min-height:190px}body .steps-section .step-list{padding:6px 22px}body .steps-section .step-index{font-size:28px;min-width:45px}body .pricing-section .pricing-intro{margin-bottom:38px}body .pricing-section .pricing-card{padding:33px 25px 26px}body .download-section .downloads-panel{padding:29px 20px}body .download-section .downloads-heading h2{font-size:38px}body .download-section .downloads-spark{display:none}body .download-section .platform-card{padding:16px 18px}body .download-section .downloads-footer{flex-direction:column;align-items:flex-start}body .faq-section .faq-list summary{font-size:15px}body .final-cta{padding:56px 0}body .final-cta h2{font-size:36px}body .footer .footer-top{padding:54px 0 35px}body .footer .footer-links{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));width:100%;column-gap:20px;row-gap:35px}body .footer .footer-bottom{display:flex;flex-direction:column;gap:8px}}
+
+
+/* Compact reassurance bar below the platform selector */
+body .reassurance-strip{border-top:1px solid #eee0e1;border-bottom:1px solid #eee0e1;background:#fffaf9}
+body .reassurance-strip .container{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:16px 44px;padding:22px 0}
+body .reassurance-strip span{display:inline-flex;align-items:center;gap:9px;color:#57494e;font-size:13px;font-weight:650}
+body .reassurance-strip span:before{content:'✓';display:grid;place-items:center;width:25px;height:25px;border-radius:50%;background:#fff0ec;color:#e34742;font-size:15px;font-weight:900}
+@media(max-width:600px){body .reassurance-strip .container{justify-content:flex-start;gap:12px;padding:18px 0}body .reassurance-strip span{font-size:12px}}
