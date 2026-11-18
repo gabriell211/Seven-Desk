@@ -12,6 +12,7 @@
   <link rel="stylesheet" href="/styles.css?v=8" />
   <link rel="stylesheet" href="/conta.css?v=3" />
   <link rel="stylesheet" href="/theme.css?v=20261118b" />
+  <link rel="stylesheet" href="/portal.css?v=1" />
   <script defer src="/conta.bundle.js"></script>
 </head>
 <body class="account-page">
@@ -123,6 +124,7 @@
             <div class="client-user-details">
               <strong id="account-sidebar-name">Minha conta</strong>
               <span id="account-sidebar-email"></span>
+              <span id="account-user" hidden></span>
             </div>
           </div>
           <p class="client-nav-heading">MENU PRINCIPAL</p>
@@ -147,7 +149,7 @@
           <header class="client-main-header">
             <div>
               <p class="client-breadcrumb">Portal do cliente / <span id="account-view-breadcrumb">Visão geral</span></p>
-              <h1 id="account-view-title">Visão geral</h1>
+              <h1 id="account-view-title" tabindex="-1">Visão geral</h1>
               <p id="account-view-description">Gerencie sua conta e acompanhe seus dispositivos em um só lugar.</p>
             </div>
             <div class="account-connected"><span aria-hidden="true">●</span> Conectado</div>
@@ -163,7 +165,7 @@
             </div>
             <div class="client-metrics">
               <article class="client-metric"><span>Assinatura</span><strong id="account-summary-status">Consultando...</strong><small>Conforme o status da sua conta</small></article>
-              <article class="client-metric"><span>Vagas disponíveis</span><strong id="account-summary-slots">—</strong><small>Vagas contratadas não utilizadas</small></article>
+              <article class="client-metric"><span>Vagas sem ativação</span><strong id="account-summary-slots">—</strong><small>Vagas contratadas sem dispositivo ativo</small></article>
               <article class="client-metric"><span>Dispositivos ativos</span><strong id="account-summary-devices">—</strong><small>Ativações registradas</small></article>
               <article class="client-metric"><span>Técnicos cadastrados</span><strong id="account-summary-technicians">—</strong><small>Perfis vinculados à conta</small></article>
             </div>
@@ -236,7 +238,8 @@
             </div>
           </section>
         </div>
-      </div>    </section>
+      </div>
+    </section>
   </main>
   <footer class="account-footer"><span>© 2026 Seven Desk</span><a href="/">Voltar ao site</a></footer>
 </body>
