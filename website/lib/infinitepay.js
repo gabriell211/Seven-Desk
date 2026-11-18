@@ -42,7 +42,19 @@ async function postJson(path, body, { fetchImpl = fetch, apiKey } = {}) {
   const response = await fetchImpl(`${API}${path}`, {
     method: 'POST', headers, body: JSON.stringify(body), signal: AbortSignal.timeout(15000),
   });
-  if (!response.ok) throw new Error('Payment provider unavailable');
+  if (!response.ok) {
+    // Classify only the known safe provider code; never return provider bodies
+    // to users or log API keys, customer data, or full responses.
+    if (path === '/links' && response.status >= 400 && response.status < 500) {
+      const failure = await response.json().catch(() => null);
+      if (failure?.error === 'external_checkout_not_enabled') {
+        const error = new Error('Integrated checkout is disabled by payment provider');
+        error.code = 'CHECKOUT_INTEGRATION_DISABLED';
+        throw error;
+      }
+    }
+    throw new Error('Payment provider unavailable');
+  }
   return response.json();
 }
 
