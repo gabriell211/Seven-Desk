@@ -26,7 +26,7 @@ void main() {
     expect(legacy.avatarUrl, '');
 
     final invalid = incomingSupportIdentity(
-      requesterName: 'Técnico\\nFake · Empresa',
+      requesterName: 'Técnico\nFake · Empresa',
       requesterAvatar: 'http://www.sevendesk.tech/picture.png',
     );
     expect(invalid.technician, 'Técnico não identificado');
