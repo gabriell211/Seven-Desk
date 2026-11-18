@@ -147,9 +147,12 @@ def evidence_gate(path,commit):
   cases=doc["cases"]
   if (doc.get("commit")!=commit or not isinstance(cases,list) or
       len(cases)!=len(MANUAL_CASES) or
+      any(not isinstance(c,dict) for c in cases) or
       {c.get("id") for c in cases}!=set(MANUAL_CASES)):
    raise ValueError("Case identifiers or commit do not match")
   for c in cases:
+   if not isinstance(c,dict):
+    raise ValueError("Malformed test case")
    if c.get("status") not in ("PASS","FAIL","BLOCKED","PENDING"):
     raise ValueError("Unknown status")
    if c["status"]=="PASS" and not (

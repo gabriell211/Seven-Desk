@@ -71,6 +71,9 @@ class PreflightTest(unittest.TestCase):
    cases[0]["evidence"]=""
    path.write_text(json.dumps({"commit":SHA,"cases":cases}))
    self.assertEqual(h.evidence_gate(path,SHA)["status"],"FAIL")
+   cases[0]=None
+   path.write_text(json.dumps({"commit":SHA,"cases":cases}))
+   self.assertEqual(h.evidence_gate(path,SHA)["status"],"FAIL")
  def test_https_origin_restrictions(self):
   self.assertEqual(h.validate_origin(S+"/"),S)
   for url in ("http://host","https://u:p@host","https://host/path","https://host/?key=x"):

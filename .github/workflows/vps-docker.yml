@@ -11,12 +11,18 @@ on:
     paths:
       - "deploy/vps/**"
       - "website/**"
+      - "scripts/homologation_preflight.py"
+      - "scripts/test_homologation_preflight.py"
+      - "docs/homologacao-evidencias.template.json"
       - ".github/workflows/vps-docker.yml"
   push:
     branches: [main]
     paths:
       - "deploy/vps/**"
       - "website/**"
+      - "scripts/homologation_preflight.py"
+      - "scripts/test_homologation_preflight.py"
+      - "docs/homologacao-evidencias.template.json"
       - ".github/workflows/vps-docker.yml"
 
 permissions:
