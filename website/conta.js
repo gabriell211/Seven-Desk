@@ -202,9 +202,10 @@ async function loadAppAccess() {
     const list = el('account-device-list');
     list.replaceChildren();
     const availableSlots = Number.isInteger(maxSlots) ? Math.max(1,Math.min(maxSlots,500)) : 5;
-    const bySlot = new Map(devices.filter(item =>
-      Number.isInteger(item?.slot) && item.slot >= 1 && item.slot <= availableSlots
-    ).map(item => [item.slot,item]));
+    const bySlot = new Map(devices.filter(item => {
+      const slot = Number(item?.slot);
+      return Number.isInteger(slot) && slot >= 1 && slot <= availableSlots;
+    }).map(item => [Number(item.slot),item]));
     const registered = [...bySlot.values()];
     const activated = registered.filter(item => item.activated === true).length;
     el('account-summary-slots').textContent = String(Math.max(0,availableSlots-activated));
