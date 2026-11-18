@@ -1,5 +1,5 @@
 Name:       sevendesk
-Version:    1.5.3
+Version:    1.5.4
 Release:    0
 Summary:    Seven Desk remote support
 License:    GPL-3.0

@@ -16,7 +16,7 @@ AppDir:
     id: sevendesk
     name: Seven Desk
     icon: sevendesk
-    version: 1.5.3
+    version: 1.5.4
     exec: usr/share/rustdesk/rustdesk
     exec_args: $@
   apt:
