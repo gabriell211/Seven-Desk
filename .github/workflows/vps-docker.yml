@@ -32,6 +32,13 @@ jobs:
         with:
           persist-credentials: false
 
+      - name: Homologation preflight unit tests (offline)
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m unittest discover -s scripts -p test_homologation_preflight.py -v
+          python3 -m json.tool docs/homologacao-evidencias.template.json > /dev/null
+
       - name: Prepare synthetic CI secrets (not actual credentials)
         shell: bash
         run: |
@@ -109,3 +116,4 @@ jobs:
       - name: Stop temporary test stack
         if: always()
         run: docker compose -f deploy/vps/compose.yml -f deploy/vps/traefik-downloads.compose.yml down --remove-orphans || true
+

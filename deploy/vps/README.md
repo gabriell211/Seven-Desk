@@ -134,3 +134,12 @@ assinados antes de alterar o `manifest.json`. Não coloque secrets nesse diretó
 
 O diretório não fica dentro da imagem Docker, permitindo atualizar instaladores
 sem reconstruir a aplicação. Nenhum arquivo fictício deve ser anunciado.
+
+## Homologação obrigatória antes do merge e da release
+
+Antes de ativar novas contas/licenças, publicar instaladores ou fazer merge,
+siga a [matriz de homologação do Seven Desk](../../docs/homologacao-seven-desk.md).
+O script read-only verifica TLS, endpoints públicos e manifesto, mas a aprovação
+final exige evidências físicas por commit para Windows, Linux, macOS, Android,
+consentimento, UAC, licenças e pagamentos. Sem evidências, o gate permanece BLOCKED.
+
