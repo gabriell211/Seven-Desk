@@ -166,20 +166,138 @@ html[data-theme] body.account-page.account-authenticated .account-plan-actions{
 html[data-theme] body.account-page.account-authenticated .account-plan-actions h2{color:var(--portal-ink)}
 html[data-theme] body.account-page.account-authenticated .account-plan-actions label{color:var(--portal-ink)}
 html[data-theme] body.account-page.account-authenticated .account-intro{color:var(--portal-muted)}
-.account-authenticated .account-device-row{
-  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));align-items:end;gap:12px 18px;
-  margin:15px 0;padding:20px;border:1px solid var(--portal-border);border-radius:12px;
-  background:var(--portal-hover);
+
+html[data-theme] body.account-page.account-authenticated #account-app-access {
+  background:transparent;border:0;box-shadow:none;padding:0;margin:0;
 }
-.account-authenticated .account-device-row label{margin:0}
-.account-authenticated .account-device-row .technician-preview{margin:0}
-.account-authenticated .account-device-row .account-signout{margin:0;width:100%;min-height:42px}
-.account-authenticated .account-device-row .technician-code-status{color:var(--portal-muted);font-size:11px;align-self:center}
-.account-authenticated .account-device-row input[type=file],.account-authenticated #account-profile-file{
-  display:block;width:100%;max-width:100%;margin-top:8px;padding:8px;
-  box-sizing:border-box;border-radius:10px;background:var(--portal-hover);
-  border:1px solid var(--portal-border);color:var(--portal-ink);font-size:12px;
+.account-authenticated .technician-board-heading {
+  display:flex;justify-content:space-between;align-items:flex-start;gap:20px;
+  padding:18px 0 14px;
 }
+.account-authenticated .technician-board-eyebrow {
+  display:block;color:var(--portal-accent);font-size:10px;font-weight:850;letter-spacing:.14em;margin:0 0 10px;
+}
+.account-authenticated .technician-board-heading h2 {
+  margin:0 0 8px;color:var(--portal-ink);font-size:23px;font-weight:800;letter-spacing:-.04em;
+}
+.account-authenticated .technician-board-heading p {
+  max-width:660px;margin:0;color:var(--portal-muted);font-size:13px;line-height:1.7;
+}
+.account-authenticated .technician-board-note {
+  display:inline-block;flex:0 0 auto;max-width:230px;padding:10px 13px;border-radius:10px;
+  border:1px solid var(--portal-border);background:var(--portal-accent-soft);
+  color:var(--portal-accent);font-size:11px;font-weight:700;line-height:1.5;
+}
+.account-authenticated .technician-board-notice:not(:empty) {
+  padding:12px 15px;border:1px solid var(--portal-border);border-radius:11px;
+  background:var(--portal-accent-soft);color:var(--portal-ink);font-size:12px;line-height:1.6;
+}
+.account-authenticated .technician-board-footnote {
+  padding:14px 0;margin:0;color:var(--portal-muted);font-size:11px;line-height:1.7;
+}
+.account-authenticated .technician-card-grid {
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:19px;margin:22px 0 16px;
+}
+.account-authenticated .technician-card {
+  min-width:0;display:flex;flex-direction:column;gap:0;overflow:hidden;
+  border:1px solid var(--portal-border);border-radius:17px;
+  background:var(--portal-panel);box-shadow:var(--portal-shadow);
+}
+.account-authenticated .technician-card-header {
+  display:flex;align-items:center;gap:13px;min-width:0;
+  padding:20px;border-bottom:1px solid var(--portal-border);
+}
+.account-authenticated .technician-card-avatar {
+  position:relative;flex:0 0 72px;width:72px;height:72px;display:grid;place-items:center;
+  overflow:hidden;border-radius:50%;border:3px solid var(--portal-panel);
+  outline:1px solid var(--portal-border);background:linear-gradient(135deg,#6530be,#ae71ee);
+  color:white;font-size:23px;font-weight:850;box-sizing:border-box;
+}
+.account-authenticated .technician-card-initials {display:grid;place-items:center;width:100%;height:100%}
+.account-authenticated .technician-card-photo {position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.account-authenticated .technician-card-photo[hidden],
+.account-authenticated .technician-card-initials[hidden],
+.account-authenticated .technician-card-credential[hidden],
+.account-authenticated .technician-card-actions button[hidden] {display:none!important}
+.account-authenticated .technician-card-identity {flex:1;min-width:0}
+.account-authenticated .technician-card-kicker {
+  display:block;color:var(--portal-accent);font-size:10px;font-weight:800;letter-spacing:.1em;margin-bottom:5px;
+}
+.account-authenticated .technician-card-identity h3 {
+  margin:0 0 5px;overflow-wrap:anywhere;color:var(--portal-ink);font-size:17px;font-weight:800;
+  line-height:1.25;letter-spacing:-.03em;
+}
+.account-authenticated .technician-card-identity p {
+  margin:0;color:var(--portal-muted);font-size:11px;overflow-wrap:anywhere;
+}
+.account-authenticated .technician-card-badge {
+  flex:0 0 auto;align-self:flex-start;max-width:115px;
+  padding:6px 8px;border-radius:7px;color:var(--portal-muted);
+  background:var(--portal-hover);border:1px solid var(--portal-border);
+  font-size:10px;font-weight:750;text-align:center;line-height:1.35;
+}
+.account-authenticated .technician-card-badge[data-status="activated"] {
+  color:var(--portal-accent);background:var(--portal-accent-soft);
+}
+.account-authenticated .technician-card-fields {
+  display:grid;grid-template-columns:1fr;gap:13px;padding:19px 20px 0;
+}
+html[data-theme] body.account-page.account-authenticated .technician-card-fields label {
+  display:grid;gap:7px;margin:0;color:var(--portal-ink);font-size:12px;font-weight:750;
+}
+.account-authenticated .technician-card-fields input,
+.account-authenticated .technician-card-credential input {
+  width:100%;max-width:100%;min-width:0;box-sizing:border-box;
+  border:1px solid var(--portal-border);border-radius:9px;background:var(--portal-panel);
+  color:var(--portal-ink);padding:11px 12px;font:inherit;font-size:12px;
+}
+.account-authenticated .technician-card-fields input[type=file],
+.account-authenticated #account-profile-file {
+  background:var(--portal-hover);padding:8px;font-size:11px;
+}
+.account-authenticated .technician-card-fields label small {
+  font-size:10px;font-weight:400;line-height:1.55;color:var(--portal-muted);
+}
+.account-authenticated .technician-card-description {
+  min-height:35px;margin:12px 20px 0;color:var(--portal-muted);
+  font-size:10px;line-height:1.6;
+}
+.account-authenticated .technician-card-actions {
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;
+  margin-top:auto;padding:15px 20px 20px;
+}
+.account-authenticated .technician-card-actions button,
+.account-authenticated .technician-card-credential button {
+  width:100%;min-width:0;min-height:42px;box-sizing:border-box;
+  padding:10px 8px;border-radius:9px;border:1px solid var(--portal-border);
+  background:var(--portal-hover);color:var(--portal-ink);cursor:pointer;
+  font:inherit;font-weight:750;font-size:11px;line-height:1.3;
+}
+.account-authenticated .technician-card-actions .technician-card-primary,
+.account-authenticated .technician-card-credential button {
+  background:var(--portal-accent);border-color:var(--portal-accent);color:#fff;
+}
+.account-authenticated .technician-card-actions button[data-card-revoke] {
+  background:transparent;color:#ce5b65;border-color:var(--portal-border);
+}
+.account-authenticated .technician-card-actions button:hover,
+.account-authenticated .technician-card-credential button:hover {filter:brightness(.96)}
+.account-authenticated .technician-card-actions button:disabled {opacity:.55;cursor:wait}
+.account-authenticated .technician-card-fields input:focus-visible,
+.account-authenticated .technician-card-credential input:focus-visible,
+.account-authenticated .technician-card-actions button:focus-visible,
+.account-authenticated .technician-card-credential button:focus-visible {
+  outline:2px solid var(--portal-accent);outline-offset:2px;
+}
+.account-authenticated .technician-card-credential {
+  display:grid;gap:9px;padding:15px 20px 20px;
+  background:var(--portal-accent-soft);border-top:1px solid var(--portal-border);
+}
+html[data-theme] body.account-page.account-authenticated .technician-card-credential label {
+  min-width:0;display:grid;gap:7px;color:var(--portal-ink);font-size:11px;font-weight:750;
+}
+.account-authenticated .technician-card-credential input {font-family:ui-monospace,monospace;font-size:11px}
+.account-authenticated .technician-card-credential small {font-size:10px;color:var(--portal-muted)}
 html[data-theme] body.account-page.account-authenticated .account-plan-actions input:not([type=file]){
   background:var(--portal-panel);color:var(--portal-ink);border-color:var(--portal-border);
 }
@@ -198,6 +316,7 @@ html[data-theme] body.account-page.account-authenticated .account-plan-actions i
 @media(max-width:1100px){
   .account-authenticated .client-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}
   .account-authenticated .client-overview-grid{grid-template-columns:1fr}
+  .account-authenticated .technician-card-grid{grid-template-columns:1fr}
 }
 @media(max-width:760px){
   html[data-theme] body.account-page.account-authenticated #account-signed-in{display:block}
@@ -219,7 +338,11 @@ html[data-theme] body.account-page.account-authenticated .account-plan-actions i
   .account-authenticated .client-metrics{gap:10px}
   .account-authenticated .client-metric{padding:15px}
   .account-authenticated .client-metric>strong{font-size:20px}
-  .account-authenticated .account-device-row{grid-template-columns:1fr}
+  .account-authenticated .technician-board-heading{display:grid;gap:12px}
+  .account-authenticated .technician-board-note{max-width:none}
+  .account-authenticated .technician-card-header{flex-wrap:wrap}
+  .account-authenticated .technician-card-badge{align-self:center}
+  .account-authenticated .technician-card-actions{grid-template-columns:1fr}
   .account-authenticated .client-settings-links a{display:grid}
 }
 @media(prefers-reduced-motion:reduce){
