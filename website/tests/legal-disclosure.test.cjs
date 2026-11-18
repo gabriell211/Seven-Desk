@@ -9,7 +9,7 @@ const legal = readFileSync(join(root,'licencas.html'),'utf8');
 const privacy = readFileSync(join(root,'privacidade.html'),'utf8');
 
 test('legal page identifies individual service operator and preserves the AGPL licensing boundary',()=>{
-  assert.match(legal, /www\.sevendesk\.tech\/licencas/);
+  assert.match(legal, /href="https:\/\/www\.sevendesk\.tech\/licencas\.html"/);
   assert.doesNotMatch(legal, /seven-desk-site\.vercel\.app/);
   assert.match(legal, /prestador individual independente/);
   assert.match(legal, /servidores pr[oó]prios|infraestrutura de conex[aã]o/);
@@ -24,7 +24,7 @@ test('legal page identifies individual service operator and preserves the AGPL l
 });
 
 test('privacy explains responsible party, data rights, remote access and service providers',()=>{
-  assert.match(privacy,/www\.sevendesk\.tech\/privacidade/);
+  assert.match(privacy,/href="https:\/\/www\.sevendesk\.tech\/privacidade\.html"/);
   assert.match(privacy,/gabriell211/);
   assert.match(privacy,/CPF e CNPJ/);
   assert.match(privacy,/InfinitePay/);
