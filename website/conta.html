@@ -10,7 +10,7 @@
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
   <script src="/theme.js?v=20261118a"></script>
   <link rel="stylesheet" href="/styles.css?v=8" />
-  <link rel="stylesheet" href="/conta.css?v=2" />
+  <link rel="stylesheet" href="/conta.css?v=3" />
   <link rel="stylesheet" href="/theme.css?v=20261118b" />
   <script defer src="/conta.bundle.js"></script>
 </head>
@@ -109,23 +109,83 @@
         </form>
         <p class="account-legal">Ao criar uma conta, você concorda com os <a href="/licencas.html">termos</a> e a <a href="/privacidade.html">política de privacidade</a>.</p>
       </div>
-      <div id="account-signed-in" hidden>
-        <div class="account-connected"><span aria-hidden="true">●</span> Conectado</div>
-        <p class="account-identity">Conectado como <strong id="account-user"></strong></p>
-        <form id="account-profile-form" class="account-plan-actions">
-          <h2>Seu perfil</h2>
-          <img id="account-profile-photo" alt="Foto do perfil" width="72" height="72" hidden />
-          <label>Seu nome ou nome da empresa
-            <input id="account-profile-name" name="name" maxlength="100" minlength="2" required autocomplete="name" />
-          </label>
-          <label>Foto do perfil
-            <input id="account-profile-file" name="photo" type="file" accept="image/jpeg,image/png,image/webp" />
-          </label>
-          <button id="account-profile-save" class="account-submit" type="submit">Salvar perfil</button>
-          <p id="account-profile-message" class="account-intro" role="status" aria-live="polite"></p>
-        </form>
-        <p id="account-subscription" class="account-intro" aria-live="polite">Consultando seu acesso...</p>
-        <div id="account-app-access" class="account-plan-actions" hidden>
+      <div id="account-signed-in" class="client-workspace" hidden>
+        <aside class="client-sidebar" aria-label="Área do cliente">
+          <a href="/" class="client-sidebar-brand" aria-label="Seven Desk, página inicial">
+            <img src="/assets/seven-desk-logo.svg" alt="" width="38" height="38" />
+            <span>seven<strong>desk</strong></span>
+          </a>
+          <div class="client-sidebar-user">
+            <div class="client-avatar">
+              <img id="account-sidebar-avatar" alt="" width="48" height="48" hidden />
+              <span id="account-sidebar-initial" aria-hidden="true">S</span>
+            </div>
+            <div class="client-user-details">
+              <strong id="account-sidebar-name">Minha conta</strong>
+              <span id="account-sidebar-email"></span>
+            </div>
+          </div>
+          <p class="client-nav-heading">MENU PRINCIPAL</p>
+          <nav class="client-nav" aria-label="Navegação do cliente">
+            <button type="button" data-account-view="overview" aria-current="page" aria-controls="account-panel-overview"><span aria-hidden="true">▦</span> Visão geral</button>
+            <button type="button" data-account-view="devices" aria-controls="account-panel-devices"><span aria-hidden="true">▣</span> Computadores e técnicos</button>
+            <button type="button" data-account-view="profile" aria-controls="account-panel-profile"><span aria-hidden="true">◉</span> Meu perfil</button>
+            <button type="button" data-account-view="billing" aria-controls="account-panel-billing"><span aria-hidden="true">◇</span> Assinatura e planos</button>
+            <button type="button" data-account-view="settings" aria-controls="account-panel-settings"><span aria-hidden="true">⚙</span> Configurações</button>
+          </nav>
+          <p class="client-nav-heading">RECURSOS</p>
+          <nav class="client-nav" aria-label="Links úteis">
+            <a href="/#plataformas"><span aria-hidden="true">↓</span> Downloads</a>
+            <a href="/#perguntas"><span aria-hidden="true">?</span> Ajuda e suporte</a>
+          </nav>
+          <div class="client-sidebar-footer">
+            <button id="account-signout" class="client-signout" type="button"><span aria-hidden="true">↪</span> Sair da conta</button>
+            <span>Seven Desk © 2026</span>
+          </div>
+        </aside>
+        <div class="client-main">
+          <header class="client-main-header">
+            <div>
+              <p class="client-breadcrumb">Portal do cliente / <span id="account-view-breadcrumb">Visão geral</span></p>
+              <h1 id="account-view-title">Visão geral</h1>
+              <p id="account-view-description">Gerencie sua conta e acompanhe seus dispositivos em um só lugar.</p>
+            </div>
+            <div class="account-connected"><span aria-hidden="true">●</span> Conectado</div>
+          </header>
+          <section id="account-panel-overview" class="client-panel" data-account-panel="overview" aria-label="Visão geral da conta">
+            <div class="client-welcome-card">
+              <div>
+                <p class="client-card-kicker">BEM-VINDO AO SEVEN DESK</p>
+                <h2>Seu espaço de trabalho, organizado.</h2>
+                <p>Gerencie computadores, técnicos, códigos de ativação e sua assinatura com segurança.</p>
+              </div>
+              <button type="button" class="client-primary-action" data-account-view="devices">Gerenciar dispositivos</button>
+            </div>
+            <div class="client-metrics">
+              <article class="client-metric"><span>Assinatura</span><strong id="account-summary-status">Consultando...</strong><small>Conforme o status da sua conta</small></article>
+              <article class="client-metric"><span>Vagas disponíveis</span><strong id="account-summary-slots">—</strong><small>Vagas contratadas não utilizadas</small></article>
+              <article class="client-metric"><span>Dispositivos ativos</span><strong id="account-summary-devices">—</strong><small>Ativações registradas</small></article>
+              <article class="client-metric"><span>Técnicos cadastrados</span><strong id="account-summary-technicians">—</strong><small>Perfis vinculados à conta</small></article>
+            </div>
+            <div class="client-overview-grid">
+              <article class="client-surface">
+                <div class="client-surface-header"><h2>Gerenciamento rápido</h2><span>ACESSOS</span></div>
+                <p>Cadastre os técnicos e gere os códigos individuais antes de conectar os computadores.</p>
+                <div class="client-quick-actions">
+                  <button type="button" data-account-view="devices">Computadores e técnicos <span aria-hidden="true">→</span></button>
+                  <button type="button" data-account-view="profile">Editar meu perfil <span aria-hidden="true">→</span></button>
+                </div>
+              </article>
+              <article class="client-surface">
+                <div class="client-surface-header"><h2>Seu plano</h2><span>ASSINATURA</span></div>
+                <p id="account-summary-subscription" aria-live="polite">Consultando período de acesso...</p>
+                <button class="client-text-action" type="button" data-account-view="billing">Ver assinatura e planos <span aria-hidden="true">→</span></button>
+              </article>
+            </div>
+          </section>
+          <section id="account-panel-devices" class="client-panel" data-account-panel="devices" aria-label="Computadores e técnicos" hidden>
+            <div class="client-section-heading"><h2>Computadores e técnicos</h2><p>Gerencie dispositivos autorizados, perfis dos técnicos e códigos exclusivos.</p></div>
+            <div id="account-app-access" class="account-plan-actions" hidden>
           <h2>Equipe de técnicos e dispositivos</h2>
           <p class="account-intro">O primeiro mês inclui cinco vagas para computadores e técnicos. Após o teste, o acesso depende de assinatura ativa. Sua conta permite até cinco computadores para prestar suporte. Compre slots adicionais por R$ 7,00 quando precisar de mais vagas. Clientes atendidos não precisam de cadastro.</p>
           <p class="account-intro">Cada código fica vinculado ao primeiro dispositivo que iniciar suporte com ele. Os nomes e fotos dos técnicos são gerenciados aqui e aparecem no aplicativo e nas solicitações de acesso. Para trocar o dispositivo, gere um novo código na mesma vaga.</p>
@@ -140,16 +200,43 @@
           </label>
           <button id="account-app-copy" class="account-signout" type="button" hidden>Copiar código</button>
         </div>
-        <div id="account-plan-actions" class="account-plan-actions" hidden>
+          </section>
+          <section id="account-panel-profile" class="client-panel" data-account-panel="profile" aria-label="Perfil" hidden>
+            <div class="client-section-heading"><h2>Meu perfil</h2><p>Atualize os dados exibidos na sua conta e nas solicitações de suporte.</p></div>
+            <form id="account-profile-form" class="account-plan-actions">
+          <h2>Seu perfil</h2>
+          <img id="account-profile-photo" alt="Foto do perfil" width="72" height="72" hidden />
+          <label>Seu nome ou nome da empresa
+            <input id="account-profile-name" name="name" maxlength="100" minlength="2" required autocomplete="name" />
+          </label>
+          <label>Foto do perfil
+            <input id="account-profile-file" name="photo" type="file" accept="image/jpeg,image/png,image/webp" />
+          </label>
+          <button id="account-profile-save" class="account-submit" type="submit">Salvar perfil</button>
+          <p id="account-profile-message" class="account-intro" role="status" aria-live="polite"></p>
+        </form>
+          </section>
+          <section id="account-panel-billing" class="client-panel" data-account-panel="billing" aria-label="Assinatura e planos" hidden>
+            <div class="client-section-heading"><h2>Assinatura e planos</h2><p>Acompanhe seu acesso e consulte os planos disponíveis.</p></div>
+            <div class="client-surface client-subscription-surface"><p id="account-subscription" class="account-intro" aria-live="polite">Consultando seu acesso...</p></div>
+            <div id="account-plan-actions" class="account-plan-actions" hidden>
           <h2>Escolha seu plano</h2>
           <p id="account-checkout-notice" class="account-intro" aria-live="polite">Verificando disponibilidade...</p>
           <button type="button" class="account-submit" data-plan="monthly" disabled>Plano mensal — R$ 39,90</button>
           <button type="button" class="account-submit" data-plan="yearly" disabled>Plano anual — R$ 400,00</button>
           <button type="button" class="account-submit" data-plan="extra_slot" disabled>Slot adicional — R$ 7,00</button>
         </div>
-        <button id="account-signout" class="account-signout" type="button">Sair da conta</button>
-      </div>
-    </section>
+          </section>
+          <section id="account-panel-settings" class="client-panel" data-account-panel="settings" aria-label="Configurações" hidden>
+            <div class="client-section-heading"><h2>Configurações</h2><p>Privacidade, segurança e preferências da sua conta.</p></div>
+            <div class="client-surface client-settings-links">
+              <a href="/recuperar-senha"><strong>Segurança da conta</strong><span>Solicitar a redefinição de senha →</span></a>
+              <a href="/privacidade.html"><strong>Privacidade</strong><span>Consultar nossa política →</span></a>
+              <a href="/licencas.html"><strong>Termos e licenças</strong><span>Ver os termos de utilização →</span></a>
+            </div>
+          </section>
+        </div>
+      </div>    </section>
   </main>
   <footer class="account-footer"><span>© 2026 Seven Desk</span><a href="/">Voltar ao site</a></footer>
 </body>
