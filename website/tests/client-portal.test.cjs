@@ -57,7 +57,7 @@ test('dashboard uses server responses and fails closed when APIs are unavailable
 });
 
 test('portal styling is scoped to authenticated sessions, responsive, and theme aware', () => {
-  assert.match(html, /href="\/portal\.css\?v=1"/);
+  assert.match(html, /href="\/portal\.css\?v=2"/);
   const build = fs.readFileSync(path.join(site, 'build-site.cjs'), 'utf8');
   assert.ok(build.includes("'portal.css'"), 'production build must publish the sidebar stylesheet');
   assert.match(html, /class="client-nav"[\s\S]*?<svg viewBox="0 0 24 24"/);
@@ -66,4 +66,25 @@ test('portal styling is scoped to authenticated sessions, responsive, and theme 
   assert.match(css, /grid-template-columns:264px minmax\(0,1fr\)/);
   assert.match(css, /@media\(max-width:760px\)/);
   assert.match(js, /classList\.toggle\('account-authenticated',Boolean\(user\)\)/);
+});
+
+
+test('one responsive technician card per slot shows synced avatar and safe controls', () => {
+  assert.match(html, /id="account-device-list" class="technician-card-grid"/);
+  assert.match(html, /Foto e o nome|A foto e o nome/);
+  assert.match(js, /function createTechnicianCard\(slot, device\)/);
+  assert.match(js, /list\.append\(createTechnicianCard\(slot,bySlot\.get\(slot\)\)\)/);
+  assert.match(js, /function trustedTechnicianImage\(value, slot\)/);
+  assert.match(js, /trustedTechnicianImage\(device\?\.technician_image,slot\)/);
+  assert.match(js, /fileInput\.addEventListener\('change'/);
+  assert.match(js, /URL\.createObjectURL\(file\)/);
+  assert.match(js, /file\.size > 2 \* 1024 \* 1024/);
+  assert.match(js, /updateTechnicianProfile\(slot,nameInput\.value,photoInput\.files\?\.\[0\],save\)/);
+  assert.match(js, /showCardCode\(slot,'technician',code\)/);
+  assert.match(js, /showCardCode\(slot,'activation',result\.token\)/);
+  assert.doesNotMatch(js, /row\.className = 'account-device-row'/);
+  assert.match(css, /technician-card-avatar/);
+  assert.match(css, /technician-card-photo\[hidden\]/);
+  assert.match(css, /technician-card-grid\{grid-template-columns:1fr\}/);
+  assert.match(css, /html\[data-theme="dark"\]/);
 });
