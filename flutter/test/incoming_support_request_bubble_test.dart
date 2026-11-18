@@ -79,14 +79,15 @@ void main() {
       onReject: () => rejected++,
       disabledReason: 'Somente autenticação por senha.',
     ));
-    final admin = tester.widget<FilledButton>(
-      find.widgetWithText(FilledButton, 'Aceitar como administrador'),
-    );
-    final accept = tester.widget<FilledButton>(
-      find.widgetWithText(FilledButton, 'Aceitar'),
-    );
-    expect(admin.onPressed, isNull);
-    expect(accept.onPressed, isNull);
+    expect(find.text('Aceitar como administrador'), findsOneWidget);
+    expect(find.text('Aceitar'), findsOneWidget);
+    // FilledButton.icon and FilledButton.tonal are different runtime classes;
+    // find.byType(FilledButton) misses the icon variant.
+    final buttons = tester.widgetList<FilledButton>(
+      find.byWidgetPredicate((widget) => widget is FilledButton),
+    ).toList();
+    expect(buttons, hasLength(2));
+    expect(buttons.every((button) => button.onPressed == null), isTrue);
     expect(find.text('Somente autenticação por senha.'), findsOneWidget);
     await tester.tap(find.text('Recusar'));
     expect(rejected, 1);
