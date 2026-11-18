@@ -14,7 +14,7 @@ AppDir:
   path: ./AppDir
   app_info:
     id: sevendesk
-    name: sevendesk
+    name: Seven Desk
     icon: sevendesk
     version: 1.5.3
     exec: usr/share/rustdesk/rustdesk
