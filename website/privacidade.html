@@ -3,39 +3,78 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <meta name="theme-color" content="#0c0a19" />
-  <meta name="description" content="Informações sobre privacidade, contas, cadastro e suporte remoto do Seven Desk." />
-  <meta name="robots" content="noindex, follow" />
+  <meta name="theme-color" content="#6d2bec" />
+  <meta name="description" content="Política de Privacidade do Seven Desk: identidade do responsável individual, dados tratados, pagamentos, acesso remoto, retenção e direitos previstos na LGPD." />
   <link rel="canonical" href="https://www.sevendesk.tech/privacidade" />
   <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
   <script src="/theme.js?v=20261118a"></script>
   <link rel="stylesheet" href="/styles.css?v=8" />
   <link rel="stylesheet" href="/theme.css?v=20261118b" />
-  <title>Privacidade | Seven Desk</title>
+  <title>Política de Privacidade | Seven Desk</title>
   <style>
-  .privacy{width:min(850px,calc(100% - 36px));margin:70px auto 100px;line-height:1.8;color:#c3bdd4}
-  .privacy h1,.privacy h2{color:#fff;line-height:1.25}.privacy h1{font-size:clamp(32px,5vw,54px)}
-  .privacy h2{font-size:22px;margin-top:34px}.privacy a{color:#d2a5ff;text-decoration:underline}
-  .privacy p,.privacy li{font-size:15px}.privacy ul{padding-left:22px}
+    .privacy{width:min(920px,calc(100% - 36px));margin:40px auto 90px;line-height:1.78;color:var(--sd-text)}
+    .privacy h1{font-size:clamp(31px,5vw,51px);line-height:1.15;letter-spacing:-.045em;margin:25px 0 20px}
+    .privacy h2{font-size:20px;line-height:1.35;margin:35px 0 13px}
+    .privacy h1,.privacy h2{color:var(--sd-title)}
+    .privacy p,.privacy li{font-size:14px;margin:0 0 13px}
+    .privacy li{margin-bottom:9px}
+    .privacy ul{padding-left:23px;margin:0 0 17px}
+    .privacy a{color:var(--sd-link);text-decoration:underline;text-underline-offset:3px}
+    .privacy .privacy-topbar{display:flex;justify-content:flex-end;align-items:center;min-height:52px}
+    .privacy .privacy-intro{font-size:16px;max-width:780px;color:var(--sd-muted);line-height:1.8}
+    .privacy .privacy-label{display:block;text-transform:uppercase;letter-spacing:.12em;font-size:11px;color:var(--sd-link);font-weight:800;margin-top:26px}
+    .privacy .privacy-date{font-size:12px;color:var(--sd-muted);margin-top:14px}
+    .privacy .privacy-footer{border-top:1px solid var(--sd-border);margin-top:42px;padding-top:20px;display:flex;gap:15px;justify-content:space-between;flex-wrap:wrap}
+    .privacy .privacy-footer p{font-size:12px}
+    html[data-theme] body.policy-page{background:var(--sd-page);color:var(--sd-text)}
+    @media(max-width:700px){.privacy{margin:18px auto 68px}}
   </style>
 </head>
 <body class="policy-page">
-  <main class="privacy" id="conteudo"><div class="privacy-topbar"><div class="theme-picker"><span class="theme-picker-icon" aria-hidden="true">◐</span><select id="theme-select-privacy" data-theme-select aria-label="Aparência do site"><option value="system">Sistema</option><option value="light">Claro</option><option value="dark">Escuro</option></select></div></div>
+  <a class="skip-link" href="#conteudo">Ir para o conteúdo</a>
+  <main class="privacy" id="conteudo">
+    <div class="privacy-topbar">
+      <div class="theme-picker"><span class="theme-picker-icon" aria-hidden="true">◐</span>
+        <select id="theme-select-privacy" data-theme-select aria-label="Aparência do site">
+          <option value="system">Sistema</option><option value="light">Claro</option><option value="dark">Escuro</option>
+        </select>
+      </div>
+    </div>
     <a href="/">← Início do Seven Desk</a>
-    <h1>Privacidade e dados pessoais</h1>
-    <p>Estas informações descrevem os dados tratados para o cadastro, autenticação, cobrança e operação do Seven Desk. O uso de acesso remoto deve ser autorizado pelo responsável pelo computador atendido.</p>
-    <h2>Dados de cadastro</h2>
-    <p>Para criar uma conta, são solicitados nome ou razão social, e-mail, senha e a escolha de pessoa física ou jurídica. O CPF ou CNPJ é validado e convertido, no servidor, em um identificador criptográfico com chave protegida, sem armazenamento do número em texto aberto no cadastro. O identificador é usado para impedir novos testes gratuitos com o mesmo documento.</p>
-    <p>As senhas são tratadas pelo sistema de autenticação, não divulgadas a outros usuários. O sistema registra também datas de criação, confirmação de e-mail, sessão, assinatura e situação de pagamento.</p>
-    <h2>Equipe, dispositivos e suporte remoto</h2>
-    <p>O titular administra nomes e fotos de técnicos, nomes de computadores e códigos distintos de técnico e ativação do dispositivo. Os códigos são armazenados como hashes no servidor. O aplicativo pode apresentar nome, empresa e avatar do técnico ao computador que recebe a solicitação de suporte. Essas informações devem ser conferidas antes de autorizar a conexão.</p>
-    <p>Os dados técnicos necessários à conexão remota, às permissões e aos eventos de segurança podem ser processados na VPS que hospeda o Seven Desk. Não conceda suporte a pessoas não autorizadas.</p>
-    <h2>Finalidades e compartilhamento</h2>
-    <p>Os dados são utilizados para criação e segurança da conta, prevenção de abuso do período gratuito, manutenção de assinaturas, disponibilização de recursos e suporte ao usuário. A confirmação de pagamentos pode envolver a InfinitePay. O site também pode utilizar serviços externos de fontes, links de distribuição e infraestrutura.</p>
-    <h2>Proteção e seus direitos</h2>
-    <p>Acesso às informações cadastrais e da equipe requer autenticação. Você pode atualizar nome e foto no painel. Para solicitar acesso, correção, exclusão de informações ou esclarecimentos sobre tratamento e retenção, utilize os canais oficiais de atendimento indicados no site. Alguns dados podem precisar ser preservados para segurança, comprovação de transações ou cumprimento de obrigações legais.</p>
-    <p>Ao encerrar uma assinatura, confira a política de retenção aplicável. A criação de uma conta não autoriza acesso remoto a terceiros sem consentimento.</p>
-    <p><small>Informações atualizadas em novembro de 2026.</small></p>
+    <span class="privacy-label">Transparência e proteção de dados</span>
+    <h1>Política de Privacidade.</h1>
+    <p class="privacy-intro">Esta política descreve como o Seven Desk trata dados pessoais para prestar o serviço de acesso remoto, manter contas, autenticar técnicos e confirmar pagamentos. O acesso remoto a um dispositivo deve ser autorizado pelo responsável por ele.</p>
+    <p class="privacy-date">Última atualização: 18 de novembro de 2026.</p>
+    <h2>1. Quem é responsável pelos dados</h2>
+    <p>O Seven Desk é um serviço independente administrado por seu <strong>responsável individual</strong>, identificado publicamente pelo projeto <a href="https://github.com/gabriell211/Seven-Desk" target="_blank" rel="noopener noreferrer">gabriell211/Seven-Desk</a>, com infraestrutura própria de gerenciamento e conexões. O responsável pelo Seven Desk define as finalidades e os meios do tratamento de dados relativos ao cadastro, contas, pagamento e operação da plataforma, atuando como controlador nesses contextos.</p>
+    <p>Quando uma empresa ou um técnico utiliza o Seven Desk para atender um cliente, essa empresa ou esse profissional também pode determinar finalidades de tratamento dos dados acessados durante o suporte. As funções de controlador e operador dependem de cada atividade e dos acordos aplicáveis, não apenas da contratação do aplicativo.</p>
+    <h2>2. Categorias de dados tratados</h2>
+    <ul>
+      <li><strong>Cadastro:</strong> nome ou razão social, e-mail, tipo de conta (pessoa física ou jurídica) e dados necessários à verificação do período de uso gratuito. CPF e CNPJ são usados para gerar um identificador criptográfico com chave protegida no servidor; o número não é armazenado em texto aberto no registro de cadastro descrito pelo sistema.</li>
+      <li><strong>Autenticação:</strong> credenciais protegidas, confirmação de e-mail, códigos temporários, informações de sessão e tentativas de acesso necessárias à segurança da conta.</li>
+      <li><strong>Equipe:</strong> nome e foto/avatar do técnico, vínculo com a conta, nomes de computadores, status de dispositivos, códigos de ativação e de técnico protegidos conforme a implementação.</li>
+      <li><strong>Assinatura e pagamento:</strong> plano contratado, período de vigência, estado da cobrança, identificadores de pedido e confirmações fornecidas pelo processador de pagamento; o checkout pode coletar dados diretamente no ambiente da InfinitePay.</li>
+      <li><strong>Uso técnico e segurança:</strong> informações de conexão, endereços IP, identificadores de dispositivos, permissões e eventos técnicos necessários para estabelecer e proteger o acesso remoto e investigar incidentes.</li>
+    </ul>
+    <h2>3. Acesso remoto, arquivos e comunicação</h2>
+    <p>Durante uma sessão autorizada, o Seven Desk pode processar dados exibidos na tela remota, comandos de entrada, mensagens de chat, arquivos transferidos, áudio ou outras informações associadas às permissões concedidas. O tráfego pode utilizar conexão direta ou infraestrutura de retransmissão conforme a rede. A política não afirma que conteúdo de sessão nunca transita por servidores, nem autoriza gravação, monitoramento ou uso de informações fora das finalidades legítimas do suporte.</p>
+    <p>O responsável pelo dispositivo atendido deve conferir a identidade apresentada do técnico, confirmar permissões e encerrar a conexão quando desejar. O Seven Desk não autoriza acesso oculto a computadores de terceiros.</p>
+    <h2>4. Finalidades e bases legais</h2>
+    <p>O tratamento pode ocorrer para execução de contrato ou procedimentos preliminares (cadastro, acesso, pagamento e suporte), cumprimento de obrigações legais e regulatórias (registros e documentos quando necessários), exercício regular de direitos e legítimo interesse na segurança e prevenção de fraude, observados os requisitos da LGPD. Quando uma finalidade exigir consentimento, ele deverá ser solicitado de maneira adequada e poderá ser revogado nos casos previstos em lei.</p>
+    <h2>5. Compartilhamento e operadores externos</h2>
+    <p>O serviço pode utilizar provedores de hospedagem e infraestrutura, transporte de e-mails transacionais, distribuição de atualizações e a <a href="https://www.infinitepay.io/" target="_blank" rel="noopener noreferrer">InfinitePay</a> para processamento ou confirmação de pagamentos. Cada integração deve se limitar aos dados necessários à sua finalidade. Prestadores externos podem possuir suas próprias políticas de privacidade e obrigações de proteção de dados.</p>
+    <p>Dados também podem ser disponibilizados em resposta a obrigação legal, ordem válida ou para proteção de direitos, conforme a legislação. Eventuais transferências internacionais dependem da localização da infraestrutura e dos prestadores envolvidos, sujeitas às salvaguardas legais aplicáveis.</p>
+    <h2>6. Cookies, sessões e segurança</h2>
+    <p>O site pode utilizar cookies ou identificadores técnicos de sessão necessários à autenticação, proteção de requisições e continuidade do acesso. As preferências de tema claro/escuro podem ser armazenadas localmente no navegador. As credenciais e identificadores sensíveis devem ser protegidos por controles técnicos e organizacionais proporcionais ao risco. Nenhum sistema conectado à internet oferece garantia de segurança absoluta.</p>
+    <h2>7. Retenção e exclusão</h2>
+    <p>Dados serão mantidos pelo período necessário às finalidades informadas, à vigência da conta e à prevenção de fraudes, ou pelos prazos exigidos por legislação aplicável. Registros necessários à comprovação de pagamentos e ao cumprimento de obrigações legais poderão ser preservados após encerramento da conta. Quando cessar a finalidade e não existir obrigação de guarda, os dados deverão ser eliminados ou anonimizados conforme as regras aplicáveis.</p>
+    <p>Não declaramos um prazo único de exclusão para todas as categorias de dados: o período depende da natureza do registro, das obrigações legais e dos recursos técnicos disponíveis.</p>
+    <h2>8. Direitos dos titulares (LGPD)</h2>
+    <p>Nos termos da legislação brasileira, titulares podem solicitar confirmação da existência de tratamento, acesso, correção, anonimização, bloqueio ou eliminação quando cabível, portabilidade quando aplicável, informação sobre compartilhamento, oposição e revisão de decisões automatizadas nos casos previstos em lei.</p>
+    <p>Para exercer direitos ou relatar incidentes, envie mensagem para <a href="mailto:sevendesk@sevendesk.tech?subject=Privacidade%20Seven%20Desk">sevendesk@sevendesk.tech</a> com o assunto “Privacidade Seven Desk”. Para sua segurança, não envie senhas, códigos de ativação ou dados sensíveis por e-mail. Solicitações poderão exigir confirmação de identidade antes do atendimento. Titulares também podem buscar orientação e exercer direitos perante a <a href="https://www.gov.br/anpd/pt-br/assuntos/titular-de-dados" target="_blank" rel="noopener noreferrer">ANPD</a>.</p>
+    <h2>9. Mudanças na política</h2>
+    <p>Este texto poderá ser atualizado para refletir novas funcionalidades, prestadores ou requisitos legais. Mudanças relevantes serão comunicadas por canais do serviço quando necessário. Consulte também os <a href="/licencas.html">Termos de Uso e Licenças</a> para as regras contratuais e o licenciamento do código de terceiros.</p>
+    <div class="privacy-footer"><p>© 2026 Seven Desk · Serviço independente</p><p><a href="/licencas.html">Termos e Licenças</a> · <a href="/">Voltar ao site</a></p></div>
   </main>
 </body>
 </html>
