@@ -85,12 +85,7 @@ class _OnlineStatusWidgetState extends State<OnlineStatusWidget> {
                     style: const TextStyle(fontSize: 15),
                   ),
                 ),
-                if (stopped)
-                  TextButton(
-                    onPressed: () => start_service(true),
-                    child: Text(translate('Start service')),
-                  )
-                else if (sessions > 0)
+                if (!stopped && sessions > 0)
                   Text(
                     '$sessions sessões ativas',
                     style: const TextStyle(color: HomeDashboardTheme.muted),
@@ -101,18 +96,6 @@ class _OnlineStatusWidgetState extends State<OnlineStatusWidget> {
       );
     }
     final isIncomingOnly = bind.isIncomingOnly();
-    startServiceWidget() => Offstage(
-          offstage: !_svcStopped.value,
-          child: InkWell(
-                  onTap: () async {
-                    await start_service(true);
-                  },
-                  child: Text(translate("Start service"),
-                      style: TextStyle(
-                          decoration: TextDecoration.underline, fontSize: em)))
-              .marginOnly(left: em),
-        );
-
     basicWidget() => Row(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
@@ -133,24 +116,13 @@ class _OnlineStatusWidgetState extends State<OnlineStatusWidget> {
               width: isIncomingOnly ? 226 : null,
               child: _buildConnStatusMsg(),
             ),
-            // stop
-            if (!isIncomingOnly) startServiceWidget(),
           ],
         );
 
+    // The home is a status surface; manual service actions remain in Settings.
     return Container(
       height: height,
-      child: Obx(() => isIncomingOnly
-          ? Column(
-              children: [
-                basicWidget(),
-                Align(
-                        child: startServiceWidget(),
-                        alignment: Alignment.centerLeft)
-                    .marginOnly(top: 2.0, left: 22.0),
-              ],
-            )
-          : basicWidget()),
+      child: Obx(() => basicWidget()),
     ).paddingOnly(right: isIncomingOnly ? 8 : 0);
   }
 

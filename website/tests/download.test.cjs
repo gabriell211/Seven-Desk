@@ -62,3 +62,15 @@ test('rejects missing, empty, unrelated and unsafe manifest entries', () => {
     file('sevendesk-1.5.3-x86_64.exe', 0),
   ] }, 'windows', 'x64'), null);
 });
+
+
+test('Windows main download is a portable EXE, never a mandatory installer', () => {
+  const mixed = {version: manifest.version, files: [
+    file('sevendesk-1.5.3-x86_64.msi'),
+    file('sevendesk-1.5.3-x86_64.exe'),
+  ]};
+  assert.equal(findPackage(mixed, 'windows', 'x64').filename,
+    'sevendesk-1.5.3-x86_64.exe');
+  assert.equal(findPackage({version: manifest.version,
+    files: [file('sevendesk-1.5.3-x86_64.msi')]}, 'windows', 'x64'), null);
+});

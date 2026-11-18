@@ -713,6 +713,13 @@ class HomeDashboard extends StatelessWidget {
           'Seu endereço, novas conexões e computadores dos clientes em um só lugar.',
           style: TextStyle(color: HomeDashboardTheme.muted, fontSize: 15),
         ),
+        if (isWindows && !bind.mainIsInstalled()) ...[
+          SizedBox(height: 8),
+          Text(
+            'Modo portátil · pronto para usar sem instalação',
+            style: TextStyle(color: HomeDashboardTheme.green, fontSize: 13),
+          ),
+        ],
       ],
     );
     if (!wide || status == null) return title;

@@ -139,6 +139,16 @@ void main() {
     expect(find.text('Pronto para conexões'), findsWidgets);
     expect(find.text('Support PC'), findsOneWidget);
     expect(find.text('Recentes (1)'), findsOneWidget);
+    // The first-run dashboard must never require installation or manual startup.
+    expect(find.text('Start service'), findsNothing);
+    expect(find.text('Iniciar sistema'), findsNothing);
+    expect(find.text('Install'), findsNothing);
+    Get.find<RxBool>(tag: 'stop-service').value = true;
+    await tester.pump();
+    expect(find.text('Start service'), findsNothing);
+    expect(find.text('Iniciar sistema'), findsNothing);
+    Get.find<RxBool>(tag: 'stop-service').value = false;
+    await tester.pump();
     expect(tester.takeException(), isNull);
 
     tester.view.physicalSize = const Size(800, 600);
