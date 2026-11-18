@@ -15,7 +15,7 @@ from urllib.request import HTTPRedirectHandler, Request, build_opener
 SITE="https://www.sevendesk.tech"
 DOWNLOADS="https://downloads.sevendesk.tech"
 SHA=re.compile(r"^[a-f0-9]{40}$")
-VERSION=re.compile(r"^v[0-9]+\.[0-9]+\.[0-9]+-[0-9]+$")
+VERSION=re.compile(r"^v[0-9]+\.[0-9]+\.[0-9]+(?:-[0-9]+)?$")
 ASSET=re.compile(r"^sevendesk-[A-Za-z0-9._-]{1,180}$")
 REQUIRED={
  "win_x64":r"^sevendesk-.*-x86_64\.exe$",

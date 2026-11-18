@@ -40,8 +40,8 @@ class ReleaseVersionConsistencyTests(unittest.TestCase):
                 self.assertEqual(match.group(1), version)
         tag = os.getenv("GITHUB_REF_NAME", "").strip()
         if tag and os.getenv("GITHUB_REF_TYPE") == "tag":
-            self.assertIn(tag, (version, "v" + version),
-                          "Published tag must match the compiled package version")
+            self.assertRegex(tag, rf"^v?{re.escape(version)}(?:-[0-9]+)?$",
+                                 "Published tag must match the compiled package version")
 
 
 if __name__ == "__main__":
