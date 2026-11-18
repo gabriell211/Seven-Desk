@@ -46,9 +46,10 @@ class SevenDeskProfile {
       if (imageUrl is String && imageUrl.isNotEmpty) {
         final uri = Uri.tryParse(imageUrl);
         final path = uri?.path ?? '';
-        if (uri?.scheme != 'https' || uri?.host != 'www.sevendesk.tech' ||
-            uri == null || uri.userInfo.isNotEmpty ||
-            uri?.hasQuery == true || uri?.hasFragment == true ||
+        if (uri == null || uri.scheme != 'https' ||
+            uri.host != 'www.sevendesk.tech' ||
+            uri.userInfo.isNotEmpty || uri.hasPort ||
+            uri.hasQuery || uri.hasFragment ||
             !RegExp(r'^/avatars/[0-9a-f-]{36}/(?:profile|technician-[1-9][0-9]{0,4})\.(?:jpg|png|webp)$').hasMatch(path)) {
           return false;
         }
@@ -158,9 +159,13 @@ class _SevenDeskActivationDialogState
         }
         return;
       }
+      final previousToken = bind.mainGetLocalOption(key: _optionKey);
       await bind.mainSetLocalOption(key: _optionKey, value: token);
       final profileReady = await sevenDeskProfile.refresh();
       if (token.isNotEmpty && !profileReady) {
+        // Never keep a failed activation on disk. The previously verified
+        // device token remains available for an explicit retry.
+        await bind.mainSetLocalOption(key: _optionKey, value: previousToken);
         if (mounted) {
           setState(() {
             _saving = false;
