@@ -74,6 +74,21 @@ class PreflightTest(unittest.TestCase):
    cases[0]=None
    path.write_text(json.dumps({"commit":SHA,"cases":cases}))
    self.assertEqual(h.evidence_gate(path,SHA)["status"],"FAIL")
+ def test_legacy_installer_cutover_is_a_required_manual_release_gate(self):
+  required={'LEGACY_INSTALLERS_DENIED','LATEST_INSTALLERS_CONNECTED','SERVER_IDENTITY_CUTOVER'}
+  self.assertTrue(required.issubset(set(h.MANUAL_CASES)))
+  with tempfile.TemporaryDirectory() as folder:
+   evidence_file=Path(folder)/'release-evidence.json'
+   cases=[{'id':key,'status':'PASS','tester':'QA','evidence':'private/evidence'} for key in h.MANUAL_CASES]
+   for blocked_id in required:
+    for case in cases:
+     case['status']='PENDING' if case['id']==blocked_id else 'PASS'
+    evidence_file.write_text(json.dumps({'commit':SHA,'cases':cases}))
+    self.assertEqual(h.evidence_gate(evidence_file,SHA)['status'],'BLOCKED')
+   for case in cases:case['status']='PASS'
+   evidence_file.write_text(json.dumps({'commit':SHA,'cases':cases}))
+   self.assertEqual(h.evidence_gate(evidence_file,SHA)['status'],'PASS')
+
  def test_https_origin_restrictions(self):
   self.assertEqual(h.validate_origin(S+"/"),S)
   for url in ("http://host","https://u:p@host","https://host/path","https://host/?key=x"):
