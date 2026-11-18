@@ -48,3 +48,20 @@ Copiar docs/homologacao-evidencias.template.json para um local privado. Inserir 
 
 Critérios para release: preflight_status PASS, manual PASS, release_gate PASS, GitHub CI verde no mesmo SHA, revisão sem bloqueios, teste físico Windows, Linux, macOS, Android e rollback pronto. Um teste unitário não substitui UAC, conexão real ou segurança de licença. Não publicar release, fazer merge nem ativar sinalização/licença no servidor até que tudo esteja comprovado. Corrigir problemas no PR #23; não abrir PR de reparo separado.
 
+
+## Aposentadoria obrigatória de versões antigas
+
+Esta release possui mudança de geração de credencial. **A compilação de instaladores novos por si só NÃO revoga os instaladores existentes.** Sem corte no servidor de conexão, versões antigas continuam podendo registrar um receptor e tentar acessar outro equipamento.
+
+O procedimento seguro exige validação em staging e execução coordenada após a homologação das quatro plataformas:
+
+1. Preparar uma identidade nova do servidor Seven ID/Relay (par de chaves de servidor) em armazenamento protegido, sem imprimir a chave privada em logs, issues ou PRs. Compilar **todos os novos pacotes** com a nova chave pública embutida e o mesmo endereço de conexão.
+2. Testar os novos EXE/MSI, AppImage, DMG e APK em laboratório com esta identidade, incluindo conexão direta, fallback relay, consentimento e UAC. Confirmar perfil e ativação com código da geração 2 (`sd2_`).
+3. No ambiente isolado, ativar `SEVEN_ACTIVATION_GENERATION=2` no portal/API, validar que o endpoint de licença rejeita todos os códigos `sd_` antigos e que a sinalização nova exige autorização. A alteração é **somente de backend**; uma tela de aviso de atualização no cliente antigo não basta.
+4. No momento do corte, depois de validar os artefatos **assinados e auditados**, implantar o servidor com a nova identidade no endereço oficial e passar a exigir geração 2. NÃO ativar prematuramente enquanto os novos clientes não estiverem disponíveis: a troca desconecta versões anteriores.
+5. Testar cópias reais dos antigos instaladores em Windows, Linux, macOS e Android: nenhuma deve conseguir **iniciar uma sessão ou registrar-se como receptor** na infraestrutura oficial, tanto em conexão direta mediada como relay. Testar também os novos clientes nas duas funções e documentar evidência vinculada ao SHA.
+6. Preservar backup criptografado da identidade anterior e plano de rollback de VPS, DNS, licença e instaladores; o rollback reabilita temporariamente clientes antigos e, portanto, deve ser limitado e aprovado.
+
+Casos obrigatórios adicionais da matriz: `LEGACY_INSTALLERS_DENIED`, `LATEST_INSTALLERS_CONNECTED`, `SERVER_IDENTITY_CUTOVER`. Cada caso precisa de tester e referência de evidência. O gate de release os exige, não os marca automaticamente como PASS.
+
+**Limite técnico:** o bloqueio por geração, autorização e chave impede clientes antigos *não modificados* de usar a infraestrutura oficial. Não é tecnicamente possível desinstalar remotamente um binário, impedir sua abertura local, bloquear outro servidor ou garantir bloqueio de conexões LAN fora da infraestrutura Seven Desk sem um mecanismo adicional em cada dispositivo.
