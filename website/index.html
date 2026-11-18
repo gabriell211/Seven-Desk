@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="pt-BR">
+<html lang="pt-BR" data-theme="light">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -13,9 +13,11 @@
   <meta property="og:url" content="https://www.sevendesk.tech/" />
   <link rel="canonical" href="https://www.sevendesk.tech/" />
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <script src="/theme.js?v=20261118a"></script>
   <link rel="stylesheet" href="/styles.css?v=9" />
   <title>Seven Desk | Acesso remoto simples e moderno</title>
   <link rel="stylesheet" href="/homepage.css?v=20261118d" />
+  <link rel="stylesheet" href="/theme.css?v=20261118a" />
 </head>
 <body>
   <a class="skip-link" href="#conteudo">Ir para o conteúdo</a>
@@ -30,10 +32,11 @@
       <nav class="desktop-nav" aria-label="Menu principal">
         <a href="#recursos">Por que Seven Desk?</a><a href="#solucoes">Soluções</a><a href="#como-funciona">Como funciona</a><a href="#planos">Planos e preços</a><a href="#perguntas">Suporte</a>
       </nav>
+      <div class="theme-picker"><span class="theme-picker-icon" aria-hidden="true">◐</span><select id="theme-select-header" data-theme-select aria-label="Aparência do site"><option value="system">Sistema</option><option value="light">Claro</option><option value="dark">Escuro</option></select></div>
       <div class="account-nav"><a class="account-nav-login" href="/cadastro">Comece agora</a><a class="account-nav-register" href="#plataformas">Downloads</a></div>
       <button class="mobile-menu-button" id="menu-toggle" type="button" aria-label="Abrir menu" aria-expanded="false" aria-controls="mobile-navigation"><span></span><span></span><span></span></button>
     </div>
-    <nav id="mobile-navigation" class="mobile-navigation" aria-label="Menu para dispositivos móveis" hidden><a href="#recursos">Por que Seven Desk?</a><a href="#solucoes">Soluções</a><a href="#como-funciona">Como funciona</a><a href="#planos">Planos e preços</a><a href="#plataformas">Downloads</a><a href="#perguntas">Suporte</a><a href="/entrar">Portal do cliente</a><a href="/cadastro">Criar conta</a></nav>
+    <nav id="mobile-navigation" class="mobile-navigation" aria-label="Menu para dispositivos móveis" hidden><a href="#recursos">Por que Seven Desk?</a><a href="#solucoes">Soluções</a><a href="#como-funciona">Como funciona</a><a href="#planos">Planos e preços</a><a href="#plataformas">Downloads</a><a href="#perguntas">Suporte</a><a href="/entrar">Portal do cliente</a><a href="/cadastro">Criar conta</a><div class="theme-picker theme-picker-mobile"><span class="theme-picker-icon" aria-hidden="true">◐</span><select id="theme-select-mobile" data-theme-select aria-label="Aparência do site"><option value="system">Sistema</option><option value="light">Claro</option><option value="dark">Escuro</option></select></div></nav>
   </header>
   <main id="conteudo">
     <section class="hero" aria-labelledby="hero-title">
