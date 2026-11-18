@@ -3005,6 +3005,9 @@ jobs:
           bash ./build-apprun.sh ${{ matrix.job.arch }}
           sudo appimage-builder --skip-tests --recipe ./AppImageBuilder-${{ matrix.job.arch }}.yml
           cmp AppDir/AppRun appimage-build/AppRun/v2.0.0/AppRun-Release-${{ matrix.job.arch }}
+          # appimage-builder runs as root and owns the generated output and directory.
+          # Restore runner ownership before the non-privileged artifact integrity checks.
+          sudo chown "$(id -u):$(id -g)" . ./*.AppImage
 
       - name: Normalize and validate AppImage output
         shell: bash
