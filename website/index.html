@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="pt-BR">
+<html lang="pt-BR" data-theme="light">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -13,12 +13,16 @@
   <meta property="og:url" content="https://www.sevendesk.tech/" />
   <link rel="canonical" href="https://www.sevendesk.tech/" />
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <script src="/theme.js?v=20261118a"></script>
   <link rel="stylesheet" href="/styles.css?v=9" />
   <title>Seven Desk | Acesso remoto simples e moderno</title>
+  <link rel="stylesheet" href="/homepage.css?v=20261118e" />
+  <link rel="stylesheet" href="/theme.css?v=20261118b" />
 </head>
 <body>
   <a class="skip-link" href="#conteudo">Ir para o conteúdo</a>
-  <div class="announcement"><span class="announcement-dot"></span> SEVEN DESK <span class="announce-divider"></span> A conexão que aproxima você de qualquer lugar <a href="#como-funciona">Saiba como funciona <span aria-hidden="true">↗</span></a></div>
+  <div class="announcement"><a href="#planos">Escolha o plano anual e economize R$ 78,80! <span aria-hidden="true">❯❯</span></a></div>
+  <div class="utility-bar"><div class="container utility-inner"><a href="#perguntas">Suporte e atendimento</a><a href="/entrar">Portal do cliente</a><span>Português (Brasil)</span></div></div>
   <header class="site-header" id="topo">
     <div class="container header-inner">
       <a class="brand" href="#topo" aria-label="Seven Desk — início">
@@ -26,50 +30,52 @@
         <span>seven<span class="brand-accent">desk</span><small>ACESSO REMOTO</small></span>
       </a>
       <nav class="desktop-nav" aria-label="Menu principal">
-        <a href="#recursos">Recursos</a><a href="#solucoes">Soluções</a><a href="#como-funciona">Como funciona</a><a href="#planos">Planos</a><a href="#plataformas">Plataformas</a><a href="#perguntas">Ajuda</a>
+        <a href="#recursos">Por que Seven Desk?</a><a href="#solucoes">Soluções</a><a href="#como-funciona">Como funciona</a><a href="#planos">Planos e preços</a><a href="#perguntas">Suporte</a>
       </nav>
-      <div class="account-nav"><a class="account-nav-login" href="/entrar">Entrar</a><a class="account-nav-register" href="/cadastro">Criar conta</a></div>
-      
+      <div class="theme-picker"><span class="theme-picker-icon" aria-hidden="true">◐</span><select id="theme-select-header" data-theme-select aria-label="Aparência do site"><option value="system">Sistema</option><option value="light">Claro</option><option value="dark">Escuro</option></select></div>
+      <div class="account-nav"><a class="account-nav-login" href="/cadastro">Comece agora</a><a class="account-nav-register" href="#plataformas">Downloads</a></div>
       <button class="mobile-menu-button" id="menu-toggle" type="button" aria-label="Abrir menu" aria-expanded="false" aria-controls="mobile-navigation"><span></span><span></span><span></span></button>
     </div>
-    <nav id="mobile-navigation" class="mobile-navigation" aria-label="Menu para dispositivos móveis" hidden><a href="#recursos">Recursos</a><a href="#solucoes">Soluções</a><a href="#como-funciona">Como funciona</a><a href="#planos">Planos</a><a href="#plataformas">Downloads</a><a href="#perguntas">Ajuda</a><a href="/entrar">Entrar</a><a href="/cadastro">Criar conta</a></nav>
+    <nav id="mobile-navigation" class="mobile-navigation" aria-label="Menu para dispositivos móveis" hidden><a href="#recursos">Por que Seven Desk?</a><a href="#solucoes">Soluções</a><a href="#como-funciona">Como funciona</a><a href="#planos">Planos e preços</a><a href="#plataformas">Downloads</a><a href="#perguntas">Suporte</a><a href="/entrar">Portal do cliente</a><a href="/cadastro">Criar conta</a><div class="theme-picker theme-picker-mobile"><span class="theme-picker-icon" aria-hidden="true">◐</span><select id="theme-select-mobile" data-theme-select aria-label="Aparência do site"><option value="system">Sistema</option><option value="light">Claro</option><option value="dark">Escuro</option></select></div></nav>
   </header>
   <main id="conteudo">
     <section class="hero" aria-labelledby="hero-title">
-      <div class="hero-grid-overlay" aria-hidden="true"></div>
+      <div class="hero-shape hero-shape-left" aria-hidden="true"></div>
+      <div class="hero-shape hero-shape-right" aria-hidden="true"></div>
       <div class="container hero-grid">
         <div class="hero-copy">
-          <div class="eyebrow"><span class="eyebrow-pulse"></span> CONEXÕES SEM DISTÂNCIAS</div>
-          <h1 id="hero-title">Perto, mesmo<br/>de <span class="gradient-text">longe.</span></h1>
-          <p class="hero-description">O seu computador, a sua equipe e o seu trabalho. Onde quer que você esteja. Conheça o Seven Desk e tenha mais liberdade para se conectar.</p>
-          <div class="hero-actions"><a id="download-principal" class="btn btn-primary btn-large auto-download" href="#plataformas" data-auto-download aria-label="Escolher download do Seven Desk"><img class="download-os-icon" data-os-icon src="/assets/windows.svg?v=2" alt="" width="21" height="21" hidden /><span class="download-button-label">Baixar para <span data-os-name>seu sistema</span></span></a><a class="btn btn-outline btn-large" href="/cadastro">Criar conta <span aria-hidden="true">→</span></a></div>
-          <div class="hero-subnote"><div class="note-icons" aria-hidden="true"><span><img src="/assets/windows.svg?v=2" alt="" /></span><span><img src="/assets/macos.svg?v=2" alt="" /></span><span><img src="/assets/linux.svg" alt="" /></span><span><img src="/assets/android.svg?v=2" alt="" /></span></div> <span>Windows, macOS, Linux e Android</span></div>
+          <p class="eyebrow">Software de acesso remoto Seven Desk</p>
+          <h1 id="hero-title">Controle remoto do seu computador de<br class="desktop-break" /> qualquer lugar</h1>
+          <div class="hero-actions">
+            <a id="download-principal" class="btn btn-primary btn-large auto-download" href="#plataformas" data-auto-download aria-label="Escolher download do Seven Desk"><img class="download-os-icon" data-os-icon src="/assets/windows.svg?v=2" alt="" width="21" height="21" hidden /><span class="download-button-label">Baixar para <span data-os-name>seu sistema</span></span></a>
+          </div>
+          <div class="hero-release">
+            <span>Versão: <strong data-live-release aria-live="polite">Consultando...</strong></span>
+            <a href="#plataformas">Versões e plataformas</a>
+          </div>
+          <p class="hero-terms">Ao baixar e usar o Seven Desk, você aceita nossos <a href="/licencas.html">Termos e Licenças</a> e a <a href="/privacidade.html">Política de Privacidade</a>.</p>
         </div>
-        <aside class="release-panel" aria-labelledby="release-panel-title">
-          <div class="release-panel-head">
-            <div class="release-panel-brand"><img src="/assets/seven-desk-logo.svg" alt="" width="32" height="32" /><span>Seven Desk<small>Distribuição oficial</small></span></div>
-            <a href="https://downloads.sevendesk.tech/" target="_blank" rel="noopener noreferrer">Histórico de versões <span aria-hidden="true">↗</span></a>
-          </div>
-          <div class="release-panel-body">
-            <span class="release-panel-kicker">DOWNLOADS PUBLICADOS</span>
-            <h2 id="release-panel-title">Seu próximo acesso começa aqui.</h2>
-            <p>Confira a disponibilidade diretamente no servidor de distribuição. Para se conectar, instale o aplicativo em seus dispositivos.</p>
-            <div class="release-version"><span>Versão publicada</span><strong data-live-release aria-live="polite">Consultando...</strong></div>
-            <div class="release-availability" role="list" aria-label="Disponibilidade por sistema">
-              <div class="release-platform" role="listitem" data-release-platform="windows"><img src="/assets/windows.svg?v=2" alt="" width="22" height="22" /><span>Windows</span><strong data-release-state>Verificando...</strong></div>
-              <div class="release-platform" role="listitem" data-release-platform="macos"><img src="/assets/macos.svg?v=2" alt="" width="22" height="22" /><span>macOS</span><strong data-release-state>Verificando...</strong></div>
-              <div class="release-platform" role="listitem" data-release-platform="linux"><img src="/assets/linux.svg" alt="" width="22" height="22" /><span>Linux</span><strong data-release-state>Verificando...</strong></div>
-              <div class="release-platform" role="listitem" data-release-platform="android"><img src="/assets/android.svg?v=2" alt="" width="22" height="22" /><span>Android</span><strong data-release-state>Verificando...</strong></div>
-            </div>
-          </div>
-          <div class="release-panel-footer"><span data-release-source aria-live="polite">Consultando os instaladores oficiais...</span><a href="#plataformas">Escolher plataforma <span aria-hidden="true">↓</span></a></div>
-        </aside>
+        <div class="pricing-banner" aria-label="Plano anual Seven Desk">
+          <div class="pricing-banner-savings"><span>Economize</span><strong>R$ 78,80</strong></div>
+          <div class="pricing-banner-copy"><strong>Vai usar o Seven Desk por mais tempo?</strong><span>Escolha o plano anual e economize em relação à mensalidade.</span></div>
+          <a href="#planos" class="pricing-banner-cta">Ver planos e preços</a>
+        </div>
       </div>
-      <div class="container hero-microbar"><div><span class="micro-icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" focusable="false"><circle cx="9" cy="8" r="3"/><path d="M3 20v-2a6 6 0 0 1 12 0v2"/><path d="M16 5.2a3 3 0 0 1 0 5.6M18 14a5 5 0 0 1 3 4.5V20"/></svg></span> Feito para pessoas e equipes</div><div><span class="micro-icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" focusable="false"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/><path d="m8.5 12 2.5 2.5 4.5-5"/></svg></span> Desenvolvido de forma segura</div><div><span class="micro-icon">⟷</span> Conecte de onde estiver</div></div>
+    </section>
+    <section class="platform-quickbar" aria-label="Escolha seu sistema operacional">
+      <div class="container platform-quickbar-inner">
+        <button type="button" data-platform="windows" aria-pressed="false"><img src="/assets/windows.svg?v=2" alt="" /><span>Windows</span></button>
+        <button type="button" data-platform="macos" aria-pressed="false"><img src="/assets/macos.svg?v=2" alt="" /><span>macOS</span></button>
+        <button type="button" data-platform="android" aria-pressed="false"><img src="/assets/android.svg?v=2" alt="" /><span>Android</span></button>
+        <button type="button" data-platform="linux" aria-pressed="false"><img src="/assets/linux.svg" alt="" /><span>Linux</span></button>
+      </div>
+      <p class="platform-quickbar-notice" data-release-source aria-live="polite">Consultando a disponibilidade dos instaladores oficiais...</p>
     </section>
 
+    <div class="reassurance-strip" aria-label="Benefícios do Seven Desk"><div class="container"><span>Uso portátil</span><span>Conexões com autorização</span><span>Suporte em diferentes plataformas</span></div></div>
+
     <section class="intro section" id="solucoes" aria-labelledby="solutions-title">
-      <div class="container"><div class="section-head centered"><span class="section-kicker">FEITO PARA O SEU DIA A DIA</span><h2 id="solutions-title">Uma conexão.<br/><span class="muted-heading">Mil possibilidades.</span></h2><p>Seja para ajudar alguém, acessar o computador do escritório ou continuar um projeto, existe um jeito simples de estar presente.</p></div>
+      <div class="container"><div class="section-head centered"><span class="section-kicker">UM JEITO MAIS SIMPLES DE ESTAR PERTO</span><h2 id="solutions-title">A distância muda.<br/><span class="muted-heading">A conexão continua.</span></h2><p>Seja para ajudar alguém, acessar o computador do escritório ou continuar um projeto, existe um jeito simples de estar presente.</p></div>
         <div class="solutions-grid">
           <article class="solution-card"><div class="solution-number">01 / SUPORTE</div><div class="solution-icon blue">↗</div><h3>Ajude de qualquer lugar.</h3><p>Ofereça assistência remota e acompanhe o que acontece em outro computador, mesmo quando você está longe.</p><a href="#como-funciona">Ver como conectar <span aria-hidden="true">↗</span></a><div class="solution-deco deco-support"><span>✓</span><span>Assistência conectada</span></div></article>
           <article class="solution-card accent-card"><div class="solution-number">02 / PRODUTIVIDADE</div><div class="solution-icon white">⌘</div><h3>Seu trabalho vai com você.</h3><p>Continue tarefas, visualize seus arquivos e acesse seu ambiente de trabalho em outra máquina.</p><a href="#plataformas">Escolher plataforma <span aria-hidden="true">↗</span></a><div class="solution-deco deco-work"><span>◈</span><span>Seu espaço, em todo lugar.</span></div></article>
@@ -78,7 +84,7 @@
       </div>
     </section>
 
-    <section class="feature-section section" id="recursos" aria-labelledby="feature-title"><div class="container"><div class="split-head"><div><span class="section-kicker">TECNOLOGIA QUE SIMPLIFICA</span><h2 id="feature-title">Tudo o que você precisa.<br/><span class="muted-heading">Nada de complicação.</span></h2></div><p>Uma experiência pensada para colocar o essencial em primeiro lugar — sua conexão, seu fluxo de trabalho e o seu controle.</p></div>
+    <section class="feature-section section" id="recursos" aria-labelledby="feature-title"><div class="container"><div class="split-head"><div><span class="section-kicker">POR QUE SEVEN DESK?</span><h2 id="feature-title">Acesso remoto com<br/><span class="muted-heading">o essencial em primeiro lugar.</span></h2></div><p>Uma experiência pensada para colocar o essencial em primeiro lugar — sua conexão, seu fluxo de trabalho e o seu controle.</p></div>
       <div class="features-grid">
         <article class="feature-card"><div class="feature-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="3" y="3.5" width="18" height="13" rx="2"/><path d="M8 20.5h8M12 16.5v4"/><path d="m13.5 8 2.5-2.5L18.5 8M16 5.5v7"/></svg></div><h3>Acesso e controle</h3><p>Visualize e controle a área de trabalho de um dispositivo remoto, mediante autorização.</p></article>
         <article class="feature-card"><div class="feature-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 8V4.5A1.5 1.5 0 0 1 6.5 3h4l2 2H19a1.5 1.5 0 0 1 1.5 1.5V9"/><path d="M4 13h16M4 13l3-3M4 13l3 3M20 17H4M20 17l-3-3M20 17l-3 3"/></svg></div><h3>Transferência de arquivos</h3><p>Mova documentos entre dispositivos com o gerenciador de arquivos remoto.</p></article>
@@ -88,15 +94,15 @@
         <article class="feature-card"><div class="feature-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M4 7h16M4 17h16"/><circle cx="9" cy="7" r="2.5" fill="#ecf6ff"/><circle cx="15" cy="17" r="2.5" fill="#ecf6ff"/></svg></div><h3>Configuração avançada</h3><p>Opções para adequar o aplicativo às necessidades do ambiente e do suporte.</p></article>
       </div></div></section>
 
-    <section class="steps-section section" id="como-funciona" aria-labelledby="steps-title"><div class="container steps-layout"><div class="steps-intro"><span class="section-kicker">SIMPLES DO PRIMEIRO CLIQUE</span><h2 id="steps-title">Conectar ficou<br/><span class="gradient-text">mais natural.</span></h2><p>Três passos para começar a usar o Seven Desk em dispositivos autorizados.</p><a class="btn btn-dark" href="#plataformas">Ver plataformas <span aria-hidden="true">↗</span></a></div><div class="step-list">
-      <div class="step"><span class="step-index">01</span><div><h3>Obtenha o aplicativo</h3><p>Acesse a página de versões, escolha seu sistema e instale o pacote correspondente.</p></div><span class="step-glyph">↘</span></div>
+    <section class="steps-section section" id="como-funciona" aria-labelledby="steps-title"><div class="container steps-layout"><div class="steps-intro"><span class="section-kicker">EM POUCOS PASSOS</span><h2 id="steps-title">Conectar pode ser<br/><span class="muted-heading">mais simples.</span></h2><p>Três passos para começar a usar o Seven Desk em dispositivos autorizados.</p><a class="btn btn-dark" href="#plataformas">Ver plataformas <span aria-hidden="true">↗</span></a></div><div class="step-list">
+      <div class="step"><span class="step-index">01</span><div><h3>Obtenha o aplicativo</h3><p>Acesse a página de versões, escolha seu sistema e abra o aplicativo. A instalação permanente é opcional.</p></div><span class="step-glyph">↘</span></div>
       <div class="step"><span class="step-index">02</span><div><h3>Abra nos dispositivos</h3><p>Execute o Seven Desk nos computadores e confira as informações necessárias para a conexão.</p></div><span class="step-glyph">◉</span></div>
       <div class="step"><span class="step-index">03</span><div><h3>Conecte com autorização</h3><p>Informe os dados de conexão e confirme o acesso no dispositivo remoto quando solicitado.</p></div><span class="step-glyph">↗</span></div>
     </div></div></section>
 
     <section class="pricing-section section" id="planos" aria-labelledby="pricing-title">
       <div class="container pricing-layout">
-        <div class="pricing-intro"><span class="section-kicker">PLANOS SEVEN DESK</span><h2 id="pricing-title">Um usuário.<br/><span class="gradient-text">Mais possibilidades.</span></h2><p>Estamos preparando o cadastro e a integração com o aplicativo. Quando a abertura de contas for liberada, cada usuário terá um mês gratuito antes de escolher um plano.</p><p class="pricing-renewal">Após o período grátis, escolha um plano. Renovação pelo cliente ao fim de cada período; não há cobrança automática.</p></div>
+        <div class="pricing-intro"><span class="section-kicker">PLANOS E PREÇOS</span><h2 id="pricing-title">O plano certo<br/><span class="muted-heading">para seu jeito de trabalhar.</span></h2><p>Estamos preparando o cadastro e a integração com o aplicativo. Quando a abertura de contas for liberada, cada usuário terá um mês gratuito antes de escolher um plano.</p><p class="pricing-renewal">Após o período grátis, escolha um plano. Renovação pelo cliente ao fim de cada período; não há cobrança automática.</p></div>
         <div class="pricing-cards">
           <article class="pricing-card"><div class="pricing-label">MENSAL</div><h3>Para começar</h3><p class="pricing-description">Flexibilidade para seu dia a dia.</p><p class="pricing-price"><span>R$</span> 39,90 <small>/ usuário / mês</small></p><ul><li>Uma conta por usuário</li><li>Até 5 computadores de técnicos</li><li>Clientes atendidos sem cadastro</li><li>Acesso ao servidor Seven Desk</li></ul><a class="btn pricing-button" href="/cadastro">Conhecer o cadastro</a></article>
           <article class="pricing-card pricing-card-featured"><div class="pricing-label">ANUAL <span>ECONOMIZE R$ 78,80</span></div><h3>Para ir mais longe</h3><p class="pricing-description">Um ano de acesso para seu trabalho.</p><p class="pricing-price"><span>R$</span> 400 <small>/ usuário / ano</small></p><ul><li>Uma conta por usuário</li><li>Até 5 computadores de técnicos</li><li>Clientes atendidos sem cadastro</li><li>Acesso ao servidor Seven Desk</li></ul><a class="btn btn-primary pricing-button" href="/cadastro">Conhecer o cadastro</a></article>
@@ -104,27 +110,27 @@
       </div>
     </section>
 
-    <section class="download-section section" id="plataformas" aria-labelledby="downloads-title"><div class="container"><div class="downloads-panel"><div class="downloads-heading"><div><span class="section-kicker light">SEVEN DESK PARA VOCÊ</span><h2 id="downloads-title">Onde você estiver,<br/>o Seven Desk também.</h2><p>O sistema é identificado automaticamente. Para baixar uma versão de outra plataforma, selecione o sistema desejado abaixo e use o botão principal.</p></div><img class="downloads-spark brand-ornament" src="/assets/seven-desk-logo.svg" alt="" width="184" height="184" /></div>
+    <section class="download-section section" id="plataformas" aria-labelledby="downloads-title"><div class="container"><div class="downloads-panel"><div class="downloads-heading"><div><span class="section-kicker light">SEVEN DESK PARA SEU DISPOSITIVO</span><h2 id="downloads-title">Um aplicativo.<br/>Diferentes formas de conectar.</h2><p>O sistema é identificado automaticamente. Para baixar uma versão de outra plataforma, selecione o sistema desejado abaixo e use o botão principal.</p></div><img class="downloads-spark brand-ornament" src="/assets/seven-desk-logo.svg" alt="" width="184" height="184" /></div>
       <div class="platform-grid">
         <button type="button" class="platform-card" data-platform="windows" aria-label="Selecionar Seven Desk para Windows" aria-pressed="false"><img class="platform-symbol official-platform-logo" src="/assets/windows.svg?v=2" alt="" width="47" height="47" /><span><strong>Windows</strong><small>EXE e MSI · x64 / ARM64</small></span><span class="platform-arrow">↗</span></button>
-        <button type="button" class="platform-card" data-platform="macos" aria-label="Selecionar Seven Desk para macOS" aria-pressed="false"><img class="platform-symbol official-platform-logo" src="/assets/macos.svg?v=2" alt="" width="47" height="47" /><span><strong>macOS</strong><small>Pacotes DMG</small></span><span class="platform-arrow">↗</span></button>
-        <button type="button" class="platform-card" data-platform="linux" aria-label="Selecionar Seven Desk para Linux" aria-pressed="false"><img class="platform-symbol official-platform-logo" src="/assets/linux.svg" alt="" width="47" height="47" /><span><strong>Linux</strong><small>DEB, RPM e outros</small></span><span class="platform-arrow">↗</span></button>
+        <button type="button" class="platform-card" data-platform="macos" aria-label="Selecionar Seven Desk para macOS" aria-pressed="false"><img class="platform-symbol official-platform-logo" src="/assets/macos.svg?v=2" alt="" width="47" height="47" /><span><strong>macOS</strong><small>DMG · abrir aplicativo</small></span><span class="platform-arrow">↗</span></button>
+        <button type="button" class="platform-card" data-platform="linux" aria-label="Selecionar Seven Desk para Linux" aria-pressed="false"><img class="platform-symbol official-platform-logo" src="/assets/linux.svg" alt="" width="47" height="47" /><span><strong>Linux</strong><small>AppImage · sem instalar</small></span><span class="platform-arrow">↗</span></button>
         <button type="button" class="platform-card" data-platform="android" aria-label="Selecionar Seven Desk para Android" aria-pressed="false"><img class="platform-symbol official-platform-logo" src="/assets/android.svg?v=2" alt="" width="47" height="47" /><span><strong>Android</strong><small>Pacotes APK</small></span><span class="platform-arrow">↗</span></button>
-      </div><p class="download-notice" aria-live="polite">Verificando instaladores disponíveis...</p>
+      </div><p class="download-notice" aria-live="polite">Verificando versões disponíveis...</p>
       <div class="downloads-footer"><span>Precisa de outra versão ou arquitetura?</span><a href="https://downloads.sevendesk.tech/" target="_blank" rel="noopener noreferrer">Explorar todas as versões <span aria-hidden="true">↗</span></a></div>
     </div></div></section>
 
-    <section class="faq-section section" id="perguntas" aria-labelledby="faq-title"><div class="container faq-layout"><div><span class="section-kicker">PERGUNTAS FREQUENTES</span><h2 id="faq-title">Ainda tem<br/><span class="muted-heading">alguma dúvida?</span></h2><p>As respostas essenciais para começar com mais confiança.</p><a class="text-link" href="https://github.com/gabriell211/Seven-Desk/issues" target="_blank" rel="noopener noreferrer">Acompanhar desenvolvimento <span aria-hidden="true">↗</span></a></div>
+    <section class="faq-section section" id="perguntas" aria-labelledby="faq-title"><div class="container faq-layout"><div><span class="section-kicker">CENTRAL DE AJUDA</span><h2 id="faq-title">Alguma dúvida?<br/><span class="muted-heading">A gente explica.</span></h2><p>As respostas essenciais para começar com mais confiança.</p><a class="text-link" href="https://github.com/gabriell211/Seven-Desk/issues" target="_blank" rel="noopener noreferrer">Acompanhar desenvolvimento <span aria-hidden="true">↗</span></a></div>
       <div class="faq-list">
         <details><summary>O que é o Seven Desk? <span aria-hidden="true">+</span></summary><p>É um aplicativo de acesso remoto que permite visualizar e interagir com outro computador, seguindo as permissões da sessão.</p></details>
         <details><summary>Em quais sistemas posso utilizar? <span aria-hidden="true">+</span></summary><p>O projeto disponibiliza versões para diferentes plataformas, incluindo Windows, macOS, Linux e Android. Confira os pacotes da versão mais recente.</p></details>
         <details><summary>Preciso autorizar a conexão? <span aria-hidden="true">+</span></summary><p>Conexões remotas devem acontecer com autorização. Use apenas em seus equipamentos ou em dispositivos para os quais você tenha permissão explícita.</p></details>
-        <details><summary>Onde encontro as atualizações? <span aria-hidden="true">+</span></summary><p>Os instaladores publicados ficam na página de downloads do Seven Desk. O botão principal escolhe o arquivo disponível para seu sistema.</p></details>
+        <details><summary>Onde encontro as atualizações? <span aria-hidden="true">+</span></summary><p>O Seven Desk oferece EXE portátil no Windows, AppImage no Linux e aplicativo no DMG do macOS. A instalação permanente é opcional; as permissões do sistema operacional continuam necessárias. O botão principal escolhe o arquivo disponível.</p></details>
         <details><summary>O Seven Desk é uma ferramenta de suporte? <span aria-hidden="true">+</span></summary><p>Sim. Ele pode ser utilizado para assistência técnica, colaboração e acesso remoto, conforme as condições da rede e as funções da versão instalada.</p></details>
       </div></div></section>
-    <section class="final-cta"><div class="container final-cta-inner"><div><span class="final-eyebrow">O SEU PRÓXIMO ACESSO COMEÇA AQUI</span><h2>A distância não precisa<br/>ser um limite.</h2></div></div></section>
+    <section class="final-cta"><div class="container final-cta-inner"><div><span class="final-eyebrow">O SEU PRÓXIMO ACESSO COMEÇA AQUI</span><h2>Onde você estiver,<br/>a conexão pode acontecer.</h2></div></div></section>
   </main>
-  <footer class="footer"><div class="container"><div class="footer-top"><div class="footer-brand"><a class="brand brand-footer" href="#topo"><img class="brand-icon" src="/assets/seven-desk-logo.svg" alt="" width="43" height="43" decoding="async" /><span>seven<span class="brand-accent">desk</span><small>ACESSO REMOTO</small></span></a><p>Conecte possibilidades.<br/>Encurte distâncias.</p></div><div class="footer-links"><div><strong>Explore</strong><a href="#recursos">Recursos</a><a href="#solucoes">Soluções</a><a href="#como-funciona">Como funciona</a></div><div><strong>Seven Desk</strong><a href="#plataformas">Downloads</a><a href="#perguntas">Perguntas frequentes</a><a href="/entrar">Minha conta</a><a href="/cadastro">Cadastro</a></div></div></div><div class="footer-bottom"><span>© <span id="year">2026</span> Seven Desk. <a href="/privacidade">Privacidade</a> · <a href="/licencas">Termos e licenças</a></span><span>Desenvolvido para conectar pessoas e tecnologia. <a href="#topo">Voltar ao topo ↑</a></span></div></div></footer>
+  <footer class="footer"><div class="container"><div class="footer-top"><div class="footer-brand"><a class="brand brand-footer" href="#topo"><img class="brand-icon" src="/assets/seven-desk-logo.svg" alt="" width="43" height="43" decoding="async" /><span>seven<span class="brand-accent">desk</span><small>ACESSO REMOTO</small></span></a><p>Conecte possibilidades.<br/>Encurte distâncias.</p></div><div class="footer-links"><div><strong>Explore</strong><a href="#recursos">Recursos</a><a href="#solucoes">Soluções</a><a href="#como-funciona">Como funciona</a></div><div><strong>Seven Desk</strong><a href="#plataformas">Downloads</a><a href="#perguntas">Perguntas frequentes</a><a href="/entrar">Minha conta</a><a href="/cadastro">Cadastro</a></div></div></div><div class="footer-bottom"><span>© <span id="year">2026</span> Seven Desk. <a href="/privacidade.html">Privacidade</a> · <a href="/licencas.html">Termos e licenças</a></span><span>Desenvolvido para conectar pessoas e tecnologia. <a href="#topo">Voltar ao topo ↑</a></span></div></div></footer>
   <script src="/script.js?v=7" defer></script>
 </body>
 </html>

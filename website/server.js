@@ -76,13 +76,13 @@ const server = http.createServer(async (req, raw) => {
       const handler = require(path.join(__dirname, 'api', pathname.slice(5) + '.js'));
       req.query = Object.fromEntries(url.searchParams);
       if (req.method !== 'GET' && req.method !== 'HEAD') {
-        const bytes = await body(req, pathname === '/api/avatar-upload' ? 2 * 1024 * 1024 : 256 * 1024);
-        req.body = pathname === '/api/avatar-upload' ? bytes : bytes.length ? JSON.parse(bytes.toString('utf8')) : {};
+        const bytes = await body(req, (pathname === '/api/avatar-upload' || pathname === '/api/technician-photo') ? 2 * 1024 * 1024 : 256 * 1024);
+        req.body = (pathname === '/api/avatar-upload' || pathname === '/api/technician-photo') ? bytes : bytes.length ? JSON.parse(bytes.toString('utf8')) : {};
       }
       return await handler(req, res);
     }
     if (req.method !== 'GET' && req.method !== 'HEAD') return res.status(405).json({error:'Método não permitido'});
-    if (/^\/avatars\/[0-9a-f-]{36}\/profile\.(?:jpg|png|webp)$/.test(pathname) && process.env.SEVEN_AVATAR_DIR) {
+    if (/^\/avatars\/[0-9a-f-]{36}\/(?:profile|technician-[1-9][0-9]{0,4})\.(?:jpg|png|webp)$/.test(pathname) && process.env.SEVEN_AVATAR_DIR) {
       const [, , userId, filename] = pathname.split('/');
       return await file(req, res, path.join(process.env.SEVEN_AVATAR_DIR, userId, filename), 'no-store');
     }

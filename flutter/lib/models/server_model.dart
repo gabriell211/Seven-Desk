@@ -3,6 +3,8 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_hbb/consts.dart';
+import 'package:flutter_hbb/common/widgets/incoming_support_identity.dart';
+import 'package:flutter_hbb/common/widgets/incoming_support_request_bubble.dart';
 import 'package:flutter_hbb/main.dart';
 import 'package:flutter_hbb/mobile/pages/settings_page.dart';
 import 'package:flutter_hbb/models/chat_model.dart';
@@ -588,13 +590,8 @@ class ServerModel with ChangeNotifier {
     Future.delayed(Duration.zero, () async {
       if (!hideCm) windowOnTop(null);
     });
-    // Only do the hidden task when on Desktop.
-    if (client.authorized && isDesktop) {
-      cmHiddenTimer = Timer(const Duration(seconds: 3), () {
-        if (!hideCm) windowManager.minimize();
-        cmHiddenTimer = null;
-      });
-    }
+    // The operator's connected-session panel remains visible in the
+    // lower-right corner. It is minimized only by explicit UI action.
     parent.target?.chatModel
         .updateConnIdOfKey(MessageKey(client.peerId, client.id));
   }
@@ -613,6 +610,7 @@ class ServerModel with ChangeNotifier {
       'android_new_connection_tip',
       () => sendLoginResponse(client, false),
       () => sendLoginResponse(client, true),
+      isIncomingSupportRequest: true,
     );
   }
 
@@ -633,7 +631,8 @@ class ServerModel with ChangeNotifier {
   }
 
   showClientDialog(Client client, String title, String contentTitle,
-      String content, VoidCallback onCancel, VoidCallback onSubmit) {
+      String content, VoidCallback onCancel, VoidCallback onSubmit,
+      {bool isIncomingSupportRequest = false}) {
     parent.target?.dialogManager.show((setState, close, context) {
       cancel() {
         onCancel();
@@ -656,20 +655,41 @@ class ServerModel with ChangeNotifier {
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(translate(contentTitle)),
-            ClientInfo(client),
-            Text(
-              translate(content),
-              style: Theme.of(globalKey.currentContext!).textTheme.bodyMedium,
-            ),
+            if (isIncomingSupportRequest)
+              IncomingSupportRequestBubble(
+                identity: incomingSupportIdentity(
+                  requesterName: client.name,
+                  requesterAvatar: client.avatar,
+                ),
+                requesterId: client.peerId,
+                onAcceptAsAdministrator: null,
+                onAccept: approveMode != 'password' ? submit : null,
+                onReject: cancel,
+                acceptanceDisabledReason: approveMode == 'password'
+                    ? 'Este dispositivo exige senha para autorizar conexões.'
+                    : 'A elevação administrativa só está disponível no Windows.',
+              )
+            else ...[
+              Text(translate(contentTitle)),
+              ClientInfo(client),
+              Text(
+                translate(content),
+                style: Theme.of(globalKey.currentContext!).textTheme.bodyMedium,
+              ),
+            ],
           ],
         ),
-        actions: [
-          dialogButton("Dismiss", onPressed: cancel, isOutline: true),
-          if (approveMode != 'password')
-            dialogButton("Accept", onPressed: submit),
-        ],
-        onSubmit: submit,
+        actions: isIncomingSupportRequest
+            ? const []
+            : [
+                dialogButton("Dismiss", onPressed: cancel, isOutline: true),
+                if (approveMode != 'password')
+                  dialogButton("Accept", onPressed: submit),
+              ],
+        // Keyboard confirmation must not bypass password-only approval.
+        onSubmit: isIncomingSupportRequest && approveMode == 'password'
+            ? cancel
+            : submit,
         onCancel: cancel,
       );
     }, tag: getLoginDialogTag(client.id));

@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="pt-BR">
+<html lang="pt-BR" data-theme="light">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -8,8 +8,10 @@
   <meta name="description" content="Entre, crie sua conta e acompanhe seu período de acesso ao Seven Desk." />
   <title>Minha conta | Seven Desk</title>
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <script src="/theme.js?v=20261118a"></script>
   <link rel="stylesheet" href="/styles.css?v=8" />
   <link rel="stylesheet" href="/conta.css?v=2" />
+  <link rel="stylesheet" href="/theme.css?v=20261118b" />
   <script defer src="/conta.bundle.js"></script>
 </head>
 <body class="account-page">
@@ -19,6 +21,7 @@
       <img src="/assets/seven-desk-logo.svg" alt="" width="42" height="42" />
       <span>seven<strong>desk</strong></span>
     </a>
+    <div class="theme-picker"><span class="theme-picker-icon" aria-hidden="true">◐</span><select id="theme-select-account" data-theme-select aria-label="Aparência do site"><option value="system">Sistema</option><option value="light">Claro</option><option value="dark">Escuro</option></select></div>
     <nav aria-label="Navegação da conta">
       <a href="/">Início</a>
       <a href="/entrar">Entrar</a>
@@ -29,9 +32,10 @@
     <aside class="account-intro-panel">
       <span class="account-eyebrow">SEVEN DESK • SUA CONTA</span>
       <h2>Seu acesso remoto começa <span>por aqui.</span></h2>
-      <p>Uma conta para acompanhar o período gratuito, seus planos e os próximos passos do Seven Desk.</p>
+      <p>Cadastro para pessoa física ou empresa, com um mês grátis e cinco vagas de dispositivos para sua equipe.</p>
       <ul>
-        <li>Um mês de teste a partir da liberação das novas contas</li>
+        <li>Primeiro mês gratuito por CPF ou CNPJ cadastrado</li>
+        <li>Cinco computadores/técnicos incluídos no primeiro mês</li>
         <li>Planos mensal e anual com valores transparentes</li>
         <li>Controle da assinatura no mesmo lugar</li>
       </ul>
@@ -49,8 +53,19 @@
           <button id="show-signup" type="button" aria-pressed="false">Criar conta</button>
         </div>
         <form id="account-form">
+          <div id="account-type-section" class="account-type-section" hidden>
+            <span id="account-type-title">Tipo de cadastro</span>
+            <div class="account-type-choices" role="radiogroup" aria-labelledby="account-type-title">
+              <label><input id="account-type-pf" type="radio" name="account-type" value="PF" checked /> Pessoa física</label>
+              <label><input id="account-type-pj" type="radio" name="account-type" value="PJ" /> Pessoa jurídica</label>
+            </div>
+          </div>
           <label id="account-name-label" hidden>Nome completo
             <input id="account-name" name="name" autocomplete="name" minlength="2" maxlength="100" />
+          </label>
+          <label id="account-document-label" hidden>CPF
+            <input id="account-document" name="document" inputmode="numeric" autocomplete="off" maxlength="24" required disabled aria-describedby="account-document-hint" />
+            <small id="account-document-hint">Usado somente para identificar o período gratuito. Não aparecerá no perfil público.</small>
           </label>
           <label>E-mail
             <input id="account-email" name="email" type="email" autocomplete="email" inputmode="email" required maxlength="254" />
@@ -92,7 +107,7 @@
           <button id="reset-submit" class="account-submit" type="submit" disabled>Redefinir senha</button>
           <a class="account-inline-link" href="/recuperar-senha">Solicitar outro código</a>
         </form>
-        <p class="account-legal">Ao criar uma conta, você concorda com os <a href="/licencas">termos</a> e a <a href="/privacidade">política de privacidade</a>.</p>
+        <p class="account-legal">Ao criar uma conta, você concorda com os <a href="/licencas.html">termos</a> e a <a href="/privacidade.html">política de privacidade</a>.</p>
       </div>
       <div id="account-signed-in" hidden>
         <div class="account-connected"><span aria-hidden="true">●</span> Conectado</div>
@@ -100,7 +115,7 @@
         <form id="account-profile-form" class="account-plan-actions">
           <h2>Seu perfil</h2>
           <img id="account-profile-photo" alt="Foto do perfil" width="72" height="72" hidden />
-          <label>Nome exibido no aplicativo
+          <label>Seu nome ou nome da empresa
             <input id="account-profile-name" name="name" maxlength="100" minlength="2" required autocomplete="name" />
           </label>
           <label>Foto do perfil
@@ -111,11 +126,15 @@
         </form>
         <p id="account-subscription" class="account-intro" aria-live="polite">Consultando seu acesso...</p>
         <div id="account-app-access" class="account-plan-actions" hidden>
-          <h2>Computadores de técnicos</h2>
-          <p class="account-intro">Sua conta permite até cinco computadores para prestar suporte. Compre slots adicionais por R$ 7,00 quando precisar de mais vagas. Clientes atendidos não precisam de cadastro.</p>
-          <p class="account-intro">Cada código fica vinculado ao primeiro computador que iniciar suporte com ele. Para trocar de computador, gere um novo código na mesma vaga.</p>
+          <h2>Equipe de técnicos e dispositivos</h2>
+          <p class="account-intro">O primeiro mês inclui cinco vagas para computadores e técnicos. Após o teste, o acesso depende de assinatura ativa. Sua conta permite até cinco computadores para prestar suporte. Compre slots adicionais por R$ 7,00 quando precisar de mais vagas. Clientes atendidos não precisam de cadastro.</p>
+          <p class="account-intro">Cada código fica vinculado ao primeiro dispositivo que iniciar suporte com ele. Os nomes e fotos dos técnicos são gerenciados aqui e aparecem no aplicativo e nas solicitações de acesso. Para trocar o dispositivo, gere um novo código na mesma vaga.</p>
           <p id="account-app-notice" class="account-intro" aria-live="polite"></p>
           <div id="account-device-list"></div>
+          <label id="account-tech-code-label" class="account-app-token-label" hidden>Código exclusivo do técnico (tec_)
+            <input id="account-tech-code" type="text" readonly spellcheck="false" autocomplete="off" aria-label="Código do técnico" />
+          </label>
+          <button id="account-tech-code-copy" class="account-signout" type="button" hidden>Copiar código do técnico</button>
           <label id="account-app-token-label" class="account-app-token-label" hidden>Código de ativação
             <input id="account-app-token" type="text" readonly spellcheck="false" autocomplete="off" />
           </label>

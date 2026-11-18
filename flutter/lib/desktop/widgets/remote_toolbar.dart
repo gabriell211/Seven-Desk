@@ -24,6 +24,7 @@ import '../../common/shared_state.dart';
 import './popup_menu.dart';
 import './kb_layout_type_chooser.dart';
 import './session_toolbar_avatar.dart';
+import 'package:flutter_hbb/common/widgets/seven_access.dart';
 import 'package:flutter_hbb/utils/scale.dart';
 import 'package:flutter_hbb/common/widgets/custom_scale_base.dart';
 
@@ -808,7 +809,8 @@ class _RemoteToolbarState extends State<RemoteToolbar> {
         SizedBox.square(
           dimension: _ToolbarTheme.buttonSize,
           child: Center(
-            child: SessionToolbarAvatar(photo: sessionToolbarPhoto, size: 24),
+            child: Obx(() => SessionToolbarAvatar(
+              photo: sevenDeskProfile.image.value, size: 24)),
           ),
         ),
         _toolbarSeparator(isHorizontal),
@@ -3608,7 +3610,7 @@ class _DraggableShowHideState extends State<_DraggableShowHide> {
         _buildDraggable(context),
         if (!isWeb)
           Obx(() {
-            final photo = sessionToolbarPhoto;
+            final photo = sevenDeskProfile.image.value;
             if (collapse.isFalse || photo.isEmpty) {
               return const SizedBox.shrink();
             }

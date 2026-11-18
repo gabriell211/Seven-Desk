@@ -31,6 +31,9 @@ class _DashboardBinding extends Fake implements RustdeskImpl {
   bool isDisableSettings({dynamic hint}) => false;
 
   @override
+  bool mainIsInstalled({dynamic hint}) => false;
+
+  @override
   bool isDisableAb({dynamic hint}) => false;
 
   @override
@@ -134,11 +137,22 @@ void main() {
     await tester.runAsync(() => Future<void>.delayed(Duration.zero));
     await tester.pump();
     expect(
-        find.text('Bem-vindo ao Seven Desk', findRichText: true), findsOneWidget);
+        find.text('Acesso remoto', findRichText: true), findsOneWidget);
+    expect(find.text('Modo portátil · instalação não obrigatória'), findsOneWidget);
     expect(find.text('123 456 789'), findsOneWidget);
     expect(find.text('Pronto para conexões'), findsWidgets);
     expect(find.text('Support PC'), findsOneWidget);
     expect(find.text('Recentes (1)'), findsOneWidget);
+    // The first-run dashboard must never require installation or manual startup.
+    expect(find.text('Start service'), findsNothing);
+    expect(find.text('Iniciar sistema'), findsNothing);
+    expect(find.text('Install'), findsNothing);
+    Get.find<RxBool>(tag: 'stop-service').value = true;
+    await tester.pump();
+    expect(find.text('Start service'), findsNothing);
+    expect(find.text('Iniciar sistema'), findsNothing);
+    Get.find<RxBool>(tag: 'stop-service').value = false;
+    await tester.pump();
     expect(tester.takeException(), isNull);
 
     tester.view.physicalSize = const Size(800, 600);

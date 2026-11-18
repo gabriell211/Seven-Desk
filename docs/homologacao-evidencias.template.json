@@ -1,0 +1,155 @@
+{
+  "commit": "",
+  "cases": [
+    {
+      "id": "WIN_PORTABLE",
+      "status": "PENDING",
+      "tester": "",
+      "evidence": ""
+    },
+    {
+      "id": "WIN_ACCEPT",
+      "status": "PENDING",
+      "tester": "",
+      "evidence": ""
+    },
+    {
+      "id": "WIN_REJECT",
+      "status": "PENDING",
+      "tester": "",
+      "evidence": ""
+    },
+    {
+      "id": "WIN_UAC_ALLOW",
+      "status": "PENDING",
+      "tester": "",
+      "evidence": ""
+    },
+    {
+      "id": "WIN_UAC_DENY",
+      "status": "PENDING",
+      "tester": "",
+      "evidence": ""
+    },
+    {
+      "id": "WIN_PANEL",
+      "status": "PENDING",
+      "tester": "",
+      "evidence": ""
+    },
+    {
+      "id": "WIN_MONITOR",
+      "status": "PENDING",
+      "tester": "",
+      "evidence": ""
+    },
+    {
+      "id": "WIN_CHAT_TRANSFER",
+      "status": "PENDING",
+      "tester": "",
+      "evidence": ""
+    },
+    {
+      "id": "WIN_REVOKE",
+      "status": "PENDING",
+      "tester": "",
+      "evidence": ""
+    },
+    {
+      "id": "WIN_ALIAS",
+      "status": "PENDING",
+      "tester": "",
+      "evidence": ""
+    },
+    {
+      "id": "WIN_OFFLINE",
+      "status": "PENDING",
+      "tester": "",
+      "evidence": ""
+    },
+    {
+      "id": "WIN_UNATTENDED",
+      "status": "PENDING",
+      "tester": "",
+      "evidence": ""
+    },
+    {
+      "id": "LINUX_APPIMAGE",
+      "status": "PENDING",
+      "tester": "",
+      "evidence": ""
+    },
+    {
+      "id": "LINUX_CONSENT",
+      "status": "PENDING",
+      "tester": "",
+      "evidence": ""
+    },
+    {
+      "id": "MAC_DMG",
+      "status": "PENDING",
+      "tester": "",
+      "evidence": ""
+    },
+    {
+      "id": "MAC_CONSENT",
+      "status": "PENDING",
+      "tester": "",
+      "evidence": ""
+    },
+    {
+      "id": "ANDROID_CONSENT",
+      "status": "PENDING",
+      "tester": "",
+      "evidence": ""
+    },
+    {
+      "id": "ACCOUNT_PF_PJ",
+      "status": "PENDING",
+      "tester": "",
+      "evidence": ""
+    },
+    {
+      "id": "ACCOUNT_FIVE_SLOTS",
+      "status": "PENDING",
+      "tester": "",
+      "evidence": ""
+    },
+    {
+      "id": "ACCOUNT_TECH_CLAIM",
+      "status": "PENDING",
+      "tester": "",
+      "evidence": ""
+    },
+    {
+      "id": "PAYMENT_SANDBOX",
+      "status": "PENDING",
+      "tester": "",
+      "evidence": ""
+    },
+    {
+      "id": "IDENTITY_AUTH",
+      "status": "PENDING",
+      "tester": "",
+      "evidence": ""
+    },
+    {
+      "id": "LEGACY_INSTALLERS_DENIED",
+      "status": "PENDING",
+      "tester": "",
+      "evidence": ""
+    },
+    {
+      "id": "LATEST_INSTALLERS_CONNECTED",
+      "status": "PENDING",
+      "tester": "",
+      "evidence": ""
+    },
+    {
+      "id": "SERVER_IDENTITY_CUTOVER",
+      "status": "PENDING",
+      "tester": "",
+      "evidence": ""
+    }
+  ]
+}

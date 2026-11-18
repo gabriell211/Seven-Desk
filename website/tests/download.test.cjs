@@ -15,6 +15,8 @@ const manifest = {
     file('sevendesk-1.5.3-aarch64.dmg'),
     file('sevendesk-1.5.3-x86_64.deb'),
     file('sevendesk-1.5.3-aarch64.deb'),
+    file('sevendesk-1.5.3-x86_64.AppImage'),
+    file('sevendesk-1.5.3-aarch64.AppImage'),
     file('sevendesk-1.5.3-universal-signed.apk'),
   ],
 };
@@ -37,7 +39,8 @@ test('uses only files listed for the published VPS version', () => {
   assert.equal(findPackage(manifest, 'windows', 'arm64').filename, 'sevendesk-1.5.3-aarch64.exe');
   assert.equal(findPackage(manifest, 'windows', 'x86').filename, 'sevendesk-1.5.3-x86-sciter.exe');
   assert.equal(findPackage(manifest, 'macos', 'arm64').filename, 'sevendesk-1.5.3-aarch64.dmg');
-  assert.equal(findPackage(manifest, 'linux', 'x64').filename, 'sevendesk-1.5.3-x86_64.deb');
+  assert.equal(findPackage(manifest, 'linux', 'x64').filename, 'sevendesk-1.5.3-x86_64.AppImage');
+  assert.equal(findPackage(manifest, 'linux', 'arm64').filename, 'sevendesk-1.5.3-aarch64.AppImage');
   assert.equal(findPackage(manifest, 'android', 'universal').filename, 'sevendesk-1.5.3-universal-signed.apk');
 });
 
@@ -61,4 +64,44 @@ test('rejects missing, empty, unrelated and unsafe manifest entries', () => {
     file('../sevendesk-1.5.3-x86_64.exe'),
     file('sevendesk-1.5.3-x86_64.exe', 0),
   ] }, 'windows', 'x64'), null);
+});
+
+
+test('Windows main download is a portable EXE, never a mandatory installer', () => {
+  const mixed = {version: manifest.version, files: [
+    file('sevendesk-1.5.3-x86_64.msi'),
+    file('sevendesk-1.5.3-x86_64.exe'),
+  ]};
+  assert.equal(findPackage(mixed, 'windows', 'x64').filename,
+    'sevendesk-1.5.3-x86_64.exe');
+  assert.equal(findPackage({version: manifest.version,
+    files: [file('sevendesk-1.5.3-x86_64.msi')]}, 'windows', 'x64'), null);
+});
+
+test('Linux download never presents an installing DEB/RPM as a portable executable', () => {
+  const debOnly = {version: manifest.version, files: [
+    file('sevendesk-1.5.3-x86_64.deb'),
+    file('sevendesk-1.5.3-x86_64.rpm'),
+  ]};
+  assert.equal(findPackage(debOnly, 'linux', 'x64'), null);
+  const mixed = {version: manifest.version, files: [
+    file('sevendesk-1.5.3-x86_64.deb'),
+    file('sevendesk-1.5.3-x86_64.AppImage'),
+  ]};
+  assert.equal(findPackage(mixed, 'linux', 'x64').filename,
+    'sevendesk-1.5.3-x86_64.AppImage');
+  assert.equal(assetScore('sevendesk-unattended-wayland-1.5.3-x86_64.AppImage',
+    'linux', 'x64'), -1);
+});
+
+test('macOS download stays a DMG application and does not select PKG installers', () => {
+  const onlyInstaller = {version: manifest.version,
+    files: [file('sevendesk-1.5.3-x86_64.pkg')]};
+  assert.equal(findPackage(onlyInstaller, 'macos', 'x64'), null);
+  const mix = {version: manifest.version, files: [
+    file('sevendesk-1.5.3-x86_64.pkg'),
+    file('sevendesk-1.5.3-x86_64.dmg'),
+  ]};
+  assert.equal(findPackage(mix, 'macos', 'x64').filename,
+    'sevendesk-1.5.3-x86_64.dmg');
 });

@@ -14,7 +14,6 @@ import 'package:flutter_hbb/common/widgets/keyboard_shortcuts/page_body.dart';
 import 'package:flutter_hbb/desktop/pages/desktop_keyboard_shortcuts_page.dart';
 import 'package:flutter_hbb/desktop/pages/desktop_tab_page.dart';
 import 'package:flutter_hbb/desktop/widgets/remote_toolbar.dart';
-import 'package:flutter_hbb/desktop/widgets/session_toolbar_avatar.dart';
 import 'package:flutter_hbb/mobile/widgets/dialog.dart';
 import 'package:flutter_hbb/models/platform_model.dart';
 import 'package:flutter_hbb/models/printer_model.dart';
@@ -29,6 +28,7 @@ import 'package:url_launcher/url_launcher_string.dart';
 import '../../common/widgets/dialog.dart';
 import '../../common/widgets/login.dart';
 import '../../common/widgets/seven_access.dart';
+import '../../utils/seven_access_policy.dart';
 
 const double _kTabWidth = 200;
 const double _kTabHeight = 42;
@@ -418,12 +418,32 @@ class _GeneralState extends State<_General> {
       controller: scrollController,
       children: [
         if (!isWeb) service(),
+        if (!isWeb &&
+            (isWindows || isMacOS || isLinux) &&
+            !bind.mainIsInstalled())
+          _Card(title: 'Modo portátil', children: [
+            Text(
+              isWindows
+                  ? 'O Seven Desk pode receber e iniciar conexões sem instalação '
+                    'enquanto estiver aberto. Instalar é opcional para iniciar '
+                    'junto com o Windows e permitir acesso permanente.'
+                  : isMacOS
+                      ? 'Abra o aplicativo do Seven Desk no DMG sem instalar um '
+                        'serviço de fundo. O macOS poderá solicitar permissão '
+                        'de gravação de tela e acessibilidade. Mover para '
+                        'Aplicativos e ativar o serviço de fundo são opcionais.'
+                      : 'No Linux, execute o AppImage sem instalar DEB ou RPM. '
+                        'Pode ser necessário torná-lo executável. '
+                        'O acesso permanente em segundo plano e algumas '
+                        'funções de captura dependem do ambiente e das '
+                        'permissões do sistema.',
+            ).marginOnly(left: _kContentHMargin),
+            if (isWindows && !bind.isDisableInstallation())
+              _Button('Instalação opcional para acesso permanente', () {
+                bind.mainGotoInstall();
+              }),
+          ]),
         theme(),
-        if (!isWeb && !bind.isIncomingOnly())
-          _Card(
-            title: sessionToolbarPhotoLabel,
-            children: const [SessionToolbarAvatarSettings()],
-          ),
         _Card(title: 'Language', children: [language()]),
         if (!isWeb) hwcodec(),
         if (!isWeb) audio(context),
@@ -1044,9 +1064,17 @@ class _SafetyState extends State<_Safety> with AutomaticKeepAliveClientMixin {
             preventMouseKeyBuilder(
               block: locked,
               child: Column(children: [
-                permissions(context),
+                interactiveAccess(context),
                 password(context),
-                _Card(title: '2FA', children: [tfa()]),
+                _Card(title: 'Autenticação em duas etapas',
+                    children: [tfa()]),
+                _Card(title: 'Lista de controle de acesso', children: [
+                  const Text('Restringir quem pode acessar este computador.')
+                      .marginOnly(left: _kContentHMargin),
+                  whitelist(),
+                  idWhitelist(),
+                ]),
+                permissions(context),
                 if (!isChangeIdDisabled())
                   _Card(title: 'ID', children: [changeId()]),
                 more(context),
@@ -1301,6 +1329,86 @@ class _SafetyState extends State<_Safety> with AutomaticKeepAliveClientMixin {
     return tmpWrapper();
   }
 
+  Widget interactiveAccess(BuildContext context) {
+    return ChangeNotifierProvider.value(
+      value: gFFI.serverModel,
+      child: Consumer<ServerModel>(builder: (context, model, _) {
+        final installed = bind.mainIsInstalled();
+        final onlyOpen =
+            installed && mainGetBoolOptionSync('allow-only-conn-window-open');
+        final current = sevenDeskInteractiveMode(
+          approveMode: model.approveMode,
+          onlyWhenWindowOpen: onlyOpen,
+        );
+        final enabled = !locked && !isOptionFixed(kOptionApproveMode);
+        Future<void> choose(int mode) async {
+          if (!enabled) return;
+          if (mode == 2) {
+            final hasPassword =
+                await bind.mainGetCommon(key: 'permanent-password-set') ==
+                    'true';
+            if (!hasPassword) {
+              if (isChangePermanentPasswordDisabled()) {
+                showToast('Defina uma senha permanente antes de desativar '
+                    'as solicitações.');
+                return;
+              }
+              setPasswordDialog(notEmptyCallback: () async {
+                await model.setVerificationMethod(kUsePermanentPassword);
+                await model.setApproveMode('password');
+                await model.updatePasswordModel();
+                if (mounted) setState(() {});
+              });
+              return;
+            }
+            await model.setVerificationMethod(kUsePermanentPassword);
+            await model.setApproveMode('password');
+          } else {
+            if (mode == 1 &&
+                (!installed ||
+                    isOptionFixed('allow-only-conn-window-open'))) return;
+            if (isOptionFixed('allow-only-conn-window-open') &&
+                onlyOpen != (mode == 1)) return;
+            await mainSetBoolOption('allow-only-conn-window-open', mode == 1);
+            // Preserve click-only configurations if they were previously set.
+            await model.setApproveMode(model.approveMode == 'click'
+                ? 'click'
+                : defaultOptionApproveMode);
+          }
+          await model.updatePasswordModel();
+          if (mounted) setState(() {});
+        }
+
+        return _Card(title: 'Acesso interativo', children: [
+          const Text('Defina quando mostrar solicitações de autorização.')
+              .marginOnly(left: _kContentHMargin),
+          _Radio<int>(context,
+              value: 0,
+              groupValue: current,
+              label: 'Sempre mostrar solicitações de acesso',
+              onChanged: enabled ? choose : null),
+          _Radio<int>(context,
+              value: 1,
+              groupValue: current,
+              label: 'Mostrar somente quando a janela do Seven Desk estiver aberta',
+              onChanged: enabled && installed &&
+                      !isOptionFixed('allow-only-conn-window-open')
+                  ? choose
+                  : null),
+          _Radio<int>(context,
+              value: 2,
+              groupValue: current,
+              label: 'Não mostrar solicitações (exigir senha permanente)',
+              onChanged: enabled ? choose : null),
+          const Text(
+            'Sem ninguém presente, somente a senha permanente autoriza '
+            'uma conexão. A ativação do técnico é feita no site Seven Desk.',
+          ).marginOnly(left: _kContentHMargin),
+        ]);
+      }),
+    );
+  }
+
   Widget password(BuildContext context) {
     return ChangeNotifierProvider.value(
         value: gFFI.serverModel,
@@ -1316,7 +1424,6 @@ class _SafetyState extends State<_Safety> with AutomaticKeepAliveClientMixin {
             translate('Use both passwords'),
           ];
           bool tmpEnabled = model.verificationMethod != kUsePermanentPassword;
-          bool permEnabled = model.verificationMethod != kUseTemporaryPassword;
           String currentValue =
               passwordValues[passwordKeys.indexOf(model.verificationMethod)];
           List<Widget> radios = passwordValues
@@ -1427,7 +1534,30 @@ class _SafetyState extends State<_Safety> with AutomaticKeepAliveClientMixin {
           final usePassword = model.approveMode != 'click';
 
           final isApproveModeFixed = isOptionFixed(kOptionApproveMode);
-          return _Card(title: 'Password', children: [
+          return _Card(title: 'Acesso não supervisionado', children: [
+            const Text('Defina uma senha permanente para conexões quando '
+                    'ninguém estiver presente neste computador.')
+                .marginOnly(left: _kContentHMargin),
+            FutureBuilder<String>(
+              future: bind.mainGetCommon(key: 'permanent-password-set'),
+              builder: (context, snapshot) {
+                if (!snapshot.hasData) {
+                  return const Text('Verificando senha local...')
+                      .marginOnly(left: _kContentHMargin);
+                }
+                final active = sevenDeskUnattendedEnabled(
+                  passwordConfigured: snapshot.data == 'true',
+                  approveMode: model.approveMode,
+                  verificationMethod: model.verificationMethod,
+                );
+                return Text(active
+                        ? 'Acesso não supervisionado ativo.'
+                        : snapshot.data == 'true'
+                            ? 'Senha cadastrada; habilite conexão por senha permanente.'
+                            : 'Desativado. Defina uma senha permanente.')
+                    .marginOnly(left: _kContentHMargin);
+              },
+            ),
             ComboBox(
               enabled: !locked && !isApproveModeFixed,
               keys: modeKeys,
@@ -1448,9 +1578,9 @@ class _SafetyState extends State<_Safety> with AutomaticKeepAliveClientMixin {
                   enabled: tmpEnabled && !locked),
             if (usePassword) numericOneTimePassword,
             if (usePassword) radios[1],
-            if (usePassword && !isChangePermanentPasswordDisabled())
-              _SubButton('Set permanent password', setPasswordDialog,
-                  permEnabled && !locked),
+            if (!isChangePermanentPasswordDisabled())
+              _SubButton('Definir ou alterar senha permanente',
+                  setPasswordDialog, !locked),
             // if (usePassword)
             //   hide_cm(!locked).marginOnly(left: _kContentHSubMargin - 6),
             if (usePassword) radios[2],
@@ -1460,21 +1590,15 @@ class _SafetyState extends State<_Safety> with AutomaticKeepAliveClientMixin {
 
   Widget more(BuildContext context) {
     bool enabled = !locked;
-    return _Card(title: 'Security', children: [
+    return _Card(title: 'Outras opções de segurança', children: [
       shareRdp(context, enabled),
       _OptionCheckBox(context, 'Deny LAN discovery', 'enable-lan-discovery',
           reverse: true, enabled: enabled),
       ...directIp(context),
-      whitelist(),
-      idWhitelist(),
       ...autoDisconnect(context),
       _OptionCheckBox(context, 'keep-awake-during-incoming-sessions-label',
           kOptionKeepAwakeDuringIncomingSessions,
           reverse: false, enabled: enabled),
-      if (bind.mainIsInstalled())
-        _OptionCheckBox(context, 'allow-only-conn-window-open-tip',
-            'allow-only-conn-window-open',
-            reverse: false, enabled: enabled),
       if (bind.mainIsInstalled() && !isUnlockPinDisabled()) unlockPin()
     ]);
   }
@@ -2312,7 +2436,9 @@ class _AccountState extends State<_Account> {
                 title: Text(sevenDeskProfile.name.value.isEmpty
                     ? 'Suporte sem login'
                     : sevenDeskProfile.name.value),
-                subtitle: const Text('Nome e foto sincronizados com o site'),
+                subtitle: Text(sevenDeskProfile.companyName.value.isEmpty
+                    ? 'Nome e foto sincronizados com o site'
+                    : sevenDeskProfile.companyName.value),
               )),
         ]),
       ],

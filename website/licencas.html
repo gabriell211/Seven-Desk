@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="pt-BR">
+<html lang="pt-BR" data-theme="light">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -9,8 +9,10 @@
   <meta property="og:description" content="Informações sobre uso do Seven Desk, identidade da marca e licenças de componentes de terceiros." />
   <link rel="canonical" href="https://seven-desk-site.vercel.app/licencas" />
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <script src="/theme.js?v=20261118a"></script>
   <link rel="stylesheet" href="/styles.css?v=8" />
   <title>Termos e licenças | Seven Desk</title>
+  <link rel="stylesheet" href="/theme.css?v=20261118b" />
   <style>
     .legal-header {border-bottom:1px solid #e8eef7;background:#fff}
     .legal-header-inner{min-height:86px;display:flex;align-items:center;justify-content:space-between;gap:16px}
@@ -43,7 +45,7 @@
     }
   </style>
 </head>
-<body>
+<body class="legal-page">
   <a class="skip-link" href="#conteudo">Ir para o conteúdo</a>
   <header class="legal-header">
     <div class="container legal-header-inner">
@@ -51,7 +53,7 @@
         <img class="brand-icon" src="/assets/seven-desk-logo.svg" alt="" width="43" height="43" />
         <span>seven<span class="brand-accent">desk</span><small>ACESSO REMOTO</small></span>
       </a>
-      <a class="legal-back" href="/">← Voltar ao site</a>
+      <div class="legal-tools"><div class="theme-picker"><span class="theme-picker-icon" aria-hidden="true">◐</span><select id="theme-select-legal" data-theme-select aria-label="Aparência do site"><option value="system">Sistema</option><option value="light">Claro</option><option value="dark">Escuro</option></select></div><a class="legal-back" href="/">← Voltar ao site</a></div>
     </div>
   </header>
   <main class="container legal-main" id="conteudo">
@@ -91,7 +93,7 @@
     </div>
   </main>
   <footer class="legal-footer">
-    <div class="container legal-footer-inner"><span>© Seven Desk · Identidade do produto e avisos legais</span><span><a href="/privacidade">Privacidade</a> · <a href="/">Início</a></span></div>
+    <div class="container legal-footer-inner"><span>© Seven Desk · Identidade do produto e avisos legais</span><span><a href="/privacidade.html">Privacidade</a> · <a href="/">Início</a></span></div>
   </footer>
 </body>
 </html>

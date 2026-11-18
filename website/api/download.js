@@ -40,8 +40,10 @@ function assetScore(file, platform, arch) {
       else match = /[-_](?:x86_64|amd64|x64|universal)\.dmg$/i.test(file);
       break;
     case 'linux':
-      if (arch === 'arm64') match = /[-_](?:aarch64|arm64)(?:[-_]sciter)?\.deb$/i.test(file);
-      else match = /[-_](?:x86_64|amd64|x64)(?:[-_]sciter)?\.deb$/i.test(file);
+      // DEB/RPM packages install system-wide. The one-click download must
+      // resolve only to the no-install AppImage built by the release workflow.
+      if (arch === 'arm64') match = /[-_](?:aarch64|arm64)\.AppImage$/i.test(file);
+      else match = /[-_](?:x86_64|amd64|x64)\.AppImage$/i.test(file);
       break;
     case 'android':
       if (arch === 'arm64') match = /[-_](?:aarch64|universal)-signed\.apk$/i.test(file);
@@ -149,7 +151,7 @@ module.exports = async function handler(req, res) {
   const asset = findPackage(manifest, platform, arch);
   if (!asset) {
     res.setHeader('Cache-Control', 'no-store');
-    return res.status(404).send(errorPage(404, 'Instalador ainda não disponível', 'Não existe um instalador publicado para esta plataforma e arquitetura. Confira as versões disponíveis.'));
+    return res.status(404).send(errorPage(404, 'Versão ainda não disponível', 'Não existe um arquivo publicado para esta plataforma e arquitetura. Confira as versões disponíveis.'));
   }
   res.setHeader('Location', asset.url);
   res.setHeader('X-SevenDesk-Release', asset.version);

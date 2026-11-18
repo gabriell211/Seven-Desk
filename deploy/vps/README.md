@@ -12,9 +12,7 @@ O Docker Compose usa serviços privados com três perfis:
 - signaling: os binários Seven ID/Relay em host network (NÃO ligar sem auditoria de portas)
 - cutover: Caddy 80/443 para servir www e downloads após verificar o DNS e o TLS
 
-**Ainda não houve deploy nem homologação real na VPS**. Um build CI aprovado não prova
-que SMTP, pagamentos, P2P ou UAC funcionem. Não remover a origem antiga antes de
-ser possível fazer rollback para ela.
+**Ambiente existente em 18/11/2026:** há portal, banco e sinalização ativos na VPS, com Traefik nas portas 80/443. O roteiro abaixo continua adequado para uma implantação isolada nova. O modo `cutover` (Caddy público) NÃO deve disputar as portas do Traefik. O deploy real de contas, pagamentos e instaladores ainda depende de homologação. Um build CI aprovado não comprova SMTP, pagamentos, P2P ou UAC; preserve rollback.
 
 ## Arquivos privados e pré-requisitos
 
@@ -122,6 +120,8 @@ armazenamento remoto:
 O script atual cobre o banco. Certificados TLS, arquivos de download, avatares e
 chaves privadas de ID exigem rotina cifrada adicional e testes de restauração.
 
+Para a VPS que já utiliza Traefik, siga [Downloads com Traefik](README-traefik-downloads.md), **sem** ativar o perfil `cutover`. A pasta pública não deve conter segredos.
+
 ## Publicação dos instaladores na VPS
 
 O Caddy usa o caminho de host `/srv/sevendesk/downloads` em modo somente leitura.
@@ -134,3 +134,12 @@ assinados antes de alterar o `manifest.json`. Não coloque secrets nesse diretó
 
 O diretório não fica dentro da imagem Docker, permitindo atualizar instaladores
 sem reconstruir a aplicação. Nenhum arquivo fictício deve ser anunciado.
+
+## Homologação obrigatória antes do merge e da release
+
+Antes de ativar novas contas/licenças, publicar instaladores ou fazer merge,
+siga a [matriz de homologação do Seven Desk](../../docs/homologacao-seven-desk.md).
+O script read-only verifica TLS, endpoints públicos e manifesto, mas a aprovação
+final exige evidências físicas por commit para Windows, Linux, macOS, Android,
+consentimento, UAC, licenças e pagamentos. Sem evidências, o gate permanece BLOCKED.
+

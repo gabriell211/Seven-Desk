@@ -8,7 +8,8 @@ function ready(env=process.env){
 }
 function allowed(pathname,env=process.env){
   if(!ready(env))return false;
-  if(pathname==='/api/auth/sign-up/email'&&env.SEVEN_REGISTRATION_ENABLED!=='1')return false;
+  // All sign-ups must pass the server-side CPF/CNPJ validation and unique identity gate.
+  if(pathname==='/api/auth/sign-up/email')return false;
   if(/^\/api\/auth\/email-otp\/(?:request-password-reset|reset-password)$/.test(pathname)&&env.SEVEN_PASSWORD_RECOVERY_ENABLED!=='1')return false;
   if(pathname==='/api/auth/email-otp/send-verification-otp'&&env.SEVEN_REGISTRATION_ENABLED!=='1')return false;
   return true;

@@ -72,3 +72,26 @@ test('subscription status cannot be issued for an unverified email',async()=>{
   assert.equal(await getEntitlement(db,userId),null);
   assert.match(sql,/"emailVerified" IS TRUE/);
 });
+
+test('trial is one calendar month tied to the same account and includes five slots',async()=>{
+  const {getMaxSlots}=require('../lib/technicians');
+  let queries=[];
+  const db={
+    async query(sql,args){
+      queries.push(sql);
+      if(sql.includes('seven_users u LEFT JOIN'))return {rows:[{
+        trial_ends_at:'2026-12-17T12:00:00Z',
+        access_ends_at:'2026-12-17T12:00:00Z',
+        extra_slots:0,status:'trial',
+      }]};
+      if(sql.startsWith('SELECT 5 +'))return {rows:[{max_slots:5}]};
+      throw new Error('Unexpected SQL');
+    },
+  };
+  const first=await getEntitlement(db,userId);
+  const second=await getEntitlement(db,userId);
+  assert.equal(first.status,'trial');
+  assert.equal(first.trial_ends_at,second.trial_ends_at);
+  assert.equal(await getMaxSlots(db,userId),5);
+  assert.equal(queries.filter(q=>q.includes("interval '1 month'")).length,2);
+});

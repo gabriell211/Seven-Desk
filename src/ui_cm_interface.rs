@@ -406,6 +406,25 @@ pub fn send_chat(id: i32, text: String) {
 #[inline]
 #[cfg(not(any(target_os = "ios")))]
 pub fn switch_permission(id: i32, name: String, enabled: bool) {
+    // This action originates from the receiving operator's local panel.
+    // It never grants input/file privileges to the remote peer.
+    #[cfg(not(any(target_os = "android", target_os = "ios")))]
+    if name == "seven-cycle-display" {
+        if enabled {
+            if let Some(client) = CLIENTS.read().unwrap().get(&id) {
+                if client.authorized
+                    && !client.disconnected
+                    && !client.is_file_transfer
+                    && !client.is_terminal
+                    && !client.is_view_camera
+                    && client.port_forward.is_empty()
+                {
+                    allow_err!(client.tx.send(Data::CmCycleDisplay));
+                }
+            }
+        }
+        return;
+    }
     #[cfg(target_os = "android")]
     let is_keyboard_permission = name == "keyboard";
     #[cfg(not(target_os = "android"))]

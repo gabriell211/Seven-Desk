@@ -134,19 +134,50 @@ class HomeDashboard extends StatelessWidget {
                                   children: [
                                     _welcome(wide),
                                     if (credentials != null) ...[
-                                      const SizedBox(height: 25),
+                                      const SizedBox(height: 16),
                                       credentials!,
                                     ],
-                                    if (notices != null) notices!,
-                                    const SizedBox(height: 22),
+                                    const SizedBox(height: 16),
                                     connection,
-                                    const SizedBox(height: 26),
+                                    const SizedBox(height: 18),
+                                    _quickAccess(),
+                                    const SizedBox(height: 22),
+                                    Row(
+                                      children: [
+                                        const Icon(Icons.desktop_windows_outlined,
+                                            color: HomeDashboardTheme.purple,
+                                            size: 24),
+                                        const SizedBox(width: 10),
+                                        Expanded(
+                                          child: Text(
+                                            _peerListHeading,
+                                            style: const TextStyle(
+                                              fontSize: 20,
+                                              fontWeight: FontWeight.w700,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 5),
+                                    Text(
+                                      _peerListHint,
+                                      style: const TextStyle(
+                                        color: HomeDashboardTheme.muted,
+                                        fontSize: 13,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 12),
                                     SizedBox(
-                                      height: (body.maxHeight - 410)
-                                          .clamp(224.0, double.infinity)
+                                      height: (body.maxHeight - 590)
+                                          .clamp(245.0, double.infinity)
                                           .toDouble(),
                                       child: peers,
                                     ),
+                                    if (notices != null) ...[
+                                      const SizedBox(height: 20),
+                                      notices!,
+                                    ],
                                   ],
                                 ),
                               ),
@@ -171,6 +202,119 @@ class HomeDashboard extends StatelessWidget {
                 ],
               );
             },
+          ),
+        ),
+      ),
+    );
+  }
+
+  String get _peerListHeading => switch (section) {
+        HomeDashboardSection.computers => 'Computadores na rede',
+        HomeDashboardSection.contacts => 'Contatos e clientes',
+        HomeDashboardSection.groups => 'Grupos de computadores',
+        HomeDashboardSection.sessions => 'Sessões recentes',
+        _ => 'Computadores de clientes',
+      };
+
+  String get _peerListHint => switch (section) {
+        HomeDashboardSection.computers => 'Computadores identificados na sua rede local.',
+        HomeDashboardSection.contacts => 'Seus contatos e computadores cadastrados.',
+        HomeDashboardSection.groups => 'Dispositivos organizados por grupo.',
+        _ => 'PCs recentes e salvos. Use o lápis para nomear cada computador '
+            'sem alterar o ID de conexão.',
+      };
+
+  /// Shortcuts follow the original application's navigation and security
+  /// flows instead of creating parallel connection or credential handling.
+  Widget _quickAccess() {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final columns = constraints.maxWidth >= 880
+            ? 3
+            : constraints.maxWidth >= 520
+                ? 2
+                : 1;
+        final itemWidth =
+            (constraints.maxWidth - 12 * (columns - 1)) / columns;
+        return Wrap(
+          spacing: 12,
+          runSpacing: 12,
+          children: [
+            _quickAction(
+              width: itemWidth,
+              title: 'Nova sessão',
+              description: 'Conectar pelo ID remoto',
+              icon: Icons.add_to_queue_rounded,
+              onTap: () => onSection(HomeDashboardSection.home),
+            ),
+            _quickAction(
+              width: itemWidth,
+              title: 'Sessões recentes',
+              description: 'PCs e clientes atendidos',
+              icon: Icons.history_rounded,
+              onTap: () => onSection(HomeDashboardSection.sessions),
+            ),
+            if (DesktopSettingPage.tabKeys.contains(SettingsTabKey.safety))
+              _quickAction(
+                width: itemWidth,
+                title: 'Acesso e segurança',
+                description: 'Senhas e autorizações',
+                icon: Icons.verified_user_outlined,
+                onTap: () => DesktopSettingPage.switch2page(
+                  SettingsTabKey.safety,
+                ),
+              ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _quickAction({
+    required double width,
+    required String title,
+    required String description,
+    required IconData icon,
+    required VoidCallback onTap,
+  }) {
+    return SizedBox(
+      width: width,
+      child: Material(
+        color: HomeDashboardTheme.surface,
+        borderRadius: BorderRadius.circular(14),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(14),
+          onTap: onTap,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            decoration: BoxDecoration(
+              border: Border.all(color: HomeDashboardTheme.border),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Row(
+              children: [
+                Icon(icon, size: 27, color: HomeDashboardTheme.purple),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(title,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                              fontSize: 15, fontWeight: FontWeight.w700)),
+                      const SizedBox(height: 2),
+                      Text(description,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                              color: HomeDashboardTheme.muted, fontSize: 12)),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -466,13 +610,19 @@ class HomeDashboard extends StatelessWidget {
               onOpened: () => sevenDeskProfile.refresh(),
               enabled: !bind.isDisableSettings() &&
                   (pages.contains(SettingsTabKey.general) ||
+                      pages.contains(SettingsTabKey.safety) ||
                       pages.contains(SettingsTabKey.account)),
               onSelected: DesktopSettingPage.switch2page,
               itemBuilder: (context) => [
                 if (pages.contains(SettingsTabKey.general))
                   PopupMenuItem(
                     value: SettingsTabKey.general,
-                    child: Text(translate(sessionToolbarPhotoLabel)),
+                    child: const Text('Configurações gerais'),
+                  ),
+                if (pages.contains(SettingsTabKey.safety))
+                  const PopupMenuItem(
+                    value: SettingsTabKey.safety,
+                    child: Text('Segurança e acesso'),
                   ),
                 if (pages.contains(SettingsTabKey.account))
                   PopupMenuItem(
@@ -516,7 +666,10 @@ class HomeDashboard extends StatelessWidget {
                                     color: Colors.white,
                                     fontSize: 17,
                                     fontWeight: FontWeight.w600)),
-                            Text(name.isEmpty ? 'Suporte sem login' : 'Perfil do site',
+                            Text(name.isEmpty ? 'Suporte sem login' :
+                                (sevenDeskProfile.companyName.value.isEmpty
+                                    ? 'Perfil do site'
+                                    : sevenDeskProfile.companyName.value),
                                 style: const TextStyle(
                                     color: HomeDashboardTheme.muted,
                                     fontSize: 13)),
@@ -551,23 +704,22 @@ class HomeDashboard extends StatelessWidget {
     final title = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text.rich(
-          TextSpan(
-            children: [
-              const TextSpan(text: 'Bem-vindo ao '),
-              const TextSpan(
-                text: 'Seven Desk',
-                style: TextStyle(color: HomeDashboardTheme.purple),
-              ),
-            ],
-          ),
-          style: const TextStyle(fontSize: 35, fontWeight: FontWeight.w700),
+        const Text(
+          'Acesso remoto',
+          style: TextStyle(fontSize: 29, fontWeight: FontWeight.w700),
         ),
         const SizedBox(height: 4),
-        Text(
-          'Acesse e gerencie seus computadores de forma rápida, segura e estável.',
-          style: const TextStyle(color: HomeDashboardTheme.muted, fontSize: 18),
+        const Text(
+          'Seu endereço, novas conexões e computadores dos clientes em um só lugar.',
+          style: TextStyle(color: HomeDashboardTheme.muted, fontSize: 15),
         ),
+        if ((isWindows || isMacOS || isLinux) && !bind.mainIsInstalled()) ...[
+          const SizedBox(height: 8),
+          const Text(
+            'Modo portátil · instalação não obrigatória',
+            style: TextStyle(color: HomeDashboardTheme.green, fontSize: 13),
+          ),
+        ],
       ],
     );
     if (!wide || status == null) return title;

@@ -1,0 +1,31 @@
+services:
+  downloads:
+    image: caddy:2.11.9-alpine
+    restart: unless-stopped
+    networks: [frontend]
+    volumes:
+      - ./Caddyfile.downloads:/etc/caddy/Caddyfile:ro
+      - /srv/sevendesk/downloads:/srv/downloads:ro
+    read_only: true
+    tmpfs:
+      - /tmp:size=33554432,mode=1777
+      - /data:size=33554432,mode=0700
+      - /config:size=33554432,mode=0700
+    security_opt: [no-new-privileges:true]
+    cap_drop: [ALL]
+    pids_limit: 120
+    labels:
+      traefik.enable: 'true'
+      traefik.docker.network: ${SEVEN_DOCKER_FRONTEND_NETWORK:-sevendesk_frontend}
+      traefik.http.middlewares.seven-desk-vps-downloads-https.redirectscheme.scheme: https
+      traefik.http.middlewares.seven-desk-vps-downloads-https.redirectscheme.permanent: 'true'
+      traefik.http.routers.seven-desk-vps-downloads-http.entrypoints: web
+      traefik.http.routers.seven-desk-vps-downloads-http.rule: Host(`downloads.sevendesk.tech`)
+      traefik.http.routers.seven-desk-vps-downloads-http.middlewares: seven-desk-vps-downloads-https
+      traefik.http.routers.seven-desk-vps-downloads-http.service: seven-desk-vps-downloads
+      traefik.http.routers.seven-desk-vps-downloads.entrypoints: websecure
+      traefik.http.routers.seven-desk-vps-downloads.rule: Host(`downloads.sevendesk.tech`)
+      traefik.http.routers.seven-desk-vps-downloads.tls: 'true'
+      traefik.http.routers.seven-desk-vps-downloads.tls.certresolver: letsencrypt
+      traefik.http.routers.seven-desk-vps-downloads.service: seven-desk-vps-downloads
+      traefik.http.services.seven-desk-vps-downloads.loadbalancer.server.port: '8080'

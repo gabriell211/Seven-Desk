@@ -604,6 +604,10 @@ pub enum Data {
         #[serde(default = "legacy_hot_measured")]
         hot_measured: bool,
     },
+    /// Receiver-side operator requests the next physical monitor.
+    /// Appended so existing variant ordering is not disturbed.
+    #[cfg(not(any(target_os = "android", target_os = "ios")))]
+    CmCycleDisplay,
 }
 
 /// The default for a `hot_measured` that is not on the wire at all; see the field's docs.

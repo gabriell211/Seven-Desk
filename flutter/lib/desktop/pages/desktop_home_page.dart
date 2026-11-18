@@ -104,7 +104,7 @@ class _DesktopHomePageState extends State<DesktopHomePage>
         final canEdit = !bind.isDisableSettings() &&
             DesktopSettingPage.tabKeys.contains(SettingsTabKey.safety);
         final id = _dashboardCredential(
-          label: 'Seu ID',
+          label: 'Seu endereço (ID)',
           controller: model.serverId,
           actions: canEdit ? [buildPopupMenu(context)] : const [],
         );
@@ -612,7 +612,7 @@ class _DesktopHomePageState extends State<DesktopHomePage>
       final isToUpdate = (isWindows || isMacOS) && bind.mainIsInstalled();
       String btnText = isToUpdate ? 'Update' : 'Download';
       GestureTapCallback onPressed = () async {
-        final Uri url = Uri.parse('https://rustdesk.com/download');
+        final Uri url = Uri.parse('https://www.sevendesk.tech/#plataformas');
         await launchUrl(url);
       };
       if (isToUpdate) {
@@ -628,22 +628,17 @@ class _DesktopHomePageState extends State<DesktopHomePage>
           closeButton: true,
           help: isToUpdate ? 'Changelog' : null,
           link: isToUpdate
-              ? 'https://github.com/rustdesk/rustdesk/releases/tag/${bind.mainGetNewVersion()}'
+              ? 'https://github.com/gabriell211/Seven-Desk/releases'
               : null);
     }
     if (systemError.isNotEmpty) {
       return buildInstallCard("", systemError, "", () {});
     }
 
+    // The portable Windows EXE already starts the in-process receiver.
+    // Installation is optional for persistent background access.
     if (isWindows && !bind.isDisableInstallation()) {
-      if (!bind.mainIsInstalled()) {
-        return buildInstallCard(
-            "", bind.isOutgoingOnly() ? "" : "install_tip", "Install",
-            () async {
-          await rustDeskWinManager.closeAllSubWindows();
-          bind.mainGotoInstall();
-        });
-      } else if (bind.mainIsInstalledLowerVersion()) {
+      if (bind.mainIsInstalled() && bind.mainIsInstalledLowerVersion()) {
         return buildInstallCard(
             "Status", "Your installation is lower version.", "Click to upgrade",
             () async {
@@ -675,14 +670,9 @@ class _DesktopHomePageState extends State<DesktopHomePage>
           bind.mainIsCanInputMonitoring(prompt: true);
           watchIsInputMonitoring = true;
         }, help: 'Help', link: translate("doc_mac_permission"));
-      } else if (!isOutgoingOnly &&
-          !svcStopped.value &&
-          bind.mainIsInstalled() &&
-          !bind.mainIsInstalledDaemon(prompt: false)) {
-        return buildInstallCard("", "install_daemon_tip", "Install", () async {
-          bind.mainIsInstalledDaemon(prompt: true);
-        });
       }
+      // Background daemon setup on macOS is optional and must not appear
+      // as an installation requirement in the first-run dashboard.
       //// Disable microphone configuration for macOS. We will request the permission when needed.
       // else if ((await osxCanRecordAudio() !=
       //     PermissionAuthorizeType.authorized)) {

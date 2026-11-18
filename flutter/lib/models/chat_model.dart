@@ -61,6 +61,8 @@ class ChatModel with ChangeNotifier {
   OverlayEntry? chatWindowOverlayEntry;
 
   bool isConnManager = false;
+  // When active, the CM owns its compact floating chat and window bounds.
+  bool receiverPanelActive = false;
 
   RxBool isWindowFocus = true.obs;
   BlockableOverlayState _blockableOverlayState = BlockableOverlayState();
@@ -312,6 +314,12 @@ class ChatModel with ChangeNotifier {
 
   var _togglingCMSidePage = false; // protect order for await
   toggleCMSidePage() async {
+    if (receiverPanelActive) {
+      // Prevent background chat notifications from redocking the session
+      // panel to the former top-right connection-manager window.
+      notifyListeners();
+      return false;
+    }
     if (_togglingCMSidePage) return false;
     _togglingCMSidePage = true;
     if (_isShowCMSidePage) {
