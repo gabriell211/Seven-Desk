@@ -195,13 +195,13 @@ class _SevenDeskActivationDialogState
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Na sua conta Seven Desk, copie o código de ativação sd_ '
+            const Text('Na sua conta Seven Desk, copie o código de ativação sd2_ '
                 'do computador e o código tec_ do técnico. Ambos são necessários '
                 'no primeiro vínculo. Quem recebe suporte não precisa entrar.'),
             const SizedBox(height: 14),
             TextField(
               controller: _controller,
-              maxLength: 46,
+              maxLength: 47,
               obscureText: !_showToken,
               autocorrect: false,
               enableSuggestions: false,
