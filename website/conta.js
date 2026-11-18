@@ -144,7 +144,7 @@ async function loadAppAccess() {
     if (!Array.isArray(devices)) return;
     el('account-app-access').hidden = false;
     el('account-app-notice').textContent =
-      'Cadastre o técnico e gere o código tec_ exclusivo. Depois gere o código sd_ de ativação do computador. Um código não substitui o outro.';
+      'Cadastre o técnico e gere o código tec_ exclusivo. Depois gere o código sd2_ de ativação do computador. Um código não substitui o outro.';
     const list = el('account-device-list');
     list.replaceChildren();
     const availableSlots = Number.isInteger(maxSlots) ? Math.max(1,Math.min(maxSlots,500)) : 5;
@@ -314,7 +314,7 @@ async function updateAppDevice(slot, label, revoke) {
     if (!response.ok) throw new Error('Activation unavailable');
     const result = await response.json();
     if (!revoke) {
-      if (typeof result.token !== 'string' || !/^sd_[A-Za-z0-9_-]{43}$/.test(result.token)) throw new Error('Invalid activation');
+      if (typeof result.token !== 'string' || !/^sd(?:2)?_[A-Za-z0-9_-]{43}$/.test(result.token)) throw new Error('Invalid activation');
       el('account-app-token').value = result.token;
       el('account-app-token-label').hidden = false;
       el('account-app-copy').hidden = false;
