@@ -107,8 +107,6 @@ jobs:
     if: ${{ inputs.upload-artifact }}
     runs-on: ubuntu-latest
 
-    permissions:
-      contents: write
 
     steps:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
@@ -1279,9 +1277,6 @@ jobs:
     concurrency:
       group: signed-update-${{ inputs.upload-tag }}
       cancel-in-progress: false
-    permissions:
-      # Required to inspect and publish signed release assets for the target tag.
-      contents: write
     steps:
       - name: Refuse to replace published update metadata
         shell: bash
