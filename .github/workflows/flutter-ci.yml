@@ -28,6 +28,7 @@ jobs:
     name: Seven Desk Flutter CI
     uses: ./.github/workflows/flutter-build.yml
     permissions:
-      contents: write
+      contents: read
     with:
       upload-artifact: false
+      qa-artifacts: true
