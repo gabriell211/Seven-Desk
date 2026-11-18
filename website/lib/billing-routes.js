@@ -21,7 +21,16 @@ function createBillingHandlers({ checkoutEnabled, webhookEnabled, authenticate, 
         const url = await createCheckout({ handle: settings.handle, orderId, plan, siteUrl: settings.siteUrl }, { apiKey: settings.apiKey });
         await db.query('UPDATE seven_desk_payment_orders SET checkout_url = $1 WHERE order_id = $2 AND user_id = $3', [url, orderId, userId]);
         return send(res, 200, { url });
-      } catch { return send(res, 503, { error: 'Não foi possível iniciar o pagamento' }); }
+      } catch (error) {
+        if (error?.code === 'CHECKOUT_INTEGRATION_DISABLED') {
+          // A provider-side setting cannot be fixed by retrying payment links.
+          return send(res, 503, {
+            code: 'CHECKOUT_INTEGRATION_DISABLED',
+            error: 'Checkout Integrado indisponível. A administração deve habilitá-lo na conta InfinitePay.',
+          });
+        }
+        return send(res, 503, { error: 'Não foi possível iniciar o pagamento' });
+      }
     },
     async webhook(req, res) {
       res.setHeader('Cache-Control', 'no-store');

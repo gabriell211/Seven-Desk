@@ -480,10 +480,14 @@ async function loadSubscription() {
     el('account-summary-status').textContent = 'Indisponível';
   }
 }
+let checkoutProviderDisabled = false;
+const checkoutDisabledMessage =
+  'Pagamentos indisponíveis: é necessário habilitar o Checkout Integrado na conta InfinitePay. Contate o suporte Seven Desk.';
 async function loadCheckoutAvailability() {
   const notice = el('account-checkout-notice');
   for (const button of paymentButtons) button.disabled = true;
-  notice.textContent = 'Pagamentos temporariamente indisponíveis.';
+  notice.textContent = checkoutProviderDisabled ? checkoutDisabledMessage : 'Pagamentos temporariamente indisponíveis.';
+  if (checkoutProviderDisabled) return;
   try {
     const response = await fetch('/api/billing-status', {cache:'no-store'});
     if (!response.ok || (await response.json()).checkoutAvailable !== true) return;
@@ -501,7 +505,14 @@ async function startCheckout(plan) {
       headers:{'Content-Type':'application/json', Authorization:await appAuthorization()},
       body:JSON.stringify({plan}),
     });
-    if (!response.ok) throw new Error('Checkout unavailable');
+    if (!response.ok) {
+      const details = await response.json().catch(() => null);
+      if (response.status === 503 && details?.code === 'CHECKOUT_INTEGRATION_DISABLED') {
+        checkoutProviderDisabled = true;
+        throw new Error('CHECKOUT_INTEGRATION_DISABLED');
+      }
+      throw new Error('Checkout unavailable');
+    }
     const {url:link} = await response.json();
     const url = new URL(link);
     if (url.protocol !== 'https:' ||
@@ -510,7 +521,9 @@ async function startCheckout(plan) {
     window.location.assign(url.href);
   } catch {
     await loadCheckoutAvailability();
-    notice.textContent = 'Não foi possível iniciar o pagamento. Tente novamente mais tarde.';
+    notice.textContent = checkoutProviderDisabled
+      ? checkoutDisabledMessage
+      : 'Não foi possível iniciar o pagamento. Tente novamente mais tarde.';
   }
 }
 paymentButtons.forEach(button=>button.addEventListener('click',()=>startCheckout(button.dataset.plan)));

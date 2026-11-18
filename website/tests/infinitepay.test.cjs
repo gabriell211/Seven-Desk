@@ -33,3 +33,81 @@ test('confirms a paid order using the provider and the stored plan amount', asyn
   assert.equal(await payment.verifyPayment(input, { fetchImpl: fake({ success: true, paid: true, amount: 1 }) }), false);
   assert.equal(await payment.verifyPayment(input, { fetchImpl: fake({ success: true, paid: false, amount: 3990 }) }), false);
 });
+
+
+test('recognizes merchant-disabled checkout without leaking provider data', async () => {
+  const input = {
+    handle:'merchant', orderId:'test-order', plan:'monthly', siteUrl:'https://www.sevendesk.tech',
+  };
+  const provider = async () => ({
+    ok:false,
+    status:404,
+    json:async () => ({
+      error:'external_checkout_not_enabled',
+      message:'Private provider details must not reach the customer',
+    }),
+  });
+  await assert.rejects(
+    payment.createCheckout(input,{apiKey:'test-key',fetchImpl:provider}),
+    error => error.code === 'CHECKOUT_INTEGRATION_DISABLED' &&
+      !error.message.includes('Private provider details'),
+  );
+  // Unknown failures remain generic, with no provider body forwarded to callers.
+  const unknown = async () => ({
+    ok:false,status:403,
+    json:async () => ({error:'other_private_error',message:'Sensitive provider response'}),
+  });
+  await assert.rejects(
+    payment.createCheckout(input,{apiKey:'test-key',fetchImpl:unknown}),
+    error => error.message === 'Payment provider unavailable' &&
+      !error.message.includes('Sensitive provider response'),
+  );
+});
+
+test('checkout route reports disabled provider safely and keeps authorization required', async () => {
+  const {createBillingHandlers}=require('../lib/billing-routes');
+  const makeResponse=()=>{
+    const res={statusCode:200,body:null,headers:{}};
+    res.status=code=>{res.statusCode=code;return res;};
+    res.json=body=>{res.body=body;return res;};
+    res.setHeader=(name,value)=>{res.headers[name]=value;};
+    return res;
+  };
+  let created=0;
+  const handlers=createBillingHandlers({
+    checkoutEnabled:()=>true,
+    webhookEnabled:()=>false,
+    authenticate:async header=>header==='Bearer verified'?'verified-user':null,
+    pool:()=>({query:async()=>({rows:[]})}),
+    createOrder:async()=>{created++;return 'order-123';},
+    createCheckout:async()=> {
+      const error=new Error('Internal provider response must be hidden');
+      error.code='CHECKOUT_INTEGRATION_DISABLED';
+      throw error;
+    },
+    reconcilePayment:async()=>false,
+    config:()=>({handle:'merchant',apiKey:'test-key',siteUrl:'https://www.sevendesk.tech'}),
+  });
+  const unauthorized=makeResponse();
+  await handlers.checkout({method:'POST',headers:{authorization:''},body:{plan:'monthly'}},unauthorized);
+  assert.equal(unauthorized.statusCode,401);
+  assert.equal(created,0);
+  const res=makeResponse();
+  await handlers.checkout({method:'POST',headers:{authorization:'Bearer verified'},body:{plan:'monthly'}},res);
+  assert.equal(res.statusCode,503);
+  assert.equal(res.body.code,'CHECKOUT_INTEGRATION_DISABLED');
+  assert.match(res.body.error,/Checkout Integrado/);
+  assert.doesNotMatch(JSON.stringify(res.body),/Internal provider response/);
+  assert.equal(created,1);
+});
+
+test('the website explains provider-disabled billing without exposing provider secrets', () => {
+  const {readFileSync}=require('node:fs');
+  const {join}=require('node:path');
+  const source=readFileSync(join(__dirname,'../conta.js'),'utf8');
+  assert.match(source,/let checkoutProviderDisabled = false/);
+  assert.match(source,/details\?\.code === 'CHECKOUT_INTEGRATION_DISABLED'/);
+  assert.match(source,/if \(checkoutProviderDisabled\) return/);
+  assert.match(source,/checkoutDisabledMessage/);
+  assert.doesNotMatch(source,/https:\/\/checkout\.infinitepay\.io\/gabriel_/);
+});
