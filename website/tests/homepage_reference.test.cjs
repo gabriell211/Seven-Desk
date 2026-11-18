@@ -34,7 +34,7 @@ test('accessible navigation, account and legal links are retained', () => {
   const html = read('index.html');
   assert.match(html, /id="menu-toggle"[^>]*aria-expanded="false"/);
   assert.match(html, /id="mobile-navigation"[^>]*hidden/);
-  for (const route of ['/entrar', '/cadastro', '/licencas', '/privacidade']) {
+  for (const route of ['/entrar', '/cadastro', '/licencas.html', '/privacidade.html']) {
     assert.ok(html.includes('href="' + route + '"'), route);
   }
 });
@@ -70,6 +70,6 @@ test('pricing terms and protected download behavior remain truthful', () => {
   assert.match(html, /ECONOMIZE R\$ 78,80/);
   assert.match(html, /não há cobrança automática/);
   assert.equal((html.match(/\bdata-auto-download\b/g) || []).length, 1);
-  assert.match(html, /href="\/licencas"/);
-  assert.match(html, /href="\/privacidade"/);
+  assert.match(html, /href="\/licencas\.html"/);
+  assert.match(html, /href="\/privacidade\.html"/);
 });
