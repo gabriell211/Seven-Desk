@@ -8,9 +8,17 @@ use hbb_common::{
 const ACTIVATION_OPTION: &str = "seven-license-token";
 
 fn valid_activation(value: &str) -> bool {
-    value.len() == 46
-        && value.starts_with("sd_")
-        && value[3..].bytes().all(|b| b.is_ascii_alphanumeric() || b == b'-' || b == b'_')
+    let suffix = if let Some(s) = value.strip_prefix("sd2_") {
+        s
+    } else if let Some(s) = value.strip_prefix("sd_") {
+        s
+    } else {
+        return false;
+    };
+    suffix.len() == 43
+        && suffix
+            .bytes()
+            .all(|b| b.is_ascii_alphanumeric() || b == b'-' || b == b'_')
 }
 
 fn token_for_device(original: &str, activation: &str, uuid: &[u8]) -> String {
