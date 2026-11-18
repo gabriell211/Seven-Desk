@@ -40,6 +40,7 @@ class AppImageIdentityTests(unittest.TestCase):
                 self.assertIn(" - cp ./sevendesk.desktop ./AppDir/usr/share/applications/sevendesk.desktop\n", recipe)
         workflow = (ROOT / ".github" / "workflows" / "flutter-build.yml").read_text(encoding="utf-8")
         self.assertIn("Normalize and validate AppImage output", workflow)
+        self.assertIn('sudo chown "$(id -u):$(id -g)" . ./*.AppImage', workflow)
         self.assertIn("Expected exactly one built AppImage", workflow)
         self.assertIn("sha256sum", workflow)
         self.assertIn("appimage/sevendesk-${{ env.VERSION }}-${{ matrix.job.arch }}.AppImage", workflow)
