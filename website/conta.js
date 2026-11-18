@@ -184,6 +184,567 @@ async function appAuthorization() {
     throw new Error('Authentication required');
   return 'Bearer '+token;
 }
+
+function trustedTechnicianImage(value, slot) {
+  if (typeof value !== 'string') return '';
+  try {
+    const url = new URL(value, window.location.origin);
+    return url.protocol === 'https:' &&
+      (url.origin === window.location.origin || url.hostname === 'www.sevendesk.tech') &&
+      new RegExp('^/avatars/[0-9a-f-]{36}/technician-' + slot + '\\.(?:jpg|png|webp)
+  const availabilityNotice = el('account-device-unavailable');
+  availabilityNotice.hidden = false;
+  availabilityNotice.textContent = 'Verificando disponibilidade dos dispositivos...';
+  try {
+    const response = await fetch('/api/app-token', {
+      headers: {Authorization: await appAuthorization()}, cache:'no-store',
+    });
+    if (!response.ok) throw new Error('Device management unavailable');
+    const {devices,maxSlots} = await response.json();
+    if (!Array.isArray(devices)) throw new Error('Invalid devices payload');
+    availabilityNotice.hidden = true;
+    el('account-app-access').hidden = false;
+    el('account-app-notice').textContent =
+      'Cadastre o técnico e gere o código tec_ exclusivo. Depois gere o código sd2_ de ativação do computador. Um código não substitui o outro.';
+    const list = el('account-device-list');
+    list.replaceChildren();
+    const availableSlots = Number.isInteger(maxSlots) ? Math.max(1,Math.min(maxSlots,500)) : 5;
+    const bySlot = new Map(devices.filter(item => {
+      const slot = Number(item?.slot);
+      return Number.isInteger(slot) && slot >= 1 && slot <= availableSlots;
+    }).map(item => [Number(item.slot),item]));
+    const registered = [...bySlot.values()];
+    const activated = registered.filter(item => item.activated === true).length;
+    el('account-summary-slots').textContent = String(Math.max(0,availableSlots-activated));
+    el('account-summary-devices').textContent = String(activated);
+    el('account-summary-technicians').textContent = String(registered.filter(item =>
+      typeof item.technician_name === 'string' && item.technician_name.trim().length > 0
+    ).length);
+    for (let slot = 1; slot <= availableSlots; slot++)
+      list.append(createTechnicianCard(slot,bySlot.get(slot)));
+  } catch {
+    availabilityNotice.hidden = false;
+    availabilityNotice.textContent = 'Não foi possível carregar os dispositivos. Tente novamente mais tarde.';
+  }
+}
+
+function showTechnicianCode(code,slot){
+  if(typeof code!=='string'||!/^tec_[A-Za-z0-9_-]{32}$/.test(code))
+    throw new Error('Código do técnico inválido');
+  el('account-tech-code').value=code;
+  el('account-tech-code-label').hidden=true;
+  el('account-tech-code-copy').hidden=true;
+  showCardCode(slot,'technician',code);
+  el('account-app-notice').textContent=
+    `Código exclusivo do técnico ${slot}: copie e guarde agora. `
+    +'Não será exibido novamente e não permite acesso remoto sozinho.';
+}
+async function rotateTechnicianCode(slot,button){
+  button.disabled=true;
+  try{
+    const response=await fetch('/api/technician-code',{
+      method:'POST',cache:'no-store',
+      headers:{'Content-Type':'application/json',Authorization:await appAuthorization()},
+      body:JSON.stringify({slot}),
+    });
+    if(!response.ok)throw new Error('Código indisponível');
+    const result=await response.json();
+    await loadAppAccess();
+    showTechnicianCode(result.technicianCode,slot);
+  }catch{
+    el('account-app-notice').textContent='Não foi possível atualizar o código do técnico.';
+  }finally{button.disabled=false;}
+}
+
+async function updateTechnicianProfile(slot, value, file, button) {
+  const notice = el('account-app-notice');
+  const name = value.trim();
+  if (name.length < 2 || name.length > 100 ||
+      (file && (file.size > 2*1024*1024 ||
+        !['image/jpeg','image/png','image/webp'].includes(file.type)))) {
+    notice.textContent = 'Informe o nome do técnico e uma foto válida de até 2 MB.';
+    return;
+  }
+  button.disabled = true;
+  notice.textContent = `Salvando perfil do técnico ${slot}...`;
+  try {
+    const headers = {Authorization: await appAuthorization()};
+    const saved = await fetch('/api/technician-profile', {
+      method:'POST',cache:'no-store',
+      headers:{...headers,'Content-Type':'application/json'},
+      body:JSON.stringify({slot,name}),
+    });
+    if (!saved.ok) throw new Error('Unable to save technician');
+    const profile = await saved.json();
+    if(profile.technicianCode)showTechnicianCode(profile.technicianCode,slot);
+    if (file) {
+      const uploaded = await fetch(`/api/technician-photo?slot=${slot}`, {
+        method:'POST',cache:'no-store',
+        headers:{...headers,'Content-Type':file.type},
+        body:file,
+      });
+      if (!uploaded.ok) throw new Error('Unable to save technician photo');
+    }
+    await loadAppAccess();
+    if(profile.technicianCode)showTechnicianCode(profile.technicianCode,slot);
+    else notice.textContent = `Nome e foto do técnico ${slot} sincronizados com o aplicativo.`;
+  } catch {
+    notice.textContent = 'Não foi possível concluir o perfil. Confira os dados e tente novamente.';
+  } finally {
+    button.disabled = false;
+  }
+}
+
+async function updateAppDevice(slot, label, revoke) {
+  const notice = el('account-app-notice');
+  const name = label.trim();
+  if (!revoke && (name.length < 1 || name.length > 60)) {
+    notice.textContent = 'Informe um nome de até 60 caracteres.';
+    return;
+  }
+  try {
+    const response = await fetch('/api/app-token', {
+      method: revoke ? 'DELETE' : 'POST', cache: 'no-store',
+      headers: {'Content-Type':'application/json', Authorization: await appAuthorization()},
+      body: JSON.stringify({slot, label:name}),
+    });
+    if (!response.ok) throw new Error('Activation unavailable');
+    const result = await response.json();
+    if (!revoke) {
+      if (typeof result.token !== 'string' || !/^sd(?:2)?_[A-Za-z0-9_-]{43}$/.test(result.token)) throw new Error('Invalid activation');
+      el('account-app-token').value = result.token;
+      el('account-app-token-label').hidden = true;
+      el('account-app-copy').hidden = true;
+    } else {
+      el('account-app-token').value = '';
+      el('account-app-token-label').hidden = true;
+      el('account-app-copy').hidden = true;
+    }
+    await loadAppAccess();
+    if (!revoke) showCardCode(slot,'activation',result.token);
+    notice.textContent = revoke
+      ? `Acesso do computador ${slot} revogado.`
+      : `Código do computador ${slot}: copie agora e cole no aplicativo. Ele não será exibido novamente.`;
+  } catch { notice.textContent = 'Não foi possível atualizar o computador agora.'; }
+}
+async function loadSubscription() {
+  const target = el('account-subscription');
+  const summary = el('account-summary-subscription');
+  target.textContent = 'Consultando período de acesso...';
+  summary.textContent = target.textContent;
+  try {
+    const response = await fetch('/api/subscription', {headers: {Authorization: await appAuthorization()}, cache:'no-store'});
+    if (!response.ok) throw new Error('Unavailable');
+    const subscription = await response.json();
+    const date = new Date(subscription.status === 'trial' ? subscription.trialEndsAt : subscription.accessEndsAt);
+    if (Number.isNaN(date.getTime())) throw new Error('Invalid date');
+    const formatted = new Intl.DateTimeFormat('pt-BR', {dateStyle:'long', timeStyle:'short'}).format(date);
+    target.textContent = subscription.status === 'trial' ? `Período gratuito até ${formatted}.` :
+      subscription.status === 'paid' ? `Assinatura ativa até ${formatted}.` : 'Seu período de acesso terminou.';
+    summary.textContent = target.textContent;
+    el('account-summary-status').textContent = subscription.status === 'trial'
+      ? 'Período grátis' : subscription.status === 'paid' ? 'Ativa' : 'Encerrada';
+  } catch {
+    target.textContent = 'O status da assinatura está temporariamente indisponível.';
+    summary.textContent = target.textContent;
+    el('account-summary-status').textContent = 'Indisponível';
+  }
+}
+async function loadCheckoutAvailability() {
+  const notice = el('account-checkout-notice');
+  for (const button of paymentButtons) button.disabled = true;
+  notice.textContent = 'Pagamentos temporariamente indisponíveis.';
+  try {
+    const response = await fetch('/api/billing-status', {cache:'no-store'});
+    if (!response.ok || (await response.json()).checkoutAvailable !== true) return;
+    for (const button of paymentButtons) button.disabled = false;
+    notice.textContent = 'Escolha seu plano para continuar para o checkout seguro.';
+  } catch { /* Fail closed: no unchecked payments. */ }
+}
+async function startCheckout(plan) {
+  const notice = el('account-checkout-notice');
+  for (const button of paymentButtons) button.disabled = true;
+  notice.textContent = 'Preparando pagamento seguro...';
+  try {
+    const response = await fetch('/api/checkout', {
+      method:'POST', cache:'no-store',
+      headers:{'Content-Type':'application/json', Authorization:await appAuthorization()},
+      body:JSON.stringify({plan}),
+    });
+    if (!response.ok) throw new Error('Checkout unavailable');
+    const {url:link} = await response.json();
+    const url = new URL(link);
+    if (url.protocol !== 'https:' ||
+      !['checkout.infinitepay.io', 'checkout.infinitepay.com.br'].includes(url.hostname) ||
+      url.username || url.password || url.port) throw new Error('Untrusted checkout URL');
+    window.location.assign(url.href);
+  } catch {
+    await loadCheckoutAvailability();
+    notice.textContent = 'Não foi possível iniciar o pagamento. Tente novamente mais tarde.';
+  }
+}
+paymentButtons.forEach(button=>button.addEventListener('click',()=>startCheckout(button.dataset.plan)));
+el('account-profile-form').addEventListener('submit', async event => {
+  event.preventDefault();
+  const button = el('account-profile-save');
+  const message = el('account-profile-message');
+  const name = el('account-profile-name').value.trim();
+  const file = el('account-profile-file').files?.[0];
+  if (name.length < 2 || name.length > 100 ||
+      (file && (file.size > 2 * 1024 * 1024 || !['image/jpeg', 'image/png', 'image/webp'].includes(file.type)))) {
+    message.textContent = 'Informe um nome válido e uma foto JPG, PNG ou WebP de até 2 MB.';
+    return;
+  }
+  button.disabled = true;
+  message.textContent = 'Salvando seu perfil...';
+  try {
+    let image;
+    if (file) {
+      const response = await fetch('/api/avatar-upload', {
+        method:'POST', cache:'no-store',
+        headers:{'Content-Type':file.type, Authorization:await appAuthorization()},
+        body:file,
+      });
+      if (!response.ok) throw new Error('Upload unavailable');
+      image = (await response.json()).url;
+      if (typeof image !== 'string' || !image.startsWith('https://www.sevendesk.tech/avatars/')) throw new Error('Invalid image URL');
+    }
+    const result = await auth.updateUser(image ? {name, image} : {name});
+    if (result.error) throw result.error;
+    el('account-profile-file').value = '';
+    await refresh();
+    message.textContent = 'Perfil salvo. Nome e foto serão sincronizados no aplicativo.';
+  } catch { message.textContent = 'Não foi possível salvar seu perfil agora.'; }
+  finally { button.disabled = false; }
+});
+el('account-tech-code-copy').addEventListener('click',async()=>{
+  const input=el('account-tech-code');
+  input.select();
+  try{
+    await navigator.clipboard.writeText(input.value);
+    el('account-app-notice').textContent='Código do técnico copiado com segurança.';
+  }catch{
+    el('account-app-notice').textContent='Selecione e copie o código do técnico.';
+  }
+});
+el('account-app-copy').addEventListener('click', async()=>{
+  const field=el('account-app-token');
+  field.select();
+  try {
+    await navigator.clipboard.writeText(field.value);
+    el('account-app-notice').textContent='Código copiado. Cole no aplicativo Seven Desk.';
+  } catch {el('account-app-notice').textContent='Selecione e copie o código mostrado acima.';}
+});
+el('account-type-pf').addEventListener('change',updateDocumentFields);
+el('account-type-pj').addEventListener('change',updateDocumentFields);
+el('show-login').addEventListener('click',()=>setMode(false));
+el('show-signup').addEventListener('click',()=>setMode(true));
+
+form.addEventListener('submit', async event=>{
+  event.preventDefault();
+  if (signup ? !availability.registrationEnabled : !availability.loginEnabled) return;
+  const button = el('account-submit');
+  button.disabled = true;
+  status('Validando suas informações...');
+  try {
+    const email = el('account-email').value.trim();
+    const password = el('account-password').value;
+    const name = el('account-name').value.trim();
+    if (!email || password.length < (signup ? 12 : 8) || password.length > 128 ||
+        (signup && (name.length < 2 || name.length > 100))) throw new Error('Invalid input');
+    const response = signup
+      ? await (async()=>{
+          const accountType=el('account-type-pj').checked ? 'PJ' : 'PF';
+          const document=el('account-document').value.trim();
+          if (!document || document.length > 24) throw new Error('Invalid document');
+          const created=await fetch('/api/registration',{
+            method:'POST',cache:'no-store',
+            headers:{'Content-Type':'application/json'},
+            body:JSON.stringify({name,email,password,accountType,document}),
+          });
+          const body=await created.json();
+          if(!created.ok)return {error:{code:body.code||'REGISTRATION_ERROR'}};
+          return {data:body};
+        })()
+      : await auth.signIn.email({email,password});
+    if (response.error) {
+      const code = String(response.error.code || '').toUpperCase();
+      if (!signup && (code === 'EMAIL_NOT_VERIFIED' || code === 'EMAIL_VERIFICATION_REQUIRED')) {
+        el('account-password').value = '';
+        setVerificationMode(email);
+        status('Confirme o e-mail da sua conta. Digite o código recebido ou solicite um novo.');
+        return;
+      }
+      throw response.error;
+    }
+    el('account-password').value = '';
+    if (signup) {
+      el('account-document').value = '';
+      if (response.data?.user?.emailVerified !== true) {
+        setVerificationMode(email);
+        status('Cadastro recebido. Informe o código enviado ao seu e-mail.');
+      } else {
+        setMode(false);
+        status('Cadastro recebido. Entre com suas credenciais.');
+      }
+    } else {
+      await refresh();
+      status('Entrada realizada.');
+    }
+  } catch {
+    status('Não foi possível concluir. Confira os dados ou tente novamente.', true);
+  } finally {
+    button.disabled = signup ? !availability.registrationEnabled : !availability.loginEnabled;
+  }
+});
+el('account-verification-form').addEventListener('submit', async event=>{
+  event.preventDefault();
+  const code = el('verification-code').value.trim();
+  if (!/^[0-9]{6}$/.test(code) || !verificationEmail || !availability.registrationEnabled) {
+    status('Informe um código válido de seis dígitos.', true);
+    return;
+  }
+  const button = el('verify-email-submit');
+  button.disabled = true;
+  try {
+    const {error} = await auth.emailOtp.verifyEmail({email:verificationEmail, otp:code});
+    if (error) throw error;
+    el('verification-code').value = '';
+    const session = await auth.getSession();
+    if (session.data?.user?.emailVerified === true) {
+      await refresh();
+      status('E-mail confirmado com sucesso.');
+    } else {
+      setMode(false);
+      status('E-mail confirmado. Entre em sua conta.');
+    }
+  } catch {
+    status('Código incorreto ou expirado. Solicite outro e tente novamente.', true);
+  } finally {button.disabled=false;}
+});
+el('verification-resend').addEventListener('click', async ()=>{
+  if (!verificationEmail || !availability.registrationEnabled) return;
+  const button=el('verification-resend');button.disabled=true;
+  try {
+    const {error} = await auth.emailOtp.sendVerificationOtp({email:verificationEmail, type:'email-verification'});
+    if (error) throw error;
+    status('Novo código solicitado. Confira seu e-mail.');
+  } catch {
+    status('Não foi possível reenviar o código. Tente novamente mais tarde.',true);
+  } finally {button.disabled=false;}
+});
+
+el('account-recovery-form').addEventListener('submit', async event=>{
+  event.preventDefault();
+  if (!availability.recoveryEnabled) return;
+  const button = el('recovery-submit'); button.disabled = true;
+  const email = el('recovery-email').value.trim();
+  if (!email || email.length > 254 || !el('recovery-email').checkValidity()) {
+    status('Informe um e-mail válido.', true);
+    button.disabled = false;
+    return;
+  }
+  try {
+    const {error} = await auth.emailOtp.requestPasswordReset({email});
+    if (error) throw error;
+    el('reset-email').value = email;
+    setRecoveryMode(true);
+    status('Se houver uma conta, o código de recuperação será enviado para o e-mail informado.');
+  } catch {
+    status('Não foi possível solicitar o código agora. Tente novamente mais tarde.', true);
+  } finally { button.disabled = !availability.recoveryEnabled; }
+});
+el('account-reset-form').addEventListener('submit', async event=>{
+  event.preventDefault();
+  if (!availability.recoveryEnabled) return;
+  const button = el('reset-submit'); button.disabled = true;
+  try {
+    const email = el('reset-email').value.trim();
+    const otp = el('reset-code').value.trim();
+    const password = el('reset-password').value;
+    const confirm = el('reset-confirm').value;
+    if (!el('reset-email').checkValidity() || !/^[0-9]{6}$/.test(otp) ||
+        password.length < 8 || password.length > 128 || password !== confirm) {
+      throw new Error('Invalid recovery inputs');
+    }
+    const {error} = await auth.emailOtp.resetPassword({email,otp,password});
+    if (error) throw error;
+    el('reset-code').value = '';
+    el('reset-password').value = '';
+    el('reset-confirm').value = '';
+    setMode(false);
+    status('Senha redefinida. Entre com sua nova senha.');
+  } catch {
+    status('Não foi possível redefinir a senha. Confira o código e a nova senha ou solicite outro.', true);
+  } finally { button.disabled = !availability.recoveryEnabled; }
+});
+el('account-signout').addEventListener('click',async()=>{
+  try {
+    const result = await auth.signOut();
+    if (result.error) throw result.error;
+    displaySession(null);
+    setMode(false);
+    status('Você saiu da conta.');
+  } catch {status('Não foi possível sair. Tente novamente.',true);}
+});
+(async()=>{
+  try {
+    const response = await fetch('/api/account-availability', {cache:'no-store'});
+    if (!response.ok) throw new Error('Account status unavailable');
+    availability = await response.json();
+    if (!availability.loginEnabled) {
+      displaySession(null);
+      if (isResetPage) setRecoveryMode(true);
+      else if (window.location.pathname === '/recuperar-senha') setRecoveryMode(false);
+      else setMode(signup);
+      return;
+    }
+    const settings = await fetch('/api/auth-config', {cache:'no-store'});
+    if (!settings.ok) throw new Error('Authentication configuration unavailable');
+    const {authUrl} = await settings.json();
+    if(new URL(authUrl).origin!==window.location.origin)throw new Error('Invalid auth origin');
+    auth=createAuthClient({baseURL:window.location.origin,basePath:'/api/auth',plugins:[emailOTPClient(),jwtClient()]});
+    await refresh();
+    if (!el('account-signed-in').hidden) { status(''); return; }
+    if (isResetPage) setRecoveryMode(true);
+    else if (window.location.pathname === '/recuperar-senha') setRecoveryMode(false);
+    else setMode(signup);
+  } catch {
+    availability={loginEnabled:false,registrationEnabled:false,recoveryEnabled:false};
+    displaySession(null); setMode(signup);
+    status('Não foi possível carregar a área de conta agora.',true);
+  }
+})();
+).test(url.pathname)
+      ? url.href : '';
+  } catch { return ''; }
+}
+
+function createTechnicianCard(slot, device) {
+  const card = document.createElement('article');
+  card.className = 'technician-card';
+  card.dataset.technicianSlot = String(slot);
+  card.setAttribute('aria-label', 'Técnico e computador ' + slot);
+  // Static markup only; all remote profile data is assigned as text or input values.
+  card.innerHTML = [
+    '<header class="technician-card-header">',
+    '<div class="technician-card-avatar"><span class="technician-card-initials" aria-hidden="true">T</span><img class="technician-card-photo" alt="Foto do técnico no atendimento" width="72" height="72" hidden></div>',
+    '<div class="technician-card-identity"><small class="technician-card-kicker"></small><h3></h3><p></p></div>',
+    '<span class="technician-card-badge"></span></header>',
+    '<div class="technician-card-fields">',
+    '<label>Nome exibido ao cliente<input data-tech-name maxlength="100" minlength="2" autocomplete="off" placeholder="Nome do técnico"></label>',
+    '<label>Nome do computador<input data-device-name maxlength="60" autocomplete="off" placeholder="Ex.: Notebook do suporte"></label>',
+    '<label class="technician-card-upload">Foto/avatar do técnico<input type="file" accept="image/jpeg,image/png,image/webp"><small>JPG, PNG ou WebP até 2 MB · exibida nas solicitações de acesso</small></label>',
+    '</div>',
+    '<p class="technician-card-description"></p>',
+    '<div class="technician-card-actions">',
+    '<button type="button" class="technician-card-primary" data-card-save></button>',
+    '<button type="button" data-card-tech-code hidden></button>',
+    '<button type="button" data-card-activation></button>',
+    '<button type="button" data-card-revoke hidden></button>',
+    '</div><div class="technician-card-credential" role="status" hidden></div>'
+  ].join('');
+  const find = selector => card.querySelector(selector);
+  const nameInput = find('[data-tech-name]');
+  const deviceInput = find('[data-device-name]');
+  const photoInput = find('input[type=file]');
+  const photo = find('.technician-card-photo');
+  const initials = find('.technician-card-initials');
+  const title = find('.technician-card-identity h3');
+  const subtitle = find('.technician-card-identity p');
+  const badge = find('.technician-card-badge');
+  const savedName = typeof device?.technician_name === 'string' ? device.technician_name : '';
+  nameInput.value = savedName;
+  deviceInput.value = device?.label || (slot === 1 ? 'Meu computador' : 'Computador ' + slot);
+  find('.technician-card-kicker').textContent = 'VAGA ' + String(slot).padStart(2,'0');
+  badge.dataset.status = device?.activated ? 'activated' : savedName ? 'registered' : 'available';
+  badge.textContent = device?.activated ? 'Código emitido' : savedName ? 'Cadastrado' : 'Vaga livre';
+  find('.technician-card-description').textContent = device?.has_technician_code
+    ? 'Código do técnico configurado. Para visualizá-lo novamente, gere outro código.'
+    : 'O código tec_ identifica o técnico; o código sd2_ ativa o computador.';
+  let localPhotoUrl = '';
+  const remotePhotoUrl = trustedTechnicianImage(device?.technician_image,slot);
+  function setPhoto(url) {
+    if (localPhotoUrl) URL.revokeObjectURL(localPhotoUrl);
+    localPhotoUrl = url.startsWith('blob:') ? url : '';
+    photo.hidden = !url;
+    initials.hidden = !!url;
+    photo.onerror = () => { photo.hidden = true; initials.hidden = false; };
+    photo.onload = () => { if (localPhotoUrl) URL.revokeObjectURL(localPhotoUrl); localPhotoUrl=''; };
+    if (url) photo.src = url;
+    else photo.removeAttribute('src');
+  }
+  function syncIdentity() {
+    const name = nameInput.value.trim();
+    title.textContent = name || 'Adicionar técnico';
+    subtitle.textContent = deviceInput.value.trim() || 'Computador ' + slot;
+    const words = name.split(/\s+/).filter(Boolean);
+    initials.textContent = (words.length > 1 ? words[0][0] + words.at(-1)[0] :
+      words[0]?.slice(0,2) || 'T').toLocaleUpperCase('pt-BR');
+  }
+  syncIdentity();
+  setPhoto(remotePhotoUrl);
+  nameInput.addEventListener('input',syncIdentity);
+  deviceInput.addEventListener('input',syncIdentity);
+  photoInput.addEventListener('change', () => {
+    const file = photoInput.files?.[0];
+    if (!file) { setPhoto(remotePhotoUrl); return; }
+    if (file.size < 1 || file.size > 2 * 1024 * 1024 ||
+        !['image/jpeg','image/png','image/webp'].includes(file.type)) {
+      photoInput.value = '';
+      el('account-app-notice').textContent = 'Selecione uma foto JPG, PNG ou WebP de até 2 MB.';
+      setPhoto(remotePhotoUrl);
+      return;
+    }
+    setPhoto(URL.createObjectURL(file));
+  });
+  const save = find('[data-card-save]');
+  save.textContent = savedName ? 'Salvar alterações' : 'Cadastrar técnico';
+  save.addEventListener('click', () => updateTechnicianProfile(slot,nameInput.value,photoInput.files?.[0],save));
+  const techCode = find('[data-card-tech-code]');
+  techCode.hidden = !savedName;
+  techCode.textContent = device?.has_technician_code ? 'Trocar código tec_' : 'Gerar código tec_';
+  techCode.addEventListener('click', () => rotateTechnicianCode(slot,techCode));
+  const activation = find('[data-card-activation]');
+  activation.textContent = device?.activated ? 'Trocar ativação sd2_' : 'Gerar ativação sd2_';
+  activation.addEventListener('click', () => updateAppDevice(slot,deviceInput.value,false));
+  const revoke = find('[data-card-revoke]');
+  revoke.hidden = !device?.activated;
+  revoke.textContent = 'Revogar ativação';
+  revoke.addEventListener('click', () => updateAppDevice(slot,'',true));
+  return card;
+}
+
+function showCardCode(slot, kind, code) {
+  const card = [...el('account-device-list').querySelectorAll('[data-technician-slot]')]
+    .find(item => item.dataset.technicianSlot === String(slot));
+  if (!card) return;
+  const target = card.querySelector('.technician-card-credential');
+  const label = document.createElement('label');
+  label.textContent = kind === 'technician' ? 'Código do técnico (tec_)' : 'Ativação do computador (sd2_)';
+  const input = document.createElement('input');
+  input.type = 'text';
+  input.readOnly = true;
+  input.value = code;
+  input.setAttribute('aria-label',label.textContent);
+  input.autocomplete = 'off';
+  label.append(input);
+  const copy = document.createElement('button');
+  copy.type = 'button';
+  copy.textContent = 'Copiar código';
+  copy.addEventListener('click', async () => {
+    input.select();
+    try {
+      await navigator.clipboard.writeText(input.value);
+      el('account-app-notice').textContent = 'Código copiado.';
+    } catch { el('account-app-notice').textContent = 'Selecione o código para copiar manualmente.'; }
+  });
+  const hint = document.createElement('small');
+  hint.textContent = 'Guarde agora. Por segurança, este código não será exibido novamente.';
+  target.replaceChildren(label, copy, hint);
+  target.hidden = false;
+}
+
 async function loadAppAccess() {
   const availabilityNotice = el('account-device-unavailable');
   availabilityNotice.hidden = false;
