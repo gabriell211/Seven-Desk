@@ -1,5 +1,11 @@
 name: Seven Desk VPS Docker Integration
 
+# New PR commits supersede stale CI runs. Never cancel push/release runs.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+
 on:
   pull_request:
     paths:
