@@ -701,21 +701,21 @@ class HomeDashboard extends StatelessWidget {
   }
 
   Widget _welcome(bool wide) {
-    final title = const Column(
+    final title = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
+        const Text(
           'Acesso remoto',
           style: TextStyle(fontSize: 29, fontWeight: FontWeight.w700),
         ),
-        SizedBox(height: 4),
-        Text(
+        const SizedBox(height: 4),
+        const Text(
           'Seu endereço, novas conexões e computadores dos clientes em um só lugar.',
           style: TextStyle(color: HomeDashboardTheme.muted, fontSize: 15),
         ),
         if (isWindows && !bind.mainIsInstalled()) ...[
-          SizedBox(height: 8),
-          Text(
+          const SizedBox(height: 8),
+          const Text(
             'Modo portátil · pronto para usar sem instalação',
             style: TextStyle(color: HomeDashboardTheme.green, fontSize: 13),
           ),
