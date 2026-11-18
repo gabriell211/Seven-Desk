@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="pt-BR">
+<html lang="pt-BR" data-theme="light">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -8,8 +8,10 @@
   <meta name="description" content="Entre, crie sua conta e acompanhe seu período de acesso ao Seven Desk." />
   <title>Minha conta | Seven Desk</title>
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <script src="/theme.js?v=20261118a"></script>
   <link rel="stylesheet" href="/styles.css?v=8" />
   <link rel="stylesheet" href="/conta.css?v=2" />
+  <link rel="stylesheet" href="/theme.css?v=20261118a" />
   <script defer src="/conta.bundle.js"></script>
 </head>
 <body class="account-page">
@@ -19,6 +21,7 @@
       <img src="/assets/seven-desk-logo.svg" alt="" width="42" height="42" />
       <span>seven<strong>desk</strong></span>
     </a>
+    <div class="theme-picker"><span class="theme-picker-icon" aria-hidden="true">◐</span><select id="theme-select-account" data-theme-select aria-label="Aparência do site"><option value="system">Sistema</option><option value="light">Claro</option><option value="dark">Escuro</option></select></div>
     <nav aria-label="Navegação da conta">
       <a href="/">Início</a>
       <a href="/entrar">Entrar</a>
