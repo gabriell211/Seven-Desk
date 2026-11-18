@@ -138,6 +138,7 @@ void main() {
     await tester.pump();
     expect(
         find.text('Acesso remoto', findRichText: true), findsOneWidget);
+    expect(find.text('Modo portátil · instalação não obrigatória'), findsOneWidget);
     expect(find.text('123 456 789'), findsOneWidget);
     expect(find.text('Pronto para conexões'), findsWidgets);
     expect(find.text('Support PC'), findsOneWidget);
