@@ -76,7 +76,7 @@ test('one responsive technician card per slot shows synced avatar and safe contr
   assert.match(js, /list\.append\(createTechnicianCard\(slot,bySlot\.get\(slot\)\)\)/);
   assert.match(js, /function trustedTechnicianImage\(value, slot\)/);
   assert.match(js, /trustedTechnicianImage\(device\?\.technician_image,slot\)/);
-  assert.match(js, /fileInput\.addEventListener\('change'/);
+  assert.match(js, /photoInput\.addEventListener\('change'/);
   assert.match(js, /URL\.createObjectURL\(file\)/);
   assert.match(js, /file\.size > 2 \* 1024 \* 1024/);
   assert.match(js, /updateTechnicianProfile\(slot,nameInput\.value,photoInput\.files\?\.\[0\],save\)/);
