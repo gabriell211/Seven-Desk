@@ -36,3 +36,7 @@ código, comportamento gráfico, instalação ou conexão com o servidor.
 Aviso: builds QA podem não ser executados quando não há runner GitHub disponível;
 nesse caso, o workflow fica em fila. O commit do pipeline **não** significa que
 EXE, MSI, AppImage, DMG ou APK já foram compilados.
+
+## Compatibilidade intencionalmente quebrada
+
+O próximo conjunto de executáveis deve usar a geração de ativação `sd2_` e a identidade pública renovada do Seven ID/Relay. Para desativar versões instaladas anteriormente, a equipe precisa executar o corte coordenado descrito em `docs/homologacao-seven-desk.md`, marcar os três testes de descontinuação como PASS com evidências reais e verificar que o servidor legado não permanece acessível como alternativa. **Nenhum dos dois passos está ativado na VPS de produção durante a preparação.**
