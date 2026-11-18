@@ -340,3 +340,19 @@ html[data-theme] body.account-page .account-app-token-label input:read-only{back
   html[data-theme] body.legal-page .legal-header-inner{flex-wrap:wrap;padding-top:14px;padding-bottom:14px}
   html[data-theme] body.legal-page .legal-tools{width:100%;justify-content:space-between;gap:8px}
 }
+
+
+/* Compatibility for the already deployed privacy/legal static templates. */
+html[data-theme] body.policy-page .legal-head,
+html[data-theme] body.policy-page .legal-footer{background:var(--sd-bg-soft);border-color:var(--sd-border);color:var(--sd-text)}
+html[data-theme] body.policy-page main.legal-page{color:var(--sd-text)}
+html[data-theme] body.policy-page main.legal-page h1,
+html[data-theme] body.policy-page main.legal-page h2{color:var(--sd-title)}
+html[data-theme] body.policy-page main.legal-page p,
+html[data-theme] body.policy-page main.legal-page li{color:var(--sd-muted)}
+html[data-theme] body.policy-page main.legal-page a,
+html[data-theme] body.policy-page .legal-head .brand,
+html[data-theme] body.policy-page .legal-footer a{color:var(--sd-link)!important}
+html[data-theme] body.policy-page .legal-head .brand-accent{color:var(--sd-logo-dark)}
+html[data-theme] body.policy-page .legal-note{background:var(--sd-panel-raised);border-color:var(--sd-border);color:var(--sd-text)}
+html[data-theme] body.policy-page .privacy-topbar{margin:0 0 18px;display:flex;justify-content:flex-end}
