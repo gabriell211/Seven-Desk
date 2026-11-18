@@ -79,9 +79,11 @@ html[data-theme] body.account-page.account-authenticated #account-signed-in {
   color:var(--portal-muted);font:inherit;font-size:13px;font-weight:650;text-align:left;
   text-decoration:none;cursor:pointer;transition:background .15s,color .15s;
 }
-.account-authenticated .client-nav a>span,.account-authenticated .client-nav button>span {
-  display:inline-flex;align-items:center;justify-content:center;flex:0 0 19px;
-  font-size:18px;color:var(--portal-accent);
+.account-authenticated .client-nav a>svg,.account-authenticated .client-nav button>svg {
+  display:block;flex:0 0 19px;width:19px;height:19px;color:var(--portal-accent);
+}
+.account-authenticated .client-signout>svg{
+  width:18px;height:18px;flex:0 0 18px;color:var(--portal-accent);
 }
 .account-authenticated .client-nav a:hover,.account-authenticated .client-nav button:hover {
   background:var(--portal-hover);color:var(--portal-ink);
