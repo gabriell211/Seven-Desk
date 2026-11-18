@@ -42,7 +42,7 @@ test('accessible navigation, account and legal links are retained', () => {
 test('production bundler copies the new stylesheet alongside the homepage', () => {
   const build = read('build-site.cjs');
   const css = read('homepage.css');
-  assert.match(build, /'styles\.css', 'homepage\.css', 'script\.js'/);
+  assert.match(build, /'styles\.css', 'homepage\.css', 'theme\.css', 'theme\.js', 'script\.js'/);
   assert.match(css, /\.hero \.hero-grid/);
   assert.match(css, /\.platform-quickbar button img/);
   assert.match(css, /filter:brightness\(0\);opacity:\.7/);
