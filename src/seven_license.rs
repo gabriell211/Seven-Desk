@@ -82,6 +82,18 @@ mod tests {
     }
 
     #[test]
+    fn generation_two_activation_is_supported_and_bound_to_same_device() {
+        let new_code = format!("sd2_{}", "b".repeat(43));
+        assert!(valid_activation(&new_code));
+        assert!(!valid_activation(&format!("sd3_{}", "b".repeat(43))));
+        assert!(!valid_activation(&format!("sd2_{}", "b".repeat(42))));
+        let token = token_for_device("legacy", &new_code, b"device-2");
+        assert!(token.starts_with(&format!("{}:", new_code)));
+        assert_eq!(token.split(':').nth(1).unwrap().len(), 64);
+        assert_ne!(token, token_for_device("legacy", &new_code, b"different-device"));
+    }
+
+    #[test]
     fn activation_token_binds_a_stable_hash_to_one_device() {
         let token = token_for_device("legacy", &code(), b"machine-id-1");
         assert!(token.starts_with(&format!("{}:", code())));
