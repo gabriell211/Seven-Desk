@@ -249,6 +249,11 @@ jobs:
         echo "CARGO_TEST_OPTIONS=${CARGO_TEST_OPTIONS}" >> $GITHUB_OUTPUT
 
     - name: Run tests
+      # The native WebRTC/FFI suite shares process-global state: run all tests
+      # sequentially to avoid intermittent SIGSEGV from parallel teardown.
+      # No tests are excluded or marked allowed-to-fail.
+      env:
+        RUST_TEST_THREADS: '1'
       uses: actions-rs/cargo@844f36862e911db73fe0815f00a4a2602c279505 # v1
       with:
         use-cross: ${{ matrix.job.use-cross }}
