@@ -39,3 +39,10 @@ test('all supported operating systems remain selectable', () => {
     assert.match(js, new RegExp(platform + ": '/assets/"));
   }
 });
+
+test('portable Linux and macOS are described without mandatory package installation', () => {
+  assert.match(html, /AppImage · sem instalar/);
+  assert.match(html, /DMG · abrir aplicativo/);
+  assert.doesNotMatch(html, /Para se conectar, instale o aplicativo/);
+  assert.match(js, /versão portátil publicada/);
+});

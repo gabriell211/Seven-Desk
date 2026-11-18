@@ -31,6 +31,9 @@ class _DashboardBinding extends Fake implements RustdeskImpl {
   bool isDisableSettings({dynamic hint}) => false;
 
   @override
+  bool mainIsInstalled({dynamic hint}) => false;
+
+  @override
   bool isDisableAb({dynamic hint}) => false;
 
   @override

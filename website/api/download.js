@@ -40,8 +40,10 @@ function assetScore(file, platform, arch) {
       else match = /[-_](?:x86_64|amd64|x64|universal)\.dmg$/i.test(file);
       break;
     case 'linux':
-      if (arch === 'arm64') match = /[-_](?:aarch64|arm64)(?:[-_]sciter)?\.deb$/i.test(file);
-      else match = /[-_](?:x86_64|amd64|x64)(?:[-_]sciter)?\.deb$/i.test(file);
+      // DEB/RPM packages install system-wide. The one-click download must
+      // resolve only to the no-install AppImage built by the release workflow.
+      if (arch === 'arm64') match = /[-_](?:aarch64|arm64)\.AppImage$/i.test(file);
+      else match = /[-_](?:x86_64|amd64|x64)\.AppImage$/i.test(file);
       break;
     case 'android':
       if (arch === 'arm64') match = /[-_](?:aarch64|universal)-signed\.apk$/i.test(file);

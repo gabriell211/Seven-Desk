@@ -418,18 +418,30 @@ class _GeneralState extends State<_General> {
       controller: scrollController,
       children: [
         if (!isWeb) service(),
-        if (isWindows &&
-            !bind.isDisableInstallation() &&
+        if (!isWeb &&
+            (isWindows || isMacOS || isLinux) &&
             !bind.mainIsInstalled())
           _Card(title: 'Modo portátil', children: [
-            const Text(
-              'O Seven Desk pode receber e iniciar conexões sem instalação '
-              'enquanto estiver aberto. Instalar é opcional e serve para '
-              'acesso permanente, inicialização com o Windows e serviço de fundo.',
+            Text(
+              isWindows
+                  ? 'O Seven Desk pode receber e iniciar conexões sem instalação '
+                    'enquanto estiver aberto. Instalar é opcional para iniciar '
+                    'junto com o Windows e permitir acesso permanente.'
+                  : isMacOS
+                      ? 'Abra o aplicativo do Seven Desk no DMG sem instalar um '
+                        'serviço de fundo. O macOS poderá solicitar permissão '
+                        'de gravação de tela e acessibilidade. Mover para '
+                        'Aplicativos e ativar o serviço de fundo são opcionais.'
+                      : 'No Linux, execute o AppImage sem instalar DEB ou RPM. '
+                        'Pode ser necessário torná-lo executável. '
+                        'O acesso permanente em segundo plano e algumas '
+                        'funções de captura dependem do ambiente e das '
+                        'permissões do sistema.',
             ).marginOnly(left: _kContentHMargin),
-            _Button('Instalação opcional para acesso permanente', () {
-              bind.mainGotoInstall();
-            }),
+            if (isWindows && !bind.isDisableInstallation())
+              _Button('Instalação opcional para acesso permanente', () {
+                bind.mainGotoInstall();
+              }),
           ]),
         theme(),
         _Card(title: 'Language', children: [language()]),
