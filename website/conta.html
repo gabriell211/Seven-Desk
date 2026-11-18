@@ -12,7 +12,7 @@
   <link rel="stylesheet" href="/styles.css?v=8" />
   <link rel="stylesheet" href="/conta.css?v=3" />
   <link rel="stylesheet" href="/theme.css?v=20261118b" />
-  <link rel="stylesheet" href="/portal.css?v=1" />
+  <link rel="stylesheet" href="/portal.css?v=2" />
   <script defer src="/conta.bundle.js"></script>
 </head>
 <body class="account-page">
@@ -189,11 +189,16 @@
             <div class="client-section-heading"><h2>Computadores e técnicos</h2><p>Gerencie dispositivos autorizados, perfis dos técnicos e códigos exclusivos.</p></div>
             <p id="account-device-unavailable" class="client-surface client-availability" role="status">Verificando disponibilidade dos dispositivos...</p>
             <div id="account-app-access" class="account-plan-actions" hidden>
-          <h2>Equipe de técnicos e dispositivos</h2>
-          <p class="account-intro">O primeiro mês inclui cinco vagas para computadores e técnicos. Após o teste, o acesso depende de assinatura ativa. Sua conta permite até cinco computadores para prestar suporte. Compre slots adicionais por R$ 7,00 quando precisar de mais vagas. Clientes atendidos não precisam de cadastro.</p>
-          <p class="account-intro">Cada código fica vinculado ao primeiro dispositivo que iniciar suporte com ele. Os nomes e fotos dos técnicos são gerenciados aqui e aparecem no aplicativo e nas solicitações de acesso. Para trocar o dispositivo, gere um novo código na mesma vaga.</p>
-          <p id="account-app-notice" class="account-intro" aria-live="polite"></p>
-          <div id="account-device-list"></div>
+          <div class="technician-board-heading">
+            <div><span class="technician-board-eyebrow">EQUIPE DE SUPORTE</span>
+              <h2>Seus técnicos</h2>
+              <p>Um cartão por técnico. A foto e o nome cadastrados aqui identificam quem solicita acesso ao computador do cliente.</p>
+            </div>
+            <span class="technician-board-note">5 vagas no primeiro mês · vagas extras conforme seu plano</span>
+          </div>
+          <p id="account-app-notice" class="technician-board-notice" role="status" aria-live="polite"></p>
+          <div id="account-device-list" class="technician-card-grid"></div>
+          <p class="technician-board-footnote">Cada técnico tem seu código <strong>tec_</strong> e cada computador recebe um código <strong>sd2_</strong>. Os códigos são diferentes, vinculados à vaga e só aparecem ao serem gerados.</p>
           <label id="account-tech-code-label" class="account-app-token-label" hidden>Código exclusivo do técnico (tec_)
             <input id="account-tech-code" type="text" readonly spellcheck="false" autocomplete="off" aria-label="Código do técnico" />
           </label>
