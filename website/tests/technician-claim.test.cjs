@@ -38,6 +38,27 @@ test('a technician can pair only with device activation from matching account an
   assert.equal(JSON.stringify(calls).includes(technician),false);
 });
 
+test('generation-two account requires new activation, legacy claim is rejected before DB query',async()=>{
+  const old=process.env.SEVEN_ACTIVATION_GENERATION;
+  let updates=0;
+  try{
+    process.env.SEVEN_ACTIVATION_GENERATION='2';
+    const latest='sd2_'+'x'.repeat(43);
+    const handler=createTechnicianClaimHandler({db:()=>({query:async()=>{
+      updates++;return {rows:[{user_id:userId}]};
+    }})});
+    const rejected=makeResponse();await handler(request(device,technician),rejected);
+    assert.equal(rejected.code,400);
+    assert.equal(updates,0);
+    const accepted=makeResponse();await handler(request(latest,technician),accepted);
+    assert.equal(accepted.code,200);
+    assert.equal(updates,1);
+  }finally{
+    if(old===undefined)delete process.env.SEVEN_ACTIVATION_GENERATION;
+    else process.env.SEVEN_ACTIVATION_GENERATION=old;
+  }
+});
+
 test('malformed and nonmatching technician codes never verify a device',async()=>{
   let updates=0;
   const handler=createTechnicianClaimHandler({db:()=>({
