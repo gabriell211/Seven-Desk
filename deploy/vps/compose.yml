@@ -37,6 +37,8 @@ services:
       SEVEN_BILLING_ENABLED: '0'
       SEVEN_WEBHOOK_ENABLED: '0'
       SEVEN_LICENSE_API_ENABLED: '0'
+      # Keep legacy activation until validated clients and signaling rotate together.
+      SEVEN_ACTIVATION_GENERATION: ${SEVEN_ACTIVATION_GENERATION:-1}
       SEVEN_SALES_LAUNCH_APPROVED: '0'
       SEVEN_SITE_URL: ${SEVEN_SITE_URL:-https://www.sevendesk.tech}
       SEVEN_AVATAR_DIR: /srv/sevendesk/avatars
