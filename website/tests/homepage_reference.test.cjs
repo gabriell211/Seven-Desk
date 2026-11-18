@@ -14,7 +14,7 @@ test('homepage mirrors the approved centered layout without an obsolete side pan
   assert.match(html, /class="pricing-banner"/);
   assert.match(html, /class="platform-quickbar"/);
   assert.doesNotMatch(html, /class="release-panel"/);
-  assert.match(html, /href="\/homepage\.css\?v=20261118d"/);
+  assert.match(html, /href="\/homepage\.css\?v=20261118e"/);
 });
 
 test('download remains a single OS-aware action with honest availability', () => {
@@ -72,4 +72,22 @@ test('pricing terms and protected download behavior remain truthful', () => {
   assert.equal((html.match(/\bdata-auto-download\b/g) || []).length, 1);
   assert.match(html, /href="\/licencas\.html"/);
   assert.match(html, /href="\/privacidade\.html"/);
+});
+
+
+test('legacy orange accents are removed and feature SVGs inherit branded purple', () => {
+  const css = read('homepage.css');
+  const theme = read('theme.css');
+  assert.doesNotMatch(css, /#(?:ff6909|f26522|ec4b46|e94b46|eb4743|ee4a46)\b/i);
+  assert.match(theme, /feature-card \.feature-icon svg/);
+  assert.match(theme, /stroke:var\(--sd-link\)/);
+});
+
+test('platform images are transparent, not darkened background squares', () => {
+  const css = read('theme.css');
+  const html = read('index.html');
+  assert.match(css, /platform-card img\.platform-symbol/);
+  assert.match(css, /background:transparent!important/);
+  assert.match(css, /filter:brightness\(0\) saturate\(100%\)/);
+  assert.equal((html.match(/class="platform-symbol official-platform-logo"/g) || []).length, 4);
 });
