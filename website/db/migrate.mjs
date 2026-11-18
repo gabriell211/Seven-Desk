@@ -7,7 +7,7 @@ import {createRequire} from 'node:module';
 import {auth} from '../lib/selfhost-auth.mjs';
 const require=createRequire(import.meta.url);
 const {options}=require('../lib/db-pool.js');
-const scripts=['001_billing.sql','002_app_tokens.sql','003_technician_slots.sql','004_extra_slots.sql','005_technician_profiles.sql','006_account_identity.sql','007_technicians.sql','008_technician_claim.sql'];
+const scripts=['001_billing.sql','002_app_tokens.sql','003_technician_slots.sql','004_extra_slots.sql','005_technician_profiles.sql','006_account_identity.sql','007_technicians.sql','008_technician_claim.sql','009_expand_activation_slots.sql'];
 const db=new Pool(options());
 const directory=path.dirname(fileURLToPath(import.meta.url));
 let client;
