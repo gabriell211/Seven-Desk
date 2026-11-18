@@ -58,6 +58,9 @@ test('dashboard uses server responses and fails closed when APIs are unavailable
 
 test('portal styling is scoped to authenticated sessions, responsive, and theme aware', () => {
   assert.match(html, /href="\/portal\.css\?v=1"/);
+  const build = fs.readFileSync(path.join(site, 'build-site.cjs'), 'utf8');
+  assert.ok(build.includes("'portal.css'"), 'production build must publish the sidebar stylesheet');
+  assert.match(html, /class="client-nav"[\s\S]*?<svg viewBox="0 0 24 24"/);
   assert.match(css, /html\[data-theme="light"\] body\.account-page\.account-authenticated/);
   assert.match(css, /html\[data-theme="dark"\] body\.account-page\.account-authenticated/);
   assert.match(css, /grid-template-columns:264px minmax\(0,1fr\)/);
