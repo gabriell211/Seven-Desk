@@ -14,7 +14,7 @@ test('homepage mirrors the approved centered layout without an obsolete side pan
   assert.match(html, /class="pricing-banner"/);
   assert.match(html, /class="platform-quickbar"/);
   assert.doesNotMatch(html, /class="release-panel"/);
-  assert.match(html, /href="\/homepage\.css\?v=20261118c"/);
+  assert.match(html, /href="\/homepage\.css\?v=20261118d"/);
 });
 
 test('download remains a single OS-aware action with honest availability', () => {
@@ -46,4 +46,30 @@ test('production bundler copies the new stylesheet alongside the homepage', () =
   assert.match(css, /\.hero \.hero-grid/);
   assert.match(css, /\.platform-quickbar button img/);
   assert.match(css, /filter:brightness\(0\);opacity:\.7/);
+});
+
+
+test('the entire landing page uses one reference-led visual system', () => {
+  const html = read('index.html');
+  const css = read('homepage.css');
+  const sections = ['solucoes', 'recursos', 'como-funciona', 'planos', 'plataformas', 'perguntas'];
+  for (const id of sections) assert.equal((html.match(new RegExp('id="' + id + '"', 'g')) || []).length, 1, id);
+  assert.match(html, /class="reassurance-strip"/);
+  for (const selector of ['intro', 'feature-section', 'steps-section', 'pricing-section', 'download-section', 'faq-section', 'final-cta', 'footer']) {
+    assert.ok(css.includes('body .' + selector), 'missing section style ' + selector);
+  }
+  assert.match(css, /body \.footer \.footer-links/);
+  assert.match(css, /body \.download-section \.platform-card/);
+  assert.match(css, /body \.faq-section \.faq-list/);
+});
+
+test('pricing terms and protected download behavior remain truthful', () => {
+  const html = read('index.html');
+  assert.match(html, /R\$<\/span> 39,90/);
+  assert.match(html, /R\$<\/span> 400/);
+  assert.match(html, /ECONOMIZE R\$ 78,80/);
+  assert.match(html, /não há cobrança automática/);
+  assert.equal((html.match(/\bdata-auto-download\b/g) || []).length, 1);
+  assert.match(html, /href="\/licencas"/);
+  assert.match(html, /href="\/privacidade"/);
 });
