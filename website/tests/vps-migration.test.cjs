@@ -22,3 +22,16 @@ test('Dockerfile never copies the application secret store to its image',()=>{
   assert.match(ignore,/website\/\.env/);
   assert.match(ignore,/website\/secrets\//);
 });
+
+
+
+test('paid extra slots use a schema limit compatible with the entitlement quota',()=>{
+  const readWeb=path=>readFileSync(resolve(__dirname,'..',path),'utf8');
+  const schema=readWeb('db/009_expand_activation_slots.sql');
+  const runner=readWeb('db/migrate.mjs');
+  const entitlement=readWeb('lib/technicians.js');
+  assert.match(runner,/'008_technician_claim\.sql','009_expand_activation_slots\.sql'/);
+  assert.match(schema,/DROP CONSTRAINT IF EXISTS seven_desk_app_tokens_slot_check/);
+  assert.match(schema,/ADD CONSTRAINT seven_desk_app_tokens_slot_check\s+CHECK \(slot BETWEEN 1 AND 32767\)/);
+  assert.match(entitlement,/SELECT 5 \+ COALESCE/);
+});
