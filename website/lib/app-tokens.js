@@ -3,7 +3,7 @@
 const { createHash, randomBytes } = require('node:crypto');
 const {getMaxSlots}=require('./technicians');
 
-const TOKEN_RE = /^sd_[A-Za-z0-9_-]{43}$/;
+const { allowedActivation, newTokenPrefix } = require('./activation-policy');
 const DEVICE_RE = /^[0-9a-f]{64}$/;
 
 function tokenHash(token) {
@@ -15,7 +15,7 @@ async function appTokenUser(pool, header, bindDevice = false) {
   const parts = credential.split(':');
   if (parts.length !== (bindDevice ? 2 : 1)) return null;
   const [token, deviceHash] = parts;
-  if (!TOKEN_RE.test(token)) return null;
+  if (!allowedActivation(token)) return null;
   if (bindDevice && !DEVICE_RE.test(deviceHash || '')) return null;
   const result = bindDevice
     ? await pool.query(
@@ -68,7 +68,7 @@ function createAppTokenHandler({ enabled, authenticate, pool, random = randomByt
       }
       const label = typeof req.body?.label === 'string' ? req.body.label.trim() : '';
       if (!label || label.length > 60) return res.status(400).json({ error: 'Nome do computador inválido' });
-      const token = 'sd_' + random(32).toString('base64url');
+      const token = newTokenPrefix() + random(32).toString('base64url');
       const result = await db.query(
         `INSERT INTO seven_desk_app_tokens (user_id, slot, label, token_hash)
          SELECT id, $2, $3, $4 FROM seven_users WHERE id = $1 AND "emailVerified" IS TRUE
