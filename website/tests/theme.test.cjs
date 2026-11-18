@@ -104,7 +104,7 @@ test('public build contains assets; all core pages load the shared selector', ()
     const html = file(name);
     assert.match(html, /data-theme="light"/, name);
     assert.match(html, /theme\.js\?v=20261118a/, name);
-    assert.match(html, /theme\.css\?v=20261118a/, name);
+    assert.match(html, /theme\.css\?v=20261118b/, name);
     assert.match(html, /data-theme-select/, name);
     const jsAt = html.indexOf('/theme.js?v=20261118a');
     const stylesAt = html.indexOf('/styles.css');
@@ -119,4 +119,18 @@ test('authentication and download handlers stay wired', () => {
   assert.match(file('conta.html'), /id="account-signed-out"/);
   assert.match(file('conta.html'), /id="account-signed-in"/);
   assert.match(file('pagamento-retorno.html'), /pagamento-retorno\.bundle\.js/);
+});
+
+
+test('login and signup design remains accessible and responsive in both themes', () => {
+  const css = file('theme.css');
+  assert.match(css, /body\.account-page \.account-shell/);
+  assert.match(css, /body\.account-page \.account-intro-panel/);
+  assert.match(css, /body\.account-page \.account-tabs button\[aria-pressed="true"\]/);
+  assert.match(css, /body\.account-page input:focus-visible/);
+  assert.match(css, /@media\(max-width:620px\)/);
+  const html = file('conta.html');
+  for (const key of ['account-form','account-email','account-password','account-submit','account-signed-out','account-signed-in']) {
+    assert.ok(html.includes('id="' + key + '"'),key);
+  }
 });
