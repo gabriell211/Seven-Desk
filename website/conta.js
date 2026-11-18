@@ -185,13 +185,17 @@ async function appAuthorization() {
   return 'Bearer '+token;
 }
 async function loadAppAccess() {
+  const availabilityNotice = el('account-device-unavailable');
+  availabilityNotice.hidden = false;
+  availabilityNotice.textContent = 'Verificando disponibilidade dos dispositivos...';
   try {
     const response = await fetch('/api/app-token', {
       headers: {Authorization: await appAuthorization()}, cache:'no-store',
     });
-    if (!response.ok) return;
+    if (!response.ok) throw new Error('Device management unavailable');
     const {devices,maxSlots} = await response.json();
-    if (!Array.isArray(devices)) return;
+    if (!Array.isArray(devices)) throw new Error('Invalid devices payload');
+    availabilityNotice.hidden = true;
     el('account-app-access').hidden = false;
     el('account-app-notice').textContent =
       'Cadastre o técnico e gere o código tec_ exclusivo. Depois gere o código sd2_ de ativação do computador. Um código não substitui o outro.';
@@ -289,7 +293,10 @@ async function loadAppAccess() {
       }
       list.append(row);
     }
-  } catch { /* Account activation stays unavailable if the service cannot be reached. */ }
+  } catch {
+    availabilityNotice.hidden = false;
+    availabilityNotice.textContent = 'Não foi possível carregar os dispositivos. Tente novamente mais tarde.';
+  }
 }
 
 function showTechnicianCode(code,slot){
