@@ -1,77 +1,69 @@
-/* Seven Desk homepage redesign — desktop-first, responsive and accessible */
-:root{--sd-blue:#1768e9;--sd-ink:#17263d;--sd-muted:#5d6e85;--sd-line:#e1eaf6}
-html{scroll-padding-top:96px}body{background:#fff;color:var(--sd-ink)}
-body .container{width:min(1220px,calc(100% - 52px))}
-body .announcement{background:#f4f8fe;color:#4f6280;border-bottom:1px solid #e6edf6;padding:9px 20px;font-size:12px}
-body .announcement a{color:#155de0;text-underline-offset:3px}
-body .site-header{background:rgba(255,255,255,.98);border-bottom:1px solid #e5ebf5;box-shadow:none;backdrop-filter:blur(16px)}
-body .header-inner{min-height:86px;gap:26px}
-body .site-header .brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:#142b48}
-body .site-header .brand-icon{width:44px;height:44px}
-body .site-header .brand>span{font-size:23px;font-weight:850;letter-spacing:-.06em;line-height:1.02}
-body .site-header .brand-accent{color:var(--sd-blue)}
-body .site-header .brand small{display:block;font-size:9px;letter-spacing:.18em;color:#7688a2;margin-top:6px}
-body .desktop-nav{display:flex;align-items:center;gap:22px;margin-left:auto}
-body .desktop-nav a{color:#324760;text-decoration:none;font-size:13px;font-weight:750;white-space:nowrap}
-body .desktop-nav a:hover{color:var(--sd-blue)}
-body .account-nav{display:flex;align-items:center;gap:10px}
-body .account-nav a{display:inline-flex;align-items:center;justify-content:center;border-radius:7px;font-size:13px;font-weight:800;padding:11px 16px;text-decoration:none;white-space:nowrap}
-body .account-nav-login{background:white;border:1px solid #d7e1ee;color:#2c4668}
-body .account-nav-register{background:var(--sd-blue);border:1px solid var(--sd-blue);color:white;box-shadow:0 8px 20px rgba(23,104,233,.14)}
-body .hero{min-height:0;overflow:hidden;position:relative;isolation:isolate;padding:55px 0 0;background:radial-gradient(ellipse at 89% 14%,#e8f2ff,transparent 48%),linear-gradient(180deg,#fff,#f9fbff);color:var(--sd-ink)}
-body .hero:before{content:"";position:absolute;z-index:-1;right:-250px;top:-280px;width:730px;height:730px;border-radius:50%;background:radial-gradient(circle,rgba(36,117,244,.12),transparent 70%)}
-body .hero .hero-grid-overlay{opacity:.11;background-size:48px 48px;mask-image:linear-gradient(90deg,transparent 38%,#000)}
-body .hero .hero-grid{display:grid;grid-template-columns:minmax(0,1.06fr) minmax(0,.94fr);align-items:center;gap:52px;min-height:590px;padding:25px 0 82px}
-body .hero .hero-copy{padding:0;max-width:670px;z-index:2}
-body .hero .eyebrow{display:inline-flex;align-items:center;gap:9px;background:#edf4ff;border:1px solid #d9e8ff;border-radius:6px;padding:10px 14px;color:#155ecf;font-size:11px;letter-spacing:.12em;font-weight:850}
-body .hero .eyebrow-pulse{width:7px;height:7px;border-radius:50%;background:#216ff1;box-shadow:0 0 0 4px rgba(33,111,241,.13)}
-body .hero h1{font-size:clamp(50px,5.3vw,82px);line-height:1.06;letter-spacing:-.072em;font-weight:850;color:#10213b;margin:23px 0 23px}
-body .hero .gradient-text{background:linear-gradient(100deg,#1464e9 25%,#08b6e7);-webkit-background-clip:text;background-clip:text;color:transparent}
-body .hero .hero-description{font-size:17px;line-height:1.76;color:#596b84;max-width:565px;margin:0 0 30px}
-body .hero .hero-actions{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
-body .hero .btn{min-height:53px;border-radius:7px;font-size:14px;font-weight:800;padding:13px 22px;box-shadow:none}
-body .hero .btn-primary{background:#1768e9;color:white;border:1px solid #1768e9;box-shadow:0 12px 23px rgba(23,104,233,.17)}
-body .hero .btn-primary:hover{background:#0758d8;transform:translateY(-2px)}
-body .hero .btn-outline{background:white;border:1px solid #cbd9ec;color:#25415f}
-body .hero .btn-outline:hover{border-color:#1768e9;background:#f2f7ff}
-body .hero .download-os-icon{width:21px;height:21px;margin-right:8px;vertical-align:middle}
-body .hero .hero-subnote{display:flex;align-items:center;gap:12px;flex-wrap:wrap;color:#637690;font-size:12px;font-weight:700;margin-top:29px}
-body .hero .note-icons{display:flex;align-items:center;gap:5px}
-body .hero .note-icons span{display:grid;place-items:center;background:white;border:1px solid #dae5f4;border-radius:7px;width:29px;height:29px;margin:0}
-body .hero .note-icons img{width:17px;height:17px;object-fit:contain}
-body .release-panel{position:relative;max-width:100%;min-width:0;background:#fff;border:1px solid #dce6f3;border-radius:18px;box-shadow:0 34px 75px rgba(25,57,110,.13),0 4px 12px rgba(25,57,110,.04);color:#233a57;overflow:hidden;transform:translateY(5px)}
-body .release-panel:before{content:"";display:block;height:7px;background:linear-gradient(90deg,#124fc7,#238ef4,#78cffa)}
-body .release-panel-head{display:flex;justify-content:space-between;align-items:center;gap:9px;padding:18px 21px;background:#fbfdff;border-bottom:1px solid #e6edf7}
-body .release-panel-brand{display:flex;align-items:center;gap:10px;font-size:13px;font-weight:850}
-body .release-panel-brand img{width:33px;height:33px}
-body .release-panel-brand small{display:block;color:#8999af;font-size:10px;font-weight:650;margin-top:3px}
-body .release-panel-head>a{color:#175fda;font-size:11px;font-weight:800;text-decoration:none}
-body .release-panel-body{padding:27px 25px 18px}
-body .release-panel-kicker{font-size:10px;font-weight:850;letter-spacing:.13em;color:#1662db}
-body .release-panel-body h2{font-size:clamp(21px,2.1vw,28px);line-height:1.18;letter-spacing:-.048em;color:#1a3354;margin:12px 0}
-body .release-panel-body>p{font-size:12px;color:#657892;line-height:1.7;margin:0 0 21px}
-body .release-version{display:flex;justify-content:space-between;align-items:center;gap:13px;border:1px solid #dbeaff;background:#f0f6ff;padding:13px;border-radius:9px;margin-bottom:14px;font-size:11px;color:#56708c}
-body .release-version strong{color:#165fd3;text-align:right;overflow-wrap:anywhere;font-size:12px}
-body .release-availability{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
-body .release-platform{display:flex;align-items:center;gap:7px;flex-wrap:wrap;background:#f8fafd;border:1px solid #e6edf6;border-radius:9px;padding:12px;font-size:12px;min-width:0}
-body .release-platform img{width:20px;height:20px;object-fit:contain}
-body .release-platform span{font-weight:800}
-body .release-platform strong{flex-basis:100%;color:#7d8ea4;font-size:10px}
-body .release-platform[data-availability="available"] strong{color:#07835d}
-body .release-panel-footer{display:flex;justify-content:space-between;align-items:center;gap:10px;border-top:1px solid #e8eef6;background:#fcfdff;color:#7486a0;padding:15px 22px;font-size:10px}
-body .release-panel-footer a{color:#165ed9;font-weight:800;text-decoration:none;white-space:nowrap}
-body .hero .hero-microbar{display:flex;align-items:center;justify-content:space-between;gap:18px;padding:24px 0;border-top:1px solid #e0e9f5;color:#506581;font-size:12px;font-weight:700}
-body .hero-microbar>div{display:flex;align-items:center;gap:9px}
-body .hero-microbar .micro-icon{color:#1768e9;font-size:18px}
-body .hero-microbar svg{width:20px;height:20px}
-body .intro{background:#f8fafd}
-body .section{scroll-margin-top:86px}
-body .section-head.centered{max-width:780px;text-align:center;margin:0 auto 45px}
-body .section-kicker{font-size:11px;letter-spacing:.13em;font-weight:850;color:#1463e8}
-body .solution-card,body .feature-card,body .pricing-card,body .platform-card{border-radius:15px}
-body .solution-card,body .feature-card{box-shadow:0 9px 25px rgba(21,59,111,.05)}
-body a:focus-visible,body button:focus-visible{outline:3px solid #2679ff;outline-offset:4px}
-@media(max-width:1170px){body .desktop-nav{gap:13px}body .header-inner{gap:18px}body .hero .hero-grid{gap:25px}}
-@media(max-width:980px){body .desktop-nav{display:none}body .hero{padding-top:18px}body .hero .hero-grid{grid-template-columns:1fr;gap:34px;min-height:0;padding:55px 0 65px}body .hero .hero-copy{max-width:750px}body .hero h1{font-size:clamp(48px,8vw,75px)}body .release-panel{width:100%;max-width:660px;margin:auto}body .hero .hero-microbar{flex-wrap:wrap}body .account-nav{margin-left:auto}body .mobile-menu-button{display:flex}}
-@media(max-width:640px){body .container{width:calc(100% - 36px)}body .announcement{text-align:center;font-size:10px}body .header-inner{min-height:70px}body .site-header .brand-icon{width:34px;height:34px}body .site-header .brand>span{font-size:19px}body .account-nav-login{display:none}body .account-nav-register{padding:9px 11px;font-size:11px}body .hero{padding-top:0}body .hero .hero-grid{gap:30px;padding:40px 0 50px}body .hero h1{font-size:clamp(42px,10vw,59px)}body .hero .hero-description{font-size:15px}body .hero .btn{font-size:13px;min-height:50px;padding:12px 15px}body .release-panel-head,body .release-panel-body{padding:17px}body .release-panel-head>a{font-size:10px}body .release-panel-footer{flex-direction:column;align-items:flex-start;padding:15px 17px}body .hero .hero-microbar{justify-content:flex-start;gap:14px}}
-@media(prefers-reduced-motion:reduce){body *,body *:before,body *:after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+/* Seven Desk: centered, typography-first landing page inspired by user-provided layout reference.
+   Source of truth: website/index.html; no API/auth, payment, or download behavior is changed. */
+:root{--sd-accent:#ee4a46;--sd-accent-deep:#ad195f;--sd-ink:#111;--sd-surface:#fffbfb;--sd-outline:#e7dada}
+body{background:#fff;color:#141414;font-family:Arial,Helvetica,sans-serif}
+body .container{width:min(1370px,calc(100% - 64px))}
+body .announcement{height:41px;display:flex;align-items:center;justify-content:center;padding:0 20px;background:linear-gradient(90deg,#ff6909 0%,#f05225 35%,#bd2c45 73%,#9e145c 100%);border:0;text-align:center}
+body .announcement a{display:block;color:#fff;font-weight:750;font-size:15px;text-decoration:none;letter-spacing:-.01em}
+body .announcement a span{padding-left:26px;font-size:19px}
+body .utility-bar{background:#fffafc}
+body .utility-inner{height:34px;display:flex;justify-content:flex-end;gap:22px;align-items:center;color:#e3433f;font-size:13px}
+body .utility-inner a{color:#e3433f;text-decoration:none}
+body .utility-inner a:hover{text-decoration:underline}
+body .utility-inner span{color:#b94b50}
+body .site-header{position:relative;top:auto;z-index:30;background:#fffafa;border:0;box-shadow:none;backdrop-filter:none}
+body .header-inner{height:77px;min-height:77px;display:flex;align-items:center;justify-content:space-between;gap:25px}
+body .site-header .brand{display:flex;align-items:center;gap:8px;flex-shrink:0;color:#131313;text-decoration:none}
+body .site-header .brand-icon{width:42px;height:42px}
+body .site-header .brand>span{font-size:24px;line-height:1;letter-spacing:-.06em;font-weight:800;color:#141414}
+body .site-header .brand .brand-accent{color:#6c39df}
+body .site-header .brand small{display:none}
+body .desktop-nav{display:flex;justify-content:center;align-items:center;gap:30px;margin:0 auto}
+body .desktop-nav a{color:#252525;text-decoration:none;white-space:nowrap;font-weight:500;font-size:15px}
+body .desktop-nav a:hover{color:#d83e48}
+body .account-nav{display:flex;align-items:center;gap:9px;flex-shrink:0}
+body .account-nav a{display:inline-flex;justify-content:center;align-items:center;padding:12px 18px;text-decoration:none;white-space:nowrap;border-radius:6px;font-size:14px;font-weight:800}
+body .account-nav-login{background:#eb4743;color:white;border:1px solid #eb4743}
+body .account-nav-register{background:transparent;color:#eb4743;border:2px solid #eb4743}
+body .account-nav a:hover{filter:brightness(.95);transform:none}
+body .hero{position:relative;isolation:isolate;background:radial-gradient(circle at 50% 90%,#fff 0%,#fff9f9 70%,#fff5f5 100%);padding:0;min-height:0;overflow:hidden;text-align:center;color:#111}
+body .hero:before,body .hero:after{content:none}
+body .hero-shape{pointer-events:none;position:absolute;z-index:-1;opacity:.75}
+body .hero-shape-left{width:600px;height:600px;left:-325px;top:55px;border:6px solid #ffdad8;transform:rotate(45deg)}
+body .hero-shape-left:after{content:"";position:absolute;border:5px solid #ffd8d5;inset:-145px}
+body .hero-shape-right{width:270px;height:270px;border:50px solid #ffe0de;border-radius:50%;right:-96px;top:110px;opacity:.62}
+body .hero .hero-grid{display:flex;flex-direction:column;align-items:stretch;justify-content:flex-start;gap:0;min-height:0;padding:26px 0 0;max-width:1370px}
+body .hero .hero-copy{width:100%;max-width:100%;padding:0;text-align:center;z-index:2;position:relative}
+body .hero .eyebrow{background:none;border:0;border-radius:0;padding:0;display:block;margin:2px 0 22px;color:#e8433e;font-size:19px;font-weight:750;letter-spacing:0;line-height:1.4;text-transform:none}
+body .hero h1{color:#080808;font-family:Arial,Helvetica,sans-serif;font-weight:300;letter-spacing:-.046em;line-height:1.09;font-size:clamp(46px,5.3vw,83px);max-width:1390px;margin:0 auto 23px}
+body .hero .hero-actions{display:flex;justify-content:center;align-items:center;margin:0;gap:0}
+body .hero .btn.btn-primary{border-radius:6px;background:#ed4945;color:#fff;box-shadow:none;border:1px solid #ed4945;min-height:45px;padding:10px 18px;font-size:15px;font-weight:800}
+body .hero .btn.btn-primary:hover{transform:none;background:#cc3536;border-color:#cc3536}
+body .hero .btn[aria-disabled="true"]{opacity:.8;cursor:not-allowed}
+body .hero .download-os-icon{height:17px;width:17px;margin-right:5px;vertical-align:middle;filter:brightness(0) invert(1)}
+body .hero-release{display:flex;flex-direction:column;align-items:center;gap:6px;margin:5px auto 0;font-size:14px;color:#222}
+body .hero-release strong{font-weight:500}
+body .hero-release>a{color:#ec4541;border-bottom:1px solid #ed4541;text-decoration:none;padding-bottom:5px}
+body .hero-terms{margin:19px auto 0;max-width:950px;font-size:14px;color:#222;line-height:1.5}
+body .hero-terms a{color:#e84441;text-decoration:underline;text-underline-offset:5px}
+body .pricing-banner{display:flex;align-items:center;justify-content:space-between;text-align:left;gap:25px;width:min(950px,100%);min-height:103px;margin:25px auto 0;padding:15px 20px;border-radius:12px 12px 0 0;background:linear-gradient(102deg,#ff6909 0%,#ec4917 42%,#ad135e 100%);color:#fff;box-shadow:none}
+body .pricing-banner-savings{min-width:175px;display:flex;flex-direction:column;gap:2px;font-size:13px}
+body .pricing-banner-savings strong{font-size:37px;line-height:1.02;font-weight:800;letter-spacing:-.04em;white-space:nowrap}
+body .pricing-banner-copy{display:flex;flex-direction:column;gap:5px;flex:1;min-width:0;font-size:15px}
+body .pricing-banner-copy strong{font-size:15px}
+body .pricing-banner-copy span{font-size:13px;line-height:1.4}
+body .pricing-banner-cta{background:#391025;color:#fff;text-decoration:none;border:1px solid #e8acb7;border-radius:6px;text-align:center;display:inline-flex;align-items:center;justify-content:center;min-height:56px;max-width:154px;min-width:145px;font-size:14px;line-height:1.25;padding:10px 13px;font-weight:800}
+body .pricing-banner-cta:hover{background:#5f123b}
+body .platform-quickbar{border-top:1px solid #e1dada;background:white;text-align:center;padding:0 0 8px}
+body .platform-quickbar-inner{display:flex;justify-content:center;gap:30px;align-items:stretch;padding-top:39px;flex-wrap:wrap}
+body .platform-quickbar button{border:2px solid transparent;border-bottom:0;background:transparent;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:9px;min-width:140px;min-height:94px;padding:15px 23px 13px;border-radius:5px 5px 0 0;color:#4a4a4a;cursor:pointer;font-family:inherit;font-size:14px}
+body .platform-quickbar button img{width:38px;height:38px;object-fit:contain;filter:grayscale(1);opacity:.65}
+body .platform-quickbar button.platform-selected,body .platform-quickbar button[aria-pressed="true"]{border-color:#f16d3d;color:#df443e}
+body .platform-quickbar button.platform-selected img,body .platform-quickbar button[aria-pressed="true"] img{filter:none;opacity:1}
+body .platform-quickbar-notice{margin:5px auto 13px;color:#677182;font-size:11px;max-width:580px;line-height:1.4}
+body .section{scroll-margin-top:90px}
+body button:focus-visible,body a:focus-visible{outline:3px solid #7838de;outline-offset:4px}
+@media(max-width:1150px){body .desktop-nav{gap:17px}body .desktop-nav a{font-size:13px}body .account-nav a{padding:10px 12px;font-size:12px}body .hero h1{font-size:clamp(45px,5.6vw,69px)}}
+@media(max-width:980px){body .desktop-nav{display:none}body .account-nav{margin-left:auto}body .mobile-menu-button{display:flex}body .hero .hero-grid{padding-top:45px}body .hero h1{font-size:clamp(41px,6vw,65px)}body .hero-shape-left{left:-450px}body .hero-shape-right{right:-175px}body .pricing-banner{gap:16px}body .platform-quickbar-inner{gap:8px}}
+@media(max-width:640px){body .container{width:calc(100% - 32px)}body .announcement{height:auto;min-height:40px;padding:8px 14px}body .announcement a{font-size:12px}body .utility-inner{height:31px;font-size:10px;gap:11px}body .utility-inner a:first-child{display:none}body .header-inner{height:67px;min-height:67px;gap:8px}body .site-header .brand-icon{width:33px;height:33px}body .site-header .brand>span{font-size:19px}body .account-nav-login{display:none!important}body .account-nav a{font-size:12px;padding:9px 11px}body .hero .hero-grid{padding-top:39px}body .hero .eyebrow{font-size:13px;margin-bottom:14px}body .hero h1{font-size:clamp(37px,9vw,53px);line-height:1.12;letter-spacing:-.035em;padding:0 1px;margin-bottom:24px}body .desktop-break{display:none}body .hero-terms{font-size:12px;padding:0 7px;margin-top:17px}body .pricing-banner{flex-wrap:wrap;min-height:0;padding:15px 17px;gap:12px;margin-top:25px}body .pricing-banner-savings{min-width:120px}body .pricing-banner-savings strong{font-size:27px}body .pricing-banner-copy{flex-basis:50%;font-size:12px}body .pricing-banner-copy strong{font-size:12px}body .pricing-banner-copy span{font-size:11px}body .pricing-banner-cta{flex:1;max-width:none;min-height:43px;min-width:0;font-size:12px}body .platform-quickbar-inner{padding-top:16px;gap:2px;flex-wrap:nowrap}body .platform-quickbar button{min-width:0;flex:1;padding:11px 3px;min-height:75px;font-size:11px}body .platform-quickbar button img{width:27px;height:27px}}
+@media(prefers-reduced-motion:reduce){body *,body *:before,body *:after{transition-duration:.01ms!important;animation-duration:.01ms!important}}
