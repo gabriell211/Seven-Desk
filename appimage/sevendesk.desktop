@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=Seven Desk
+Comment=Acesso remoto Seven Desk
+Exec=usr/share/rustdesk/rustdesk %u
+Icon=sevendesk
+Terminal=false
+Categories=Network;RemoteAccess;
+StartupNotify=true

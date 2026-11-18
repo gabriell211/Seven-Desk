@@ -3006,12 +3006,33 @@ jobs:
           sudo appimage-builder --skip-tests --recipe ./AppImageBuilder-${{ matrix.job.arch }}.yml
           cmp AppDir/AppRun appimage-build/AppRun/v2.0.0/AppRun-Release-${{ matrix.job.arch }}
 
+      - name: Normalize and validate AppImage output
+        shell: bash
+        run: |
+          set -euo pipefail
+          mapfile -d '' -t matches < <(find appimage -maxdepth 1 -type f -name '*.AppImage' -print0)
+          if [ "${#matches[@]}" -ne 1 ]; then
+            echo "::error::Expected exactly one built AppImage; found ${#matches[@]}" >&2
+            exit 1
+          fi
+          output="appimage/sevendesk-${{ env.VERSION }}-${{ matrix.job.arch }}.AppImage"
+          if [ "${matches[0]}" != "$output" ]; then
+            mv -- "${matches[0]}" "$output"
+          fi
+          test "$(stat -c '%s' "$output")" -gt 4096
+          cmp -s <(head -c 4 "$output") <(printf '\177ELF') || {
+            echo "::error::AppImage runtime header is not ELF" >&2
+            exit 1
+          }
+          chmod +x "$output"
+          sha256sum "$output"
+
       - name: Upload QA Linux AppImage
         if: inputs.qa-artifacts
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: sevendesk-qa-linux-${{ matrix.job.arch }}-appimage
-          path: appimage/sevendesk-${{ env.VERSION }}-*.AppImage
+          path: appimage/sevendesk-${{ env.VERSION }}-${{ matrix.job.arch }}.AppImage
           if-no-files-found: error
 
       - name: Publish appimage package
@@ -3022,7 +3043,7 @@ jobs:
           tag_name: ${{ env.TAG_NAME }}
           name: sevendesk
           files: |
-            ./appimage/sevendesk-${{ env.VERSION }}-*.AppImage
+            ./appimage/sevendesk-${{ env.VERSION }}-${{ matrix.job.arch }}.AppImage
 
   build-flatpak:
     name: Build flatpak ${{ matrix.job.target }}${{ matrix.job.suffix }}

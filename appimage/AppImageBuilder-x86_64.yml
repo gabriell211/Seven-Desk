@@ -10,6 +10,8 @@ script:
  - for i in {32,64,128}; do mkdir -p ./AppDir/usr/share/icons/hicolor/$i\x$i/apps/; cp ../res/$i\x$i.png ./AppDir/usr/share/icons/hicolor/$i\x$i/apps/sevendesk.png; done
  # Desktop identity is generated from app_info and uses the Seven Desk icon.
  - rm -rf ./AppDir/usr/share/applications
+ - mkdir -p ./AppDir/usr/share/applications
+ - cp ./sevendesk.desktop ./AppDir/usr/share/applications/sevendesk.desktop
 AppDir:
   path: ./AppDir
   app_info:

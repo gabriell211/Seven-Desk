@@ -29,5 +29,21 @@ class AppImageIdentityTests(unittest.TestCase):
         self.assertIn("Terminal=false\n", desktop)
 
 
+    def test_portable_appimage_entry_and_artifact_name(self):
+        desktop = (ROOT / "appimage" / "sevendesk.desktop").read_text(encoding="utf-8")
+        self.assertIn("Name=Seven Desk\n", desktop)
+        self.assertIn("Icon=sevendesk\n", desktop)
+        self.assertIn("Terminal=false\n", desktop)
+        for arch in ("x86_64", "aarch64"):
+            with self.subTest(arch=arch):
+                recipe = (ROOT / "appimage" / f"AppImageBuilder-{arch}.yml").read_text(encoding="utf-8")
+                self.assertIn(" - cp ./sevendesk.desktop ./AppDir/usr/share/applications/sevendesk.desktop\n", recipe)
+        workflow = (ROOT / ".github" / "workflows" / "flutter-build.yml").read_text(encoding="utf-8")
+        self.assertIn("Normalize and validate AppImage output", workflow)
+        self.assertIn("Expected exactly one built AppImage", workflow)
+        self.assertIn("sha256sum", workflow)
+        self.assertIn("appimage/sevendesk-${{ env.VERSION }}-${{ matrix.job.arch }}.AppImage", workflow)
+
+
 if __name__ == "__main__":
     unittest.main()
