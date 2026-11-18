@@ -418,6 +418,19 @@ class _GeneralState extends State<_General> {
       controller: scrollController,
       children: [
         if (!isWeb) service(),
+        if (isWindows &&
+            !bind.isDisableInstallation() &&
+            !bind.mainIsInstalled())
+          _Card(title: 'Modo portátil', children: [
+            const Text(
+              'O Seven Desk pode receber e iniciar conexões sem instalação '
+              'enquanto estiver aberto. Instalar é opcional e serve para '
+              'acesso permanente, inicialização com o Windows e serviço de fundo.',
+            ).marginOnly(left: _kContentHMargin),
+            _Button('Instalação opcional para acesso permanente', () {
+              bind.mainGotoInstall();
+            }),
+          ]),
         theme(),
         _Card(title: 'Language', children: [language()]),
         if (!isWeb) hwcodec(),
