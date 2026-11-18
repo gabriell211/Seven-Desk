@@ -1,0 +1,13 @@
+{
+	servers :8080 {
+		protocols h1
+	}
+}
+
+:8080 {
+	header X-Content-Type-Options nosniff
+	@hidden path_regexp hidden (?i)(?:^|/)\.[^/]+
+	respond @hidden 404
+	root * /srv/downloads
+	file_server
+}

@@ -75,6 +75,31 @@ jobs:
           docker compose -f deploy/vps/compose.yml exec -T site node -e \
             "fetch('http://127.0.0.1:3100/api/billing-status').then(r=>r.json()).then(x=>{if(x.checkoutAvailable!==false)process.exit(1)})"
 
+      - name: Verify Traefik downloads Compose, Caddy and private-file denial
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker compose -f deploy/vps/compose.yml -f deploy/vps/traefik-downloads.compose.yml config -q
+          docker run --rm --network none \
+            -v "$PWD/deploy/vps/Caddyfile.downloads:/etc/caddy/Caddyfile:ro" \
+            --entrypoint caddy caddy:2.11.9-alpine validate --config /etc/caddy/Caddyfile
+          sudo install -d -o "$(id -u)" -g "$(id -g)" -m 0755 /srv/sevendesk/downloads
+          public_file="$(mktemp /srv/sevendesk/downloads/sevendesk-ci-public-XXXXXX.txt)"
+          hidden_file="$(mktemp /srv/sevendesk/downloads/.sevendesk-ci-hidden-XXXXXX)"
+          trap 'rm -f "$public_file" "$hidden_file"' EXIT
+          printf 'seven-desk-static-file-ok\n' > "$public_file"
+          printf 'private\n' > "$hidden_file"
+          chmod 0644 "$public_file" "$hidden_file"
+          docker compose -f deploy/vps/compose.yml -f deploy/vps/traefik-downloads.compose.yml up -d --no-deps downloads
+          container="$(docker compose -f deploy/vps/compose.yml -f deploy/vps/traefik-downloads.compose.yml ps -q downloads)"
+          test -n "$container"
+          ip="$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' "$container")"
+          test -n "$ip"
+          test "$(curl -fsS --retry 5 --retry-connrefused --retry-delay 1 \
+            "http://$ip:8080/$(basename "$public_file")")" = "seven-desk-static-file-ok"
+          test "$(curl -sS -o /dev/null -w '%{http_code}' \
+            "http://$ip:8080/$(basename "$hidden_file")")" = "404"
+
       - name: Show diagnostics on failure
         if: failure()
         run: |
@@ -83,4 +108,4 @@ jobs:
 
       - name: Stop temporary test stack
         if: always()
-        run: docker compose -f deploy/vps/compose.yml down --remove-orphans || true
+        run: docker compose -f deploy/vps/compose.yml -f deploy/vps/traefik-downloads.compose.yml down --remove-orphans || true

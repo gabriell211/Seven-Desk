@@ -12,9 +12,7 @@ O Docker Compose usa serviços privados com três perfis:
 - signaling: os binários Seven ID/Relay em host network (NÃO ligar sem auditoria de portas)
 - cutover: Caddy 80/443 para servir www e downloads após verificar o DNS e o TLS
 
-**Ainda não houve deploy nem homologação real na VPS**. Um build CI aprovado não prova
-que SMTP, pagamentos, P2P ou UAC funcionem. Não remover a origem antiga antes de
-ser possível fazer rollback para ela.
+**Ambiente existente em 18/11/2026:** há portal, banco e sinalização ativos na VPS, com Traefik nas portas 80/443. O roteiro abaixo continua adequado para uma implantação isolada nova. O modo `cutover` (Caddy público) NÃO deve disputar as portas do Traefik. O deploy real de contas, pagamentos e instaladores ainda depende de homologação. Um build CI aprovado não comprova SMTP, pagamentos, P2P ou UAC; preserve rollback.
 
 ## Arquivos privados e pré-requisitos
 
@@ -121,6 +119,8 @@ armazenamento remoto:
 
 O script atual cobre o banco. Certificados TLS, arquivos de download, avatares e
 chaves privadas de ID exigem rotina cifrada adicional e testes de restauração.
+
+Para a VPS que já utiliza Traefik, siga [Downloads com Traefik](README-traefik-downloads.md), **sem** ativar o perfil `cutover`. A pasta pública não deve conter segredos.
 
 ## Publicação dos instaladores na VPS
 
