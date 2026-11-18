@@ -4,7 +4,7 @@ const {pool}=require('../lib/db-pool');
 const {technicianCodeHash}=require('../lib/technicians');
 const {tokenHash}=require('../lib/app-tokens');
 
-const ACTIVATION=/^sd_[A-Za-z0-9_-]{43}$/;
+const {allowedActivation}=require('../lib/activation-policy');
 function createTechnicianClaimHandler({db=pool}={}){
   return async(req,res)=>{
     res.setHeader('Cache-Control','no-store');
@@ -15,7 +15,7 @@ function createTechnicianClaimHandler({db=pool}={}){
       return res.status(503).json({error:'Validação indisponível'});
     const activation=req.body?.activationToken;
     const technician=req.body?.technicianCode;
-    if(typeof activation!=='string'||!ACTIVATION.test(activation) ||
+    if(typeof activation!=='string'||!allowedActivation(activation) ||
        typeof technician!=='string'||!technicianCodeHash(technician))
       return res.status(400).json({error:'Informe os dois códigos válidos'});
     try{
