@@ -131,3 +131,29 @@ test('a valid app token receives paid access only while its account has time rem
   await license(request('GET', 'Bearer ' + issue.body.token + ':' + device), denied);
   assert.equal(denied.code, 401);
 });
+
+
+test('cutover makes old installers lose cloud activation while new tokens stay device-bound', async () => {
+  const old = process.env.SEVEN_ACTIVATION_GENERATION;
+  try {
+    process.env.SEVEN_ACTIVATION_GENERATION = '1';
+    const { db, handler } = fixture();
+    const oldIssue = response();
+    await handler(request('POST'), oldIssue);
+    assert.match(oldIssue.body.token, /^sd_[A-Za-z0-9_-]{43}$/);
+    assert.equal(await appTokenUser(db, 'Bearer ' + oldIssue.body.token), userId);
+    process.env.SEVEN_ACTIVATION_GENERATION = '2';
+    assert.equal(await appTokenUser(db, 'Bearer ' + oldIssue.body.token), null);
+    assert.equal(await appTokenUser(db, 'Bearer ' + oldIssue.body.token + ':' + 'a'.repeat(64), true), null);
+    const newIssue = response();
+    await handler(request('POST'), newIssue);
+    assert.equal(newIssue.code, 200);
+    assert.match(newIssue.body.token, /^sd2_[A-Za-z0-9_-]{43}$/);
+    assert.equal(await appTokenUser(db, 'Bearer ' + newIssue.body.token), userId);
+    assert.equal(await appTokenUser(db, 'Bearer ' + newIssue.body.token + ':' + 'a'.repeat(64), true), userId);
+    assert.equal(await appTokenUser(db, 'Bearer ' + newIssue.body.token + ':' + 'b'.repeat(64), true), null);
+  } finally {
+    if (old === undefined) delete process.env.SEVEN_ACTIVATION_GENERATION;
+    else process.env.SEVEN_ACTIVATION_GENERATION = old;
+  }
+});
