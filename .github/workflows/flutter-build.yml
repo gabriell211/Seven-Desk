@@ -24,6 +24,16 @@ on:
 # in this file!
 
 env:
+  # Self-hosted, read-only snapshots of upstream Git dependencies (not authorship changes).
+  GIT_CONFIG_COUNT: "4"
+  GIT_CONFIG_KEY_0: "url.https://downloads.sevendesk.tech/deps/hwcodec.git.insteadOf"
+  GIT_CONFIG_VALUE_0: "https://github.com/rustdesk-org/hwcodec"
+  GIT_CONFIG_KEY_1: "url.https://downloads.sevendesk.tech/deps/hwcodec.git.insteadOf"
+  GIT_CONFIG_VALUE_1: "https://github.com/rustdesk-org/hwcodec.git"
+  GIT_CONFIG_KEY_2: "url.https://downloads.sevendesk.tech/deps/externals.git.insteadOf"
+  GIT_CONFIG_VALUE_2: "https://github.com/rustdesk-org/externals.git"
+  GIT_CONFIG_KEY_3: "url.https://downloads.sevendesk.tech/deps/externals.git.insteadOf"
+  GIT_CONFIG_VALUE_3: "https://github.com/rustdesk-org/externals"
   SCITER_RUST_VERSION: "1.75" # https://github.com/rustdesk/rustdesk/discussions/7503, also 1.78 has ABI change which causes our sciter version not working, https://blog.rust-lang.org/2024/03/30/i128-layout-update.html
   RUST_VERSION: "1.75" # sciter failed on m1 with 1.78 because of https://blog.rust-lang.org/2024/03/30/i128-layout-update.html
   MAC_RUST_VERSION: "1.81" # 1.81 is requred for macos, because of https://github.com/yury/cidre requires 1.81
@@ -2222,6 +2232,15 @@ jobs:
           dockerRunArgs: |
             --volume "${PWD}:/workspace"
             --volume "/opt/artifacts:/opt/artifacts"
+            --env GIT_CONFIG_COUNT
+            --env GIT_CONFIG_KEY_0
+            --env GIT_CONFIG_VALUE_0
+            --env GIT_CONFIG_KEY_1
+            --env GIT_CONFIG_VALUE_1
+            --env GIT_CONFIG_KEY_2
+            --env GIT_CONFIG_VALUE_2
+            --env GIT_CONFIG_KEY_3
+            --env GIT_CONFIG_VALUE_3
           shell: /bin/bash
           install: |
             # Use official Ubuntu HTTPS sources for the container's configured distro.
@@ -2576,6 +2595,15 @@ jobs:
           dockerRunArgs: |
             --volume "${PWD}:/workspace"
             --volume "/opt/artifacts:/opt/artifacts"
+            --env GIT_CONFIG_COUNT
+            --env GIT_CONFIG_KEY_0
+            --env GIT_CONFIG_VALUE_0
+            --env GIT_CONFIG_KEY_1
+            --env GIT_CONFIG_VALUE_1
+            --env GIT_CONFIG_KEY_2
+            --env GIT_CONFIG_VALUE_2
+            --env GIT_CONFIG_KEY_3
+            --env GIT_CONFIG_VALUE_3
           shell: /bin/bash
           install: |
             # Use official Ubuntu HTTPS sources for the container's configured distro.
@@ -2889,6 +2917,15 @@ jobs:
             ls -l "${PWD}"
           dockerRunArgs: |
             --volume "${PWD}:/workspace"
+            --env GIT_CONFIG_COUNT
+            --env GIT_CONFIG_KEY_0
+            --env GIT_CONFIG_VALUE_0
+            --env GIT_CONFIG_KEY_1
+            --env GIT_CONFIG_VALUE_1
+            --env GIT_CONFIG_KEY_2
+            --env GIT_CONFIG_VALUE_2
+            --env GIT_CONFIG_KEY_3
+            --env GIT_CONFIG_VALUE_3
           shell: /bin/bash
           install: |
             # Use official Ubuntu HTTPS sources for the container's configured distro.
@@ -3222,6 +3259,15 @@ jobs:
             ls -l "${PWD}"
           dockerRunArgs: |
             --volume "${PWD}:/workspace"
+            --env GIT_CONFIG_COUNT
+            --env GIT_CONFIG_KEY_0
+            --env GIT_CONFIG_VALUE_0
+            --env GIT_CONFIG_KEY_1
+            --env GIT_CONFIG_VALUE_1
+            --env GIT_CONFIG_KEY_2
+            --env GIT_CONFIG_VALUE_2
+            --env GIT_CONFIG_KEY_3
+            --env GIT_CONFIG_VALUE_3
           shell: /bin/bash
           install: |
             # Use official Ubuntu HTTPS sources for the container's configured distro.
