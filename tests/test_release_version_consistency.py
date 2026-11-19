@@ -44,5 +44,16 @@ class ReleaseVersionConsistencyTests(unittest.TestCase):
                                  "Published tag must match the compiled package version")
 
 
+    def test_flatpak_packaging_uses_supported_builder(self):
+        workflow = read(".github/workflows/flutter-build.yml")
+        block = workflow.split("  build-flatpak:\n", 1)[1].split("\n  build-rustdesk-web:", 1)[0]
+        self.assertEqual(block.count("distro: ubuntu24.04,"), 3)
+        self.assertEqual(block.count("on: ubuntu-24.04,"), 2)
+        self.assertEqual(block.count("on: ubuntu-24.04-arm,"), 1)
+        self.assertIn("apt-get install -y git flatpak flatpak-builder", block)
+        self.assertIn("flatpak-builder --version", block)
+        self.assertNotIn("ubuntu22.04", block)
+
+
 if __name__ == "__main__":
     unittest.main()
