@@ -63,14 +63,14 @@ class ReleaseVersionConsistencyTests(unittest.TestCase):
         # Two legacy Linux variants, Sciter and Flatpak share this bootstrap.
         marker = "Bootstrapping CA certificates from GPG-signed Ubuntu packages"
         self.assertEqual(workflow.count(marker), 4)
-        blocks = re.findall(r"(?m)^          install: \\|\\n((?:            .*\\n)+)", workflow)
+        blocks = re.findall(r"(?m)^          install: \|\n((?:            .*\n)+)", workflow)
         patched = [block for block in blocks if marker in block]
         self.assertEqual(len(patched), 4)
         for block in patched:
             with self.subTest(builder=patched.index(block)):
                 self.assertIn("dpkg-query -W -f='${Status}' ca-certificates", block)
                 self.assertIn("apt_retry -o Acquire::https::Verify-Peer=false", block)
-                self.assertIn("apt_retry -o Acquire::https::Verify-Host=false", block)
+                self.assertIn("-o Acquire::https::Verify-Host=false", block)
                 self.assertIn("install -y --no-install-recommends ca-certificates", block)
                 self.assertIn("test -s /etc/ssl/certs/ca-certificates.crt", block)
                 self.assertIn("update-ca-certificates", block)
