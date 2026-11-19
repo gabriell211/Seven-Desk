@@ -102,6 +102,11 @@ const clientViewMeta = Object.freeze({
   billing:['Assinatura e planos','Acompanhe a validade do seu acesso e as opções de assinatura.'],
   settings:['Configurações','Controle suas preferências e informações de segurança.'],
 });
+// Codes are kept in memory only for the currently authenticated account.
+const revealedTechnicianCodes = new Map();
+let revealedOwner = null;
+const activationUpdatesInFlight = new Set();
+
 let activeClientView = 'overview';
 function showClientView(view, focus = false) {
   if (!Object.hasOwn(clientViewMeta,view)) return;
@@ -125,6 +130,13 @@ document.querySelectorAll('[data-account-view]').forEach(button => {
 
 function displaySession(session) {
   const user = session?.user?.emailVerified === true ? session.user : null;
+  const owner = user ? (typeof user.id === 'string' ? user.id : user.email) : null;
+  if (revealedOwner !== owner) {
+    revealedOwner = owner;
+    revealedTechnicianCodes.clear();
+    activationUpdatesInFlight.clear();
+    el('account-activation-notice').textContent = '';
+  }
   el('account-signed-in').hidden = !user;
   el('account-signed-out').hidden = !!user;
   document.body.classList.toggle('account-authenticated',Boolean(user));
@@ -157,8 +169,12 @@ function displaySession(session) {
   showClientView(user ? activeClientView : 'overview');
   el('account-plan-actions').hidden = !user;
   el('account-app-access').hidden = true;
+  el('account-activation-list').replaceChildren();
+  el('account-activation-unavailable').hidden = !user;
+  el('account-activation-unavailable').textContent = 'Verificando disponibilidade dos computadores...';
   el('account-app-token').value = '';
   el('account-app-token-label').hidden = true;
+  delete el('account-app-token-label').dataset.slot;
   el('account-app-copy').hidden = true;
   el('account-tech-code').value = '';
   el('account-tech-code-label').hidden = true;
@@ -209,20 +225,16 @@ function createTechnicianCard(slot, device) {
     '<span class="technician-card-badge"></span></header>',
     '<div class="technician-card-fields">',
     '<label>Nome exibido ao cliente<input data-tech-name maxlength="100" minlength="2" autocomplete="off" placeholder="Nome do técnico"></label>',
-    '<label>Nome do computador<input data-device-name maxlength="60" autocomplete="off" placeholder="Ex.: Notebook do suporte"></label>',
     '<label class="technician-card-upload">Foto/avatar do técnico<input type="file" accept="image/jpeg,image/png,image/webp"><small>JPG, PNG ou WebP até 2 MB · exibida nas solicitações de acesso</small></label>',
     '</div>',
     '<p class="technician-card-description"></p>',
     '<div class="technician-card-actions">',
     '<button type="button" class="technician-card-primary" data-card-save></button>',
     '<button type="button" data-card-tech-code hidden></button>',
-    '<button type="button" data-card-activation></button>',
-    '<button type="button" data-card-revoke hidden></button>',
     '</div><div class="technician-card-credential" role="status" hidden></div>'
   ].join('');
   const find = selector => card.querySelector(selector);
   const nameInput = find('[data-tech-name]');
-  const deviceInput = find('[data-device-name]');
   const photoInput = find('input[type=file]');
   const photo = find('.technician-card-photo');
   const initials = find('.technician-card-initials');
@@ -231,13 +243,12 @@ function createTechnicianCard(slot, device) {
   const badge = find('.technician-card-badge');
   const savedName = typeof device?.technician_name === 'string' ? device.technician_name : '';
   nameInput.value = savedName;
-  deviceInput.value = device?.label || (slot === 1 ? 'Meu computador' : 'Computador ' + slot);
   find('.technician-card-kicker').textContent = 'VAGA ' + String(slot).padStart(2,'0');
-  badge.dataset.status = device?.activated ? 'activated' : savedName ? 'registered' : 'available';
-  badge.textContent = device?.activated ? 'Código emitido' : savedName ? 'Cadastrado' : 'Vaga livre';
+  badge.dataset.status = device?.has_technician_code ? 'activated' : savedName ? 'registered' : 'available';
+  badge.textContent = device?.has_technician_code ? 'Código do técnico emitido' : savedName ? 'Cadastrado' : 'Vaga livre';
   find('.technician-card-description').textContent = device?.has_technician_code
     ? 'Código do técnico configurado. Para visualizá-lo novamente, gere outro código.'
-    : 'O código tec_ identifica o técnico; o código sd2_ ativa o computador.';
+    : 'Cadastre o técnico para gerar seu código individual de identificação.';
   let localPhotoUrl = '';
   const remotePhotoUrl = trustedTechnicianImage(device?.technician_image,slot);
   function setPhoto(url) {
@@ -253,7 +264,7 @@ function createTechnicianCard(slot, device) {
   function syncIdentity() {
     const name = nameInput.value.trim();
     title.textContent = name || 'Adicionar técnico';
-    subtitle.textContent = deviceInput.value.trim() || 'Computador ' + slot;
+    subtitle.textContent = device?.label || (slot === 1 ? 'Meu computador' : 'Computador ' + slot);
     const words = name.split(/\s+/).filter(Boolean);
     initials.textContent = (words.length > 1 ? words[0][0] + words.at(-1)[0] :
       words[0]?.slice(0,2) || 'T').toLocaleUpperCase('pt-BR');
@@ -261,7 +272,6 @@ function createTechnicianCard(slot, device) {
   syncIdentity();
   setPhoto(remotePhotoUrl);
   nameInput.addEventListener('input',syncIdentity);
-  deviceInput.addEventListener('input',syncIdentity);
   photoInput.addEventListener('change', () => {
     const file = photoInput.files?.[0];
     if (!file) { setPhoto(remotePhotoUrl); return; }
@@ -279,15 +289,8 @@ function createTechnicianCard(slot, device) {
   save.addEventListener('click', () => updateTechnicianProfile(slot,nameInput.value,photoInput.files?.[0],save));
   const techCode = find('[data-card-tech-code]');
   techCode.hidden = !savedName;
-  techCode.textContent = device?.has_technician_code ? 'Trocar código tec_' : 'Gerar código tec_';
+  techCode.textContent = device?.has_technician_code ? 'Trocar código do técnico' : 'Gerar código do técnico';
   techCode.addEventListener('click', () => rotateTechnicianCode(slot,techCode));
-  const activation = find('[data-card-activation]');
-  activation.textContent = device?.activated ? 'Trocar ativação sd2_' : 'Gerar ativação sd2_';
-  activation.addEventListener('click', () => updateAppDevice(slot,deviceInput.value,false));
-  const revoke = find('[data-card-revoke]');
-  revoke.hidden = !device?.activated;
-  revoke.textContent = 'Revogar ativação';
-  revoke.addEventListener('click', () => updateAppDevice(slot,'',true));
   return card;
 }
 
@@ -297,7 +300,8 @@ function showCardCode(slot, kind, code) {
   if (!card) return;
   const target = card.querySelector('.technician-card-credential');
   const label = document.createElement('label');
-  label.textContent = kind === 'technician' ? 'Código do técnico (tec_)' : 'Ativação do computador (sd2_)';
+  if (kind !== 'technician') return;
+  label.textContent = 'Código exclusivo do técnico';
   const input = document.createElement('input');
   input.type = 'text';
   input.readOnly = true;
@@ -312,7 +316,7 @@ function showCardCode(slot, kind, code) {
     input.select();
     try {
       await navigator.clipboard.writeText(input.value);
-      el('account-app-notice').textContent = 'Código copiado.';
+      el('account-app-notice').textContent = 'Código do técnico copiado.';
     } catch { el('account-app-notice').textContent = 'Selecione o código para copiar manualmente.'; }
   });
   const hint = document.createElement('small');
@@ -321,8 +325,70 @@ function showCardCode(slot, kind, code) {
   target.hidden = false;
 }
 
+function createActivationCard(slot, device) {
+  const card = document.createElement('article');
+  card.className = 'activation-card';
+  card.dataset.activationSlot = String(slot);
+  card.setAttribute('aria-label', 'Ativação do computador ' + slot);
+  const header = document.createElement('div');
+  header.className = 'activation-card-header';
+  const title = document.createElement('strong');
+  title.textContent = 'Computador ' + String(slot).padStart(2, '0');
+  const state = document.createElement('span');
+  state.textContent = device?.activated ? 'Ativado' : 'Sem ativação';
+  state.dataset.status = device?.activated ? 'activated' : 'available';
+  header.append(title, state);
+  const nameLabel = document.createElement('label');
+  nameLabel.textContent = 'Nome do computador';
+  const name = document.createElement('input');
+  name.type = 'text';
+  name.maxLength = 60;
+  name.autocomplete = 'off';
+  name.placeholder = 'Ex.: Meu computador';
+  name.value = device?.label || (slot === 1 ? 'Meu computador' : 'Computador ' + slot);
+  nameLabel.append(name);
+  const actions = document.createElement('div');
+  actions.className = 'activation-card-actions';
+  const generate = document.createElement('button');
+  generate.type = 'button';
+  generate.textContent = device?.activated
+    ? 'Trocar código de ativação do sistema'
+    : 'Gerar código de ativação do sistema';
+  generate.addEventListener('click', () => updateAppDevice(slot, name.value, false));
+  actions.append(generate);
+  if (device?.activated) {
+    const revoke = document.createElement('button');
+    revoke.type = 'button';
+    revoke.textContent = 'Revogar ativação';
+    revoke.className = 'activation-card-revoke';
+    revoke.addEventListener('click', () => updateAppDevice(slot, '', true));
+    actions.append(revoke);
+  }
+  card.append(header, nameLabel, actions);
+  return card;
+}
+
+function showActivationCode(slot, code) {
+  const area = el('account-app-token-label');
+  const input = el('account-app-token');
+  input.value = code;
+  area.dataset.slot = String(slot);
+  area.hidden = false;
+  el('account-app-copy').hidden = false;
+}
+
+function clearActivationCode() {
+  el('account-app-token').value = '';
+  el('account-app-token-label').hidden = true;
+  el('account-app-copy').hidden = true;
+  delete el('account-app-token-label').dataset.slot;
+}
+
 async function loadAppAccess() {
   const availabilityNotice = el('account-device-unavailable');
+  const activationAvailability = el('account-activation-unavailable');
+  activationAvailability.hidden = false;
+  activationAvailability.textContent = 'Verificando disponibilidade dos computadores...';
   availabilityNotice.hidden = false;
   availabilityNotice.textContent = 'Verificando disponibilidade dos dispositivos...';
   try {
@@ -333,9 +399,10 @@ async function loadAppAccess() {
     const {devices,maxSlots} = await response.json();
     if (!Array.isArray(devices)) throw new Error('Invalid devices payload');
     availabilityNotice.hidden = true;
+    activationAvailability.hidden = true;
     el('account-app-access').hidden = false;
     el('account-app-notice').textContent =
-      'Cadastre o técnico e gere o código tec_ exclusivo. Depois gere o código sd2_ de ativação do computador. Um código não substitui o outro.';
+      'Cadastre cada técnico e gere seu código exclusivo. A ativação do sistema é gerenciada na Visão geral.';
     const list = el('account-device-list');
     list.replaceChildren();
     const availableSlots = Number.isInteger(maxSlots) ? Math.max(1,Math.min(maxSlots,500)) : 5;
@@ -350,10 +417,20 @@ async function loadAppAccess() {
     el('account-summary-technicians').textContent = String(registered.filter(item =>
       typeof item.technician_name === 'string' && item.technician_name.trim().length > 0
     ).length);
-    for (let slot = 1; slot <= availableSlots; slot++)
-      list.append(createTechnicianCard(slot,bySlot.get(slot)));
+    const activations = el('account-activation-list');
+    activations.replaceChildren();
+    for (let slot = 1; slot <= availableSlots; slot++) {
+      list.append(createTechnicianCard(slot, bySlot.get(slot)));
+      activations.append(createActivationCard(slot, bySlot.get(slot)));
+      const code = revealedTechnicianCodes.get(slot);
+      if (code) showCardCode(slot, 'technician', code);
+    }
   } catch {
     availabilityNotice.hidden = false;
+    activationAvailability.hidden = false;
+    el('account-activation-list').replaceChildren();
+    clearActivationCode();
+    activationAvailability.textContent = 'Não foi possível consultar a ativação do sistema. Tente novamente mais tarde.';
     availabilityNotice.textContent = 'Não foi possível carregar os dispositivos. Tente novamente mais tarde.';
   }
 }
@@ -364,6 +441,7 @@ function showTechnicianCode(code,slot){
   el('account-tech-code').value=code;
   el('account-tech-code-label').hidden=true;
   el('account-tech-code-copy').hidden=true;
+  revealedTechnicianCodes.set(slot,code);
   showCardCode(slot,'technician',code);
   el('account-app-notice').textContent=
     `Código exclusivo do técnico ${slot}: copie e guarde agora. `
@@ -379,8 +457,8 @@ async function rotateTechnicianCode(slot,button){
     });
     if(!response.ok)throw new Error('Código indisponível');
     const result=await response.json();
-    await loadAppAccess();
     showTechnicianCode(result.technicianCode,slot);
+    await loadAppAccess();
   }catch{
     el('account-app-notice').textContent='Não foi possível atualizar o código do técnico.';
   }finally{button.disabled=false;}
@@ -426,36 +504,41 @@ async function updateTechnicianProfile(slot, value, file, button) {
 }
 
 async function updateAppDevice(slot, label, revoke) {
-  const notice = el('account-app-notice');
+  const notice = el('account-activation-notice');
   const name = label.trim();
-  if (!revoke && (name.length < 1 || name.length > 60)) {
-    notice.textContent = 'Informe um nome de até 60 caracteres.';
+  if (activationUpdatesInFlight.has(slot)) return;
+  if (!Number.isInteger(slot) || slot < 1 || slot > 500 ||
+      (!revoke && (name.length < 1 || name.length > 60))) {
+    notice.textContent = 'Informe um nome de computador válido, de até 60 caracteres.';
     return;
   }
+  activationUpdatesInFlight.add(slot);
+  const current = [...el('account-activation-list').querySelectorAll('[data-activation-slot]')]
+    .find(card => card.dataset.activationSlot === String(slot));
+  current?.querySelectorAll('button').forEach(button => { button.disabled = true; });
   try {
     const response = await fetch('/api/app-token', {
-      method: revoke ? 'DELETE' : 'POST', cache: 'no-store',
+      method: revoke ? 'DELETE' : 'POST', cache:'no-store',
       headers: {'Content-Type':'application/json', Authorization: await appAuthorization()},
       body: JSON.stringify({slot, label:name}),
     });
     if (!response.ok) throw new Error('Activation unavailable');
     const result = await response.json();
-    if (!revoke) {
-      if (typeof result.token !== 'string' || !/^sd(?:2)?_[A-Za-z0-9_-]{43}$/.test(result.token)) throw new Error('Invalid activation');
-      el('account-app-token').value = result.token;
-      el('account-app-token-label').hidden = true;
-      el('account-app-copy').hidden = true;
-    } else {
-      el('account-app-token').value = '';
-      el('account-app-token-label').hidden = true;
-      el('account-app-copy').hidden = true;
-    }
+    if (!revoke && (typeof result.token !== 'string' ||
+        !/^sd(?:2)?_[A-Za-z0-9_-]{43}$/.test(result.token))) throw new Error('Invalid activation');
+    if (revoke && el('account-app-token-label').dataset.slot === String(slot)) clearActivationCode();
     await loadAppAccess();
-    if (!revoke) showCardCode(slot,'activation',result.token);
+    if (!revoke) showActivationCode(slot, result.token);
     notice.textContent = revoke
-      ? `Acesso do computador ${slot} revogado.`
-      : `Código do computador ${slot}: copie agora e cole no aplicativo. Ele não será exibido novamente.`;
-  } catch { notice.textContent = 'Não foi possível atualizar o computador agora.'; }
+      ? 'Ativação do computador ' + slot + ' revogada.'
+      : 'Código de ativação do sistema para computador ' + slot
+        + ': copie e guarde agora. Ele não poderá ser consultado novamente.';
+  } catch {
+    notice.textContent = 'Não foi possível atualizar a ativação do sistema. Tente novamente.';
+    current?.querySelectorAll('button').forEach(button => { button.disabled = false; });
+  } finally {
+    activationUpdatesInFlight.delete(slot);
+  }
 }
 async function loadSubscription() {
   const target = el('account-subscription');
@@ -575,8 +658,8 @@ el('account-app-copy').addEventListener('click', async()=>{
   field.select();
   try {
     await navigator.clipboard.writeText(field.value);
-    el('account-app-notice').textContent='Código copiado. Cole no aplicativo Seven Desk.';
-  } catch {el('account-app-notice').textContent='Selecione e copie o código mostrado acima.';}
+    el('account-activation-notice').textContent='Código de ativação do sistema copiado. Cole no aplicativo Seven Desk.';
+  } catch {el('account-activation-notice').textContent='Selecione e copie o código de ativação do sistema.';}
 });
 el('account-type-pf').addEventListener('change',updateDocumentFields);
 el('account-type-pj').addEventListener('change',updateDocumentFields);

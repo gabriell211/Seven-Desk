@@ -57,7 +57,7 @@ test('dashboard uses server responses and fails closed when APIs are unavailable
 });
 
 test('portal styling is scoped to authenticated sessions, responsive, and theme aware', () => {
-  assert.match(html, /href="\/portal\.css\?v=3"/);
+  assert.match(html, /href="\/portal\.css\?v=4"/);
   const build = fs.readFileSync(path.join(site, 'build-site.cjs'), 'utf8');
   assert.ok(build.includes("'portal.css'"), 'production build must publish the sidebar stylesheet');
   assert.match(html, /class="client-nav"[\s\S]*?<svg viewBox="0 0 24 24"/);
@@ -73,7 +73,7 @@ test('one responsive technician card per slot shows synced avatar and safe contr
   assert.match(html, /id="account-device-list" class="technician-card-grid"/);
   assert.match(html, /Foto e o nome|A foto e o nome/);
   assert.match(js, /function createTechnicianCard\(slot, device\)/);
-  assert.match(js, /list\.append\(createTechnicianCard\(slot,bySlot\.get\(slot\)\)\)/);
+  assert.match(js, /list\.append\(createTechnicianCard\(slot,\s*bySlot\.get\(slot\)\)\)/);
   assert.match(js, /function trustedTechnicianImage\(value, slot\)/);
   assert.match(js, /trustedTechnicianImage\(device\?\.technician_image,slot\)/);
   assert.match(js, /photoInput\.addEventListener\('change'/);
@@ -81,7 +81,7 @@ test('one responsive technician card per slot shows synced avatar and safe contr
   assert.match(js, /file\.size > 2 \* 1024 \* 1024/);
   assert.match(js, /updateTechnicianProfile\(slot,nameInput\.value,photoInput\.files\?\.\[0\],save\)/);
   assert.match(js, /showCardCode\(slot,'technician',code\)/);
-  assert.match(js, /showCardCode\(slot,'activation',result\.token\)/);
+  assert.match(js, /showActivationCode\(slot, result\.token\)/);
   assert.doesNotMatch(js, /row\.className = 'account-device-row'/);
   assert.match(css, /technician-card-avatar/);
   assert.match(css, /technician-card-photo\[hidden\]/);
