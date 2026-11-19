@@ -27,8 +27,12 @@ test('authenticated desktop workspace starts at viewport top without empty heade
 });
 
 test('successful authentication does not create a banner, errors remain visible', () => {
-  assert.match(rule('html[data-theme] body.account-page.account-authenticated .account-card>#account-message:not(.error)'), /display:none/);
+  assert.match(rule('html[data-theme] body.account-page.account-authenticated .account-card>#account-message:empty'), /display:none/);
+  assert.match(rule('html[data-theme] body.account-page.account-authenticated .account-card>#account-message:not(:empty)'), /position:fixed/);
   assert.match(css, /\.account-card>#account-message\.error\s*\{/);
+  const js = fs.readFileSync(path.join(root, 'conta.js'), 'utf8');
+  assert.match(js, /await refresh\(\);\s*status\(''\);/);
+  assert.doesNotMatch(js, /status\('Entrada realizada\.'\)/);
   assert.match(html, /id="account-message" class="account-message" role="status" aria-live="polite"/);
   assert.match(html, /class="account-connected"/);
 });
@@ -53,4 +57,11 @@ test('light/dark, narrow viewports and visible theme selector remain available',
   assert.match(css, /\.client-nav-heading\{display:none\}/);
   assert.match(css, /\.client-sidebar\{position:relative;min-height:0;height:auto;padding:14px 16px 10px/);
   assert.match(css, /@media\(max-width:420px\)/);
+});
+
+test('MVP dashboard uses consistent card density and readable numeric KPIs', () => {
+  assert.match(rule('.account-authenticated .client-metric'), /gap:9px;padding:19px/);
+  assert.match(rule('.account-authenticated .client-metric>strong'), /font-variant-numeric:tabular-nums/);
+  assert.match(rule('.account-authenticated .client-surface'), /padding:22px/);
+  assert.match(rule('.account-authenticated .technician-card-header'), /padding:18px/);
 });
