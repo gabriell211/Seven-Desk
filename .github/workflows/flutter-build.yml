@@ -2224,7 +2224,7 @@ jobs:
             --volume "/opt/artifacts:/opt/artifacts"
           shell: /bin/bash
           install: |
-            # Keep bionic ABI compatibility but avoid runner-blocked HTTP mirrors.
+            # Use official Ubuntu HTTPS sources for the container's configured distro.
             # APT release signature verification remains enabled.
             if [ -f /etc/apt/sources.list ]; then
               sed -i \
@@ -2578,7 +2578,7 @@ jobs:
             --volume "/opt/artifacts:/opt/artifacts"
           shell: /bin/bash
           install: |
-            # Keep bionic ABI compatibility but avoid runner-blocked HTTP mirrors.
+            # Use official Ubuntu HTTPS sources for the container's configured distro.
             # APT release signature verification remains enabled.
             if [ -f /etc/apt/sources.list ]; then
               sed -i \
@@ -2891,7 +2891,7 @@ jobs:
             --volume "${PWD}:/workspace"
           shell: /bin/bash
           install: |
-            # Keep bionic ABI compatibility but avoid runner-blocked HTTP mirrors.
+            # Use official Ubuntu HTTPS sources for the container's configured distro.
             # APT release signature verification remains enabled.
             if [ -f /etc/apt/sources.list ]; then
               sed -i \
@@ -3224,7 +3224,7 @@ jobs:
             --volume "${PWD}:/workspace"
           shell: /bin/bash
           install: |
-            # Keep bionic ABI compatibility but avoid runner-blocked HTTP mirrors.
+            # Use official Ubuntu HTTPS sources for the container's configured distro.
             # APT release signature verification remains enabled.
             if [ -f /etc/apt/sources.list ]; then
               sed -i \
