@@ -100,7 +100,7 @@ def main():
     parser.add_argument("--root", type=Path, default=Path("/srv/sevendesk/downloads"))
     parser.add_argument("--check", action="store_true", help="Verify metadata without downloading")
     args = parser.parse_args()
-    if not re.fullmatch(r"v[0-9]+\.[0-9]+\.[0-9]+-[0-9]+", args.tag):
+    if not re.fullmatch(r"v[0-9]+\.[0-9]+\.[0-9]+(?:-[0-9]+)?", args.tag):
         parser.error("Invalid release tag")
     if not re.fullmatch(r"[0-9a-f]{40}", args.commit):
         parser.error("Invalid commit SHA")
@@ -108,7 +108,7 @@ def main():
     if actual_commit != args.commit:
         raise ValueError(f"Tag points to {actual_commit}, expected {args.commit}")
     run = read_json(f"{API}/actions/runs/{args.run_id}")
-    if run["head_sha"] != args.commit or run["status"] != "completed":
+    if run["head_sha"] != args.commit or run["status"] != "completed" or run.get("conclusion") != "success":
         raise ValueError("Workflow run is not complete for this source commit")
     release = read_json(f"{API}/releases/tags/{args.tag}")
     if release["draft"] or release["prerelease"]:

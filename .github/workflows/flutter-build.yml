@@ -56,7 +56,7 @@ env:
   VCPKG_COMMIT_ID: "9e593bb18ea69cc5095e012465dcd675a822ed0d"
   VCPKG_CMAKE_VERSION: "4.3.0"
   ARMV7_VCPKG_COMMIT_ID: "6f29f12e82a8293156836ad81cc9bf5af41fe836" # 2025.01.13, got "/opt/artifacts/vcpkg/vcpkg: No such file or directory" with latest version
-  VERSION: "1.5.3"
+  VERSION: "1.5.4"
   NDK_VERSION: "r28c"
   #signing keys env variable checks
   ANDROID_SIGNING_KEY: "${{ secrets.ANDROID_SIGNING_KEY }}"
@@ -1782,6 +1782,13 @@ jobs:
           badging="$(/usr/local/lib/android/sdk/build-tools/${ANDROID_SIGN_TOOL_VERSION}/aapt dump badging "$APK")"
           grep -Fq "package: name='tech.sevendesk.app'" <<<"$badging"
           grep -Fq "application-label:'Seven Desk'" <<<"$badging"
+          signer_info="$(/usr/local/lib/android/sdk/build-tools/${ANDROID_SIGN_TOOL_VERSION}/apksigner verify --verbose --print-certs "$APK")"
+          grep -Fq 'Verified using v2 scheme (APK Signature Scheme v2): true' <<<"$signer_info"
+          grep -Eq '^Signer #1 certificate SHA-256 digest: [[:xdigit:]]{64}$' <<<"$signer_info"
+          if grep -Eiq '^Signer #[0-9]+ certificate DN:.*CN=Android Debug([, ]|$)' <<<"$signer_info"; then
+            echo 'Release blocked: APK signed using Android Debug certificate' >&2
+            exit 1
+          fi
 
       - name: Upload Artifacts
         if: ${{ !inputs.qa-artifacts && env.ANDROID_SIGNING_KEY != null && env.UPLOAD_ARTIFACT == 'true' }}
@@ -1988,6 +1995,13 @@ jobs:
           badging="$(/usr/local/lib/android/sdk/build-tools/${ANDROID_SIGN_TOOL_VERSION}/aapt dump badging "$APK")"
           grep -Fq "package: name='tech.sevendesk.app'" <<<"$badging"
           grep -Fq "application-label:'Seven Desk'" <<<"$badging"
+          signer_info="$(/usr/local/lib/android/sdk/build-tools/${ANDROID_SIGN_TOOL_VERSION}/apksigner verify --verbose --print-certs "$APK")"
+          grep -Fq 'Verified using v2 scheme (APK Signature Scheme v2): true' <<<"$signer_info"
+          grep -Eq '^Signer #1 certificate SHA-256 digest: [[:xdigit:]]{64}$' <<<"$signer_info"
+          if grep -Eiq '^Signer #[0-9]+ certificate DN:.*CN=Android Debug([, ]|$)' <<<"$signer_info"; then
+            echo 'Release blocked: APK signed using Android Debug certificate' >&2
+            exit 1
+          fi
 
       - name: Upload Artifacts
         if: ${{ !inputs.qa-artifacts && env.ANDROID_SIGNING_KEY != null && env.UPLOAD_ARTIFACT == 'true' }}
@@ -2991,13 +3005,37 @@ jobs:
           bash ./build-apprun.sh ${{ matrix.job.arch }}
           sudo appimage-builder --skip-tests --recipe ./AppImageBuilder-${{ matrix.job.arch }}.yml
           cmp AppDir/AppRun appimage-build/AppRun/v2.0.0/AppRun-Release-${{ matrix.job.arch }}
+          # appimage-builder runs as root and owns the generated output and directory.
+          # Restore runner ownership before the non-privileged artifact integrity checks.
+          sudo chown "$(id -u):$(id -g)" . ./*.AppImage
+
+      - name: Normalize and validate AppImage output
+        shell: bash
+        run: |
+          set -euo pipefail
+          mapfile -d '' -t matches < <(find appimage -maxdepth 1 -type f -name '*.AppImage' -print0)
+          if [ "${#matches[@]}" -ne 1 ]; then
+            echo "::error::Expected exactly one built AppImage; found ${#matches[@]}" >&2
+            exit 1
+          fi
+          output="appimage/sevendesk-${{ env.VERSION }}-${{ matrix.job.arch }}.AppImage"
+          if [ "${matches[0]}" != "$output" ]; then
+            mv -- "${matches[0]}" "$output"
+          fi
+          test "$(stat -c '%s' "$output")" -gt 4096
+          cmp -s <(head -c 4 "$output") <(printf '\177ELF') || {
+            echo "::error::AppImage runtime header is not ELF" >&2
+            exit 1
+          }
+          chmod +x "$output"
+          sha256sum "$output"
 
       - name: Upload QA Linux AppImage
         if: inputs.qa-artifacts
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: sevendesk-qa-linux-${{ matrix.job.arch }}-appimage
-          path: appimage/sevendesk-${{ env.VERSION }}-*.AppImage
+          path: appimage/sevendesk-${{ env.VERSION }}-${{ matrix.job.arch }}.AppImage
           if-no-files-found: error
 
       - name: Publish appimage package
@@ -3008,7 +3046,7 @@ jobs:
           tag_name: ${{ env.TAG_NAME }}
           name: sevendesk
           files: |
-            ./appimage/sevendesk-${{ env.VERSION }}-*.AppImage
+            ./appimage/sevendesk-${{ env.VERSION }}-${{ matrix.job.arch }}.AppImage
 
   build-flatpak:
     name: Build flatpak ${{ matrix.job.target }}${{ matrix.job.suffix }}
@@ -3024,23 +3062,23 @@ jobs:
           - {
               target: x86_64-unknown-linux-gnu,
               # https://github.com/ostreedev/ostree/commit/4bac96a8c817beda37448f9b8c662162bb619981
-              distro: ubuntu22.04,
-              on: ubuntu-22.04,
+              distro: ubuntu24.04,
+              on: ubuntu-24.04,
               arch: x86_64,
               suffix: "",
             }
           - {
               target: x86_64-unknown-linux-gnu,
-              distro: ubuntu22.04,
-              on: ubuntu-22.04,
+              distro: ubuntu24.04,
+              on: ubuntu-24.04,
               arch: x86_64,
               suffix: "-sciter",
             }
           - {
               target: aarch64-unknown-linux-gnu,
               # try out newer flatpak since error of "error: Nothing matches org.freedesktop.Platform in remote flathub"
-              distro: ubuntu22.04,
-              on: ubuntu-22.04-arm,
+              distro: ubuntu24.04,
+              on: ubuntu-24.04-arm,
               arch: aarch64,
               suffix: "",
             }
@@ -3075,6 +3113,7 @@ jobs:
           install: |
             apt-get update -y
             apt-get install -y git flatpak flatpak-builder
+            flatpak-builder --version
           run: |
             # disable git safe.directory
             git config --global --add safe.directory "*"

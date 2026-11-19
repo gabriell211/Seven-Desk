@@ -7,17 +7,18 @@ script:
  - mkdir ./AppDir
  - mv ./usr ./AppDir/usr
  # 32x32 icon
- - for i in {32,64,128}; do mkdir -p ./AppDir/usr/share/icons/hicolor/$i\x$i/apps/; cp ../res/$i\x$i.png ./AppDir/usr/share/icons/hicolor/$i\x$i/apps/rustdesk.png; done
- # desktop file
- # - sed -i "s/Icon=\/usr\/share\/rustdesk\/files\/rustdesk.png/Icon=rustdesk/g" ./AppDir/usr/share/applications/rustdesk.desktop
+ - for i in {32,64,128}; do mkdir -p ./AppDir/usr/share/icons/hicolor/$i\x$i/apps/; cp ../res/$i\x$i.png ./AppDir/usr/share/icons/hicolor/$i\x$i/apps/sevendesk.png; done
+ # Desktop identity is generated from app_info and uses the Seven Desk icon.
  - rm -rf ./AppDir/usr/share/applications
+ - mkdir -p ./AppDir/usr/share/applications
+ - cp ./sevendesk.desktop ./AppDir/usr/share/applications/sevendesk.desktop
 AppDir:
   path: ./AppDir
   app_info:
     id: sevendesk
-    name: sevendesk
-    icon: rustdesk
-    version: 1.5.3
+    name: Seven Desk
+    icon: sevendesk
+    version: 1.5.4
     exec: usr/share/rustdesk/rustdesk
     exec_args: $@
   apt:

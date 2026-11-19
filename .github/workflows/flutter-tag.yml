@@ -30,6 +30,9 @@ jobs:
           python3 -m unittest discover -s tests -p 'test_debian_maintainer_script_permissions.py' -v
           python3 -m unittest discover -s tests -p 'test_mfx_dispatch_patch.py' -v
           python3 -m unittest discover -s tests -p 'test_windows_sevendesk_branding.py' -v
+          python3 -m unittest discover -s tests -p 'test_appimage_identity.py' -v
+          python3 -m unittest discover -s tests -p 'test_android_release_signing_workflow.py' -v
+          python3 -m unittest discover -s tests -p 'test_release_version_consistency.py' -v
 
   run-flutter-tag-build:
     needs: preflight-release
