@@ -35,6 +35,7 @@ jobs:
           python3 -m unittest discover -s tests -p 'test_android_release_signing_workflow.py' -v
           python3 -m unittest discover -s tests -p 'test_release_version_consistency.py' -v
           python3 -m unittest discover -s tests -p 'test_vps_release_gate.py' -v
+          python3 -m unittest discover -s tests -p 'test_dependency_mirrors.py' -v
 
   run-flutter-tag-build:
     needs: preflight-release
