@@ -133,5 +133,5 @@ test('activation layout is responsive, keyboard accessible, theme aware', () => 
   assert.match(css,/\.activation-secret\[hidden\]\{display:none!important\}/);
   assert.match(css,/\.activation-card button:focus-visible/);
   assert.match(html,/role="status" aria-live="polite"/);
-  assert.match(html,/href="\/portal\.css\?v=4"/);
+  assert.match(html,/href="\/portal\.css\?v=5"/);
 });

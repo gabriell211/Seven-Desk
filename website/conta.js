@@ -1,5 +1,6 @@
 import {createAuthClient} from 'better-auth/client';
 import {emailOTPClient,jwtClient} from 'better-auth/client/plugins';
+import {presentSubscription} from './subscription-presentation.mjs';
 
 const el = id => document.getElementById(id);
 const form = el('account-form');
@@ -168,6 +169,8 @@ function displaySession(session) {
   el('account-summary-subscription').textContent = user ? 'Consultando período de acesso...' : '';
   showClientView(user ? activeClientView : 'overview');
   el('account-plan-actions').hidden = !user;
+  resetSubscriptionDetails();
+  if (!user) { el('account-subscription').textContent = ''; el('account-subscription-title').textContent = ''; }
   el('account-app-access').hidden = true;
   el('account-activation-list').replaceChildren();
   el('account-activation-unavailable').hidden = !user;
@@ -540,26 +543,61 @@ async function updateAppDevice(slot, label, revoke) {
     activationUpdatesInFlight.delete(slot);
   }
 }
+function resetSubscriptionDetails() {
+  el('account-subscription-details').hidden = true;
+  el('account-subscription-payment').hidden = true;
+  el('account-subscription-progress').hidden = true;
+  el('account-subscription-badge').dataset.state = 'loading';
+  el('account-subscription-badge').textContent = 'Consultando';
+  el('account-subscription-title').textContent = 'Consultando assinatura...';
+}
+
 async function loadSubscription() {
   const target = el('account-subscription');
   const summary = el('account-summary-subscription');
-  target.textContent = 'Consultando período de acesso...';
-  summary.textContent = target.textContent;
+  resetSubscriptionDetails();
+  target.textContent = 'Consultando seu período de acesso e pagamentos confirmados...';
+  summary.textContent = 'Consultando período de acesso...';
   try {
-    const response = await fetch('/api/subscription', {headers: {Authorization: await appAuthorization()}, cache:'no-store'});
+    const response = await fetch('/api/subscription', {
+      headers:{Authorization:await appAuthorization()}, cache:'no-store'
+    });
     if (!response.ok) throw new Error('Unavailable');
-    const subscription = await response.json();
-    const date = new Date(subscription.status === 'trial' ? subscription.trialEndsAt : subscription.accessEndsAt);
-    if (Number.isNaN(date.getTime())) throw new Error('Invalid date');
-    const formatted = new Intl.DateTimeFormat('pt-BR', {dateStyle:'long', timeStyle:'short'}).format(date);
-    target.textContent = subscription.status === 'trial' ? `Período gratuito até ${formatted}.` :
-      subscription.status === 'paid' ? `Assinatura ativa até ${formatted}.` : 'Seu período de acesso terminou.';
-    summary.textContent = target.textContent;
-    el('account-summary-status').textContent = subscription.status === 'trial'
-      ? 'Período grátis' : subscription.status === 'paid' ? 'Ativa' : 'Encerrada';
+    const view = presentSubscription(await response.json());
+    el('account-subscription-badge').dataset.state = view.state;
+    el('account-subscription-badge').textContent = view.badge;
+    el('account-subscription-title').textContent = view.headline;
+    target.textContent = view.explanation;
+    summary.textContent = view.summary;
+    el('account-summary-status').textContent = view.overviewStatus;
+    for (const [id,value] of [
+      ['account-subscription-trial',view.trialDate],
+      ['account-subscription-trial-hint',view.trialHint],
+      ['account-subscription-start-label',view.startLabel],
+      ['account-subscription-start',view.startValue],
+      ['account-subscription-start-hint',view.startHint],
+      ['account-subscription-end-label',view.endLabel],
+      ['account-subscription-end',view.endValue],
+      ['account-subscription-end-hint',view.endHint],
+      ['account-subscription-days',view.trialDays],
+      ['account-payment-plan',view.paymentName],
+      ['account-payment-amount',view.paymentAmount],
+      ['account-payment-date',view.paymentDate],
+      ['account-payment-description',view.paymentMessage],
+      ['account-subscription-slots',view.slots],
+    ]) el(id).textContent = value;
+    el('account-subscription-progress').hidden = !view.showTrialProgress;
+    el('account-subscription-meter').setAttribute('aria-valuenow', String(view.trialProgress));
+    el('account-subscription-meter-fill').style.width = view.trialProgress + '%';
+    el('account-subscription-payment').hidden = !view.showPayment;
+    el('account-subscription-details').hidden = false;
   } catch {
-    target.textContent = 'O status da assinatura está temporariamente indisponível.';
-    summary.textContent = target.textContent;
+    resetSubscriptionDetails();
+    target.textContent = 'Não foi possível consultar sua assinatura agora. Tente novamente mais tarde.';
+    summary.textContent = 'O status da assinatura está temporariamente indisponível.';
+    el('account-subscription-title').textContent = 'Informações indisponíveis';
+    el('account-subscription-badge').textContent = 'Indisponível';
+    el('account-subscription-badge').dataset.state = 'unavailable';
     el('account-summary-status').textContent = 'Indisponível';
   }
 }

@@ -12,7 +12,7 @@
   <link rel="stylesheet" href="/styles.css?v=8" />
   <link rel="stylesheet" href="/conta.css?v=3" />
   <link rel="stylesheet" href="/theme.css?v=20261118b" />
-  <link rel="stylesheet" href="/portal.css?v=4" />
+  <link rel="stylesheet" href="/portal.css?v=5" />
   <script defer src="/conta.bundle.js"></script>
 </head>
 <body class="account-page">
@@ -132,7 +132,7 @@
             <button type="button" data-account-view="overview" aria-current="page" aria-controls="account-panel-overview"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round" aria-hidden="true"><rect x="3" y="3" width="8" height="8" rx="1.5"/><rect x="13" y="3" width="8" height="8" rx="1.5"/><rect x="3" y="13" width="8" height="8" rx="1.5"/><rect x="13" y="13" width="8" height="8" rx="1.5"/></svg> Visão geral</button>
             <button type="button" data-account-view="devices" aria-controls="account-panel-devices"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round" aria-hidden="true"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg> Computadores e técnicos</button>
             <button type="button" data-account-view="profile" aria-controls="account-panel-profile"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21v-2a8 8 0 0 1 16 0v2"/></svg> Meu perfil</button>
-            <button type="button" data-account-view="billing" aria-controls="account-panel-billing"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round" aria-hidden="true"><rect x="2.5" y="5" width="19" height="14" rx="2.5"/><path d="M2.5 10h19M6 15h4"/></svg> Assinatura e planos</button>
+            <button type="button" data-account-view="billing" aria-controls="account-panel-billing"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round" aria-hidden="true"><rect x="2.5" y="5" width="19" height="14" rx="2.5"/><path d="M2.5 10h19M6 15h4"/></svg> Minha assinatura</button>
             <button type="button" data-account-view="settings" aria-controls="account-panel-settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1 1 0 0 0 .2 1.1l.1.1-1.6 1.6-.1-.1a1 1 0 0 0-1.1-.2l-1.3.5-.4 1.7h-2.3l-.4-1.7-1.3-.5a1 1 0 0 0-1.1.2l-.1.1-1.6-1.6.1-.1a1 1 0 0 0 .2-1.1l-.5-1.3-1.7-.4v-2.3l1.7-.4.5-1.3a1 1 0 0 0-.2-1.1l-.1-.1 1.6-1.6.1.1a1 1 0 0 0 1.1.2l1.3-.5.4-1.7h2.3l.4 1.7 1.3.5a1 1 0 0 0 1.1-.2l.1-.1 1.6 1.6-.1.1a1 1 0 0 0-.2 1.1l.5 1.3 1.7.4v2.3l-1.7.4z"/></svg> Configurações</button>
           </nav>
           <p class="client-nav-heading">RECURSOS</p>
@@ -237,16 +237,45 @@
           <p id="account-profile-message" class="account-intro" role="status" aria-live="polite"></p>
         </form>
           </section>
-          <section id="account-panel-billing" class="client-panel" data-account-panel="billing" aria-label="Assinatura e planos" hidden>
-            <div class="client-section-heading"><h2>Assinatura e planos</h2><p>Acompanhe seu acesso e consulte os planos disponíveis.</p></div>
-            <div class="client-surface client-subscription-surface"><p id="account-subscription" class="account-intro" aria-live="polite">Consultando seu acesso...</p></div>
+          <section id="account-panel-billing" class="client-panel" data-account-panel="billing" aria-label="Minha assinatura" hidden>
+            <div class="client-section-heading"><h2>Minha assinatura</h2><p>Veja seu teste gratuito, pagamentos confirmados e a validade do acesso.</p></div>
+            <section class="client-surface client-subscription-surface" aria-labelledby="account-subscription-title">
+              <div class="client-subscription-header">
+                <div><span class="client-billing-eyebrow">SEU ACESSO SEVEN DESK</span>
+                  <h3 id="account-subscription-title">Consultando assinatura...</h3></div>
+                <span id="account-subscription-badge" class="client-subscription-badge" data-state="loading">Consultando</span>
+              </div>
+              <p id="account-subscription" class="client-subscription-explanation" role="status" aria-live="polite">Consultando seu acesso...</p>
+              <div id="account-subscription-details" hidden>
+                <div class="client-subscription-stats">
+                  <div><span>Teste gratuito</span><strong id="account-subscription-trial">—</strong><small id="account-subscription-trial-hint">Um mês após o cadastro</small></div>
+                  <div><span id="account-subscription-start-label">Início do plano</span><strong id="account-subscription-start">—</strong><small id="account-subscription-start-hint">Sem plano contratado</small></div>
+                  <div><span id="account-subscription-end-label">Validade do acesso</span><strong id="account-subscription-end">—</strong><small id="account-subscription-end-hint">Consulte seu período</small></div>
+                </div>
+                <div id="account-subscription-progress" class="client-subscription-progress" hidden>
+                  <div><strong id="account-subscription-days">—</strong><span>Progresso do mês gratuito</span></div>
+                  <div id="account-subscription-meter" class="client-subscription-meter" role="progressbar" aria-label="Progresso do teste gratuito" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span id="account-subscription-meter-fill"></span></div>
+                </div>
+                <section id="account-subscription-payment" class="client-subscription-payment" aria-labelledby="account-payment-title" hidden>
+                  <div><h4 id="account-payment-title">Pagamento confirmado</h4><p id="account-payment-description">Seu pagamento foi identificado com segurança.</p></div>
+                  <dl>
+                    <div><dt>Último plano contratado</dt><dd id="account-payment-plan">—</dd></div>
+                    <div><dt>Valor pago</dt><dd id="account-payment-amount">—</dd></div>
+                    <div><dt>Confirmado em</dt><dd id="account-payment-date">—</dd></div>
+                    <div><dt>Computadores incluídos</dt><dd id="account-subscription-slots">5</dd></div>
+                  </dl>
+                </section>
+                <p class="client-subscription-footnote">O primeiro mês é gratuito. Um plano comprado durante o teste começa somente depois do término do período gratuito. Os planos são compras avulsas, sem cobrança ou renovação automática.</p>
+              </div>
+            </section>
             <div id="account-plan-actions" class="account-plan-actions" hidden>
-          <h2>Escolha seu plano</h2>
-          <p id="account-checkout-notice" class="account-intro" aria-live="polite">Verificando disponibilidade...</p>
-          <button type="button" class="account-submit" data-plan="monthly" disabled>Plano mensal — R$ 39,90</button>
-          <button type="button" class="account-submit" data-plan="yearly" disabled>Plano anual — R$ 400,00</button>
-          <button type="button" class="account-submit" data-plan="extra_slot" disabled>Slot adicional — R$ 7,00</button>
-        </div>
+              <h2>Planos e computadores</h2>
+              <p class="client-plan-explainer">Você pode contratar antes do término do teste: todo o período comprado será adicionado após o mês gratuito. Compras adicionais prolongam a validade existente.</p>
+              <p id="account-checkout-notice" class="account-intro" aria-live="polite">Verificando disponibilidade...</p>
+              <button type="button" class="account-submit" data-plan="monthly" disabled>1 mês de acesso — R$ 39,90</button>
+              <button type="button" class="account-submit" data-plan="yearly" disabled>1 ano de acesso — R$ 400,00</button>
+              <button type="button" class="account-submit" data-plan="extra_slot" disabled>1 computador adicional — R$ 7,00</button>
+            </div>
           </section>
           <section id="account-panel-settings" class="client-panel" data-account-panel="settings" aria-label="Configurações" hidden>
             <div class="client-section-heading"><h2>Configurações</h2><p>Privacidade, segurança e preferências da sua conta.</p></div>

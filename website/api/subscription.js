@@ -12,6 +12,16 @@ module.exports = async (req, res) => {
     if (!userId) return res.status(401).json({ error: 'Entre na sua conta' });
     const subscription = await getEntitlement(pool(), userId);
     if (!subscription) return res.status(404).json({ error: 'Conta não encontrada' });
-    return res.status(200).json({ status: subscription.status, trialEndsAt: subscription.trial_ends_at, accessEndsAt: subscription.access_ends_at });
+    return res.status(200).json({
+      status: subscription.status,
+      trialStartedAt: subscription.trial_started_at,
+      trialEndsAt: subscription.trial_ends_at,
+      accessEndsAt: subscription.access_ends_at,
+      paidThrough: subscription.paid_through ?? null,
+      paidPlan: subscription.paid_plan ?? null,
+      lastPaymentAt: subscription.last_paid_at ?? null,
+      lastPaymentAmountCents: subscription.last_paid_amount_cents ?? null,
+      extraSlots: Number(subscription.extra_slots) || 0,
+    });
   } catch { return res.status(503).json({ error: 'Não foi possível consultar a conta' }); }
 };
