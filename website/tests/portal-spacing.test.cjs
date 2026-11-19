@@ -10,10 +10,15 @@ const css = fs.readFileSync(path.join(root, 'portal.css'), 'utf8');
 const html = fs.readFileSync(path.join(root, 'conta.html'), 'utf8');
 
 function rule(selector) {
-  // Prefer the exact selector over a selector at the end of a combined rule.
-  const compact = css.indexOf(selector + '{');
-  const start = compact >= 0 ? compact : css.indexOf(selector + ' {');
-  assert.notEqual(start, -1, 'Missing scoped CSS selector: ' + selector);
+  // Match the first standalone declaration, not a grouped rule or media override.
+  const lines = css.split('\n');
+  const index = lines.findIndex(line => {
+    const normalized = line.trim();
+    return normalized.startsWith(selector + ' {') || normalized.startsWith(selector + '{');
+  });
+  assert.notEqual(index, -1, 'Missing scoped CSS selector: ' + selector);
+  const start = lines.slice(0, index).reduce((size, line) => size + line.length + 1, 0)
+    + lines[index].indexOf(selector);
   return css.slice(start, css.indexOf('}', start) + 1);
 }
 
