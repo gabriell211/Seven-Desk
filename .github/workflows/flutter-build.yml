@@ -2268,6 +2268,17 @@ jobs:
                 sleep $((attempt * 15))
               done
             }
+            # Stock Ubuntu 18.04 container images have no CA trust store.
+            # Bootstrap CA certificates using signed Ubuntu APT metadata only.
+            # TLS verification is relaxed for these two commands, never persisted.
+            if ! dpkg-query -W -f='${Status}' ca-certificates 2>/dev/null | grep -q '^install ok installed$'; then
+              echo 'Bootstrapping CA certificates from GPG-signed Ubuntu packages'
+              apt_retry -o Acquire::https::Verify-Peer=false -o Acquire::https::Verify-Host=false update
+              apt_retry -o Acquire::https::Verify-Peer=false -o Acquire::https::Verify-Host=false install -y --no-install-recommends ca-certificates
+              test -s /etc/ssl/certs/ca-certificates.crt
+              update-ca-certificates
+            fi
+            # All remaining repositories and package downloads require valid TLS.
             apt_retry update -y
             echo -e "installing deps"
             apt_retry install -y \
@@ -2631,6 +2642,17 @@ jobs:
                 sleep $((attempt * 15))
               done
             }
+            # Stock Ubuntu 18.04 container images have no CA trust store.
+            # Bootstrap CA certificates using signed Ubuntu APT metadata only.
+            # TLS verification is relaxed for these two commands, never persisted.
+            if ! dpkg-query -W -f='${Status}' ca-certificates 2>/dev/null | grep -q '^install ok installed$'; then
+              echo 'Bootstrapping CA certificates from GPG-signed Ubuntu packages'
+              apt_retry -o Acquire::https::Verify-Peer=false -o Acquire::https::Verify-Host=false update
+              apt_retry -o Acquire::https::Verify-Peer=false -o Acquire::https::Verify-Host=false install -y --no-install-recommends ca-certificates
+              test -s /etc/ssl/certs/ca-certificates.crt
+              update-ca-certificates
+            fi
+            # All remaining repositories and package downloads require valid TLS.
             apt_retry update -y
             echo -e "installing deps"
             apt_retry install -y \
@@ -2953,6 +2975,17 @@ jobs:
                 sleep $((attempt * 15))
               done
             }
+            # Stock Ubuntu 18.04 container images have no CA trust store.
+            # Bootstrap CA certificates using signed Ubuntu APT metadata only.
+            # TLS verification is relaxed for these two commands, never persisted.
+            if ! dpkg-query -W -f='${Status}' ca-certificates 2>/dev/null | grep -q '^install ok installed$'; then
+              echo 'Bootstrapping CA certificates from GPG-signed Ubuntu packages'
+              apt_retry -o Acquire::https::Verify-Peer=false -o Acquire::https::Verify-Host=false update
+              apt_retry -o Acquire::https::Verify-Peer=false -o Acquire::https::Verify-Host=false install -y --no-install-recommends ca-certificates
+              test -s /etc/ssl/certs/ca-certificates.crt
+              update-ca-certificates
+            fi
+            # All remaining repositories and package downloads require valid TLS.
             apt_retry update
             apt_retry install -y \
                build-essential \
@@ -3295,6 +3328,17 @@ jobs:
                 sleep $((attempt * 15))
               done
             }
+            # Stock Ubuntu 18.04 container images have no CA trust store.
+            # Bootstrap CA certificates using signed Ubuntu APT metadata only.
+            # TLS verification is relaxed for these two commands, never persisted.
+            if ! dpkg-query -W -f='${Status}' ca-certificates 2>/dev/null | grep -q '^install ok installed$'; then
+              echo 'Bootstrapping CA certificates from GPG-signed Ubuntu packages'
+              apt_retry -o Acquire::https::Verify-Peer=false -o Acquire::https::Verify-Host=false update
+              apt_retry -o Acquire::https::Verify-Peer=false -o Acquire::https::Verify-Host=false install -y --no-install-recommends ca-certificates
+              test -s /etc/ssl/certs/ca-certificates.crt
+              update-ca-certificates
+            fi
+            # All remaining repositories and package downloads require valid TLS.
             apt_retry update -y
             apt_retry install -y git flatpak flatpak-builder
             flatpak-builder --version
