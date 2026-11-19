@@ -2224,9 +2224,30 @@ jobs:
             --volume "/opt/artifacts:/opt/artifacts"
           shell: /bin/bash
           install: |
-            apt-get update -y
+            # Keep bionic ABI compatibility but avoid runner-blocked HTTP mirrors.
+            # APT release signature verification remains enabled.
+            if [ -f /etc/apt/sources.list ]; then
+              sed -i \
+                -e 's#http://archive.ubuntu.com/ubuntu#https://archive.ubuntu.com/ubuntu#g' \
+                -e 's#http://security.ubuntu.com/ubuntu#https://security.ubuntu.com/ubuntu#g' \
+                /etc/apt/sources.list
+            fi
+            apt_retry() {
+              local attempt
+              for attempt in 1 2 3; do
+                if apt-get -o Acquire::Retries=3 -o Acquire::http::Timeout=45 -o Acquire::https::Timeout=45 "$@"; then
+                  return 0
+                fi
+                if [ "$attempt" -eq 3 ]; then
+                  echo 'Ubuntu package repositories unavailable after retries' >&2
+                  return 1
+                fi
+                sleep $((attempt * 15))
+              done
+            }
+            apt_retry update -y
             echo -e "installing deps"
-            apt-get install -y \
+            apt_retry install -y \
                build-essential \
                clang \
                cmake \
@@ -2557,9 +2578,30 @@ jobs:
             --volume "/opt/artifacts:/opt/artifacts"
           shell: /bin/bash
           install: |
-            apt-get update -y
+            # Keep bionic ABI compatibility but avoid runner-blocked HTTP mirrors.
+            # APT release signature verification remains enabled.
+            if [ -f /etc/apt/sources.list ]; then
+              sed -i \
+                -e 's#http://archive.ubuntu.com/ubuntu#https://archive.ubuntu.com/ubuntu#g' \
+                -e 's#http://security.ubuntu.com/ubuntu#https://security.ubuntu.com/ubuntu#g' \
+                /etc/apt/sources.list
+            fi
+            apt_retry() {
+              local attempt
+              for attempt in 1 2 3; do
+                if apt-get -o Acquire::Retries=3 -o Acquire::http::Timeout=45 -o Acquire::https::Timeout=45 "$@"; then
+                  return 0
+                fi
+                if [ "$attempt" -eq 3 ]; then
+                  echo 'Ubuntu package repositories unavailable after retries' >&2
+                  return 1
+                fi
+                sleep $((attempt * 15))
+              done
+            }
+            apt_retry update -y
             echo -e "installing deps"
-            apt-get install -y \
+            apt_retry install -y \
                build-essential \
                clang \
                cmake \
@@ -2849,8 +2891,29 @@ jobs:
             --volume "${PWD}:/workspace"
           shell: /bin/bash
           install: |
-            apt-get update
-            apt-get install -y \
+            # Keep bionic ABI compatibility but avoid runner-blocked HTTP mirrors.
+            # APT release signature verification remains enabled.
+            if [ -f /etc/apt/sources.list ]; then
+              sed -i \
+                -e 's#http://archive.ubuntu.com/ubuntu#https://archive.ubuntu.com/ubuntu#g' \
+                -e 's#http://security.ubuntu.com/ubuntu#https://security.ubuntu.com/ubuntu#g' \
+                /etc/apt/sources.list
+            fi
+            apt_retry() {
+              local attempt
+              for attempt in 1 2 3; do
+                if apt-get -o Acquire::Retries=3 -o Acquire::http::Timeout=45 -o Acquire::https::Timeout=45 "$@"; then
+                  return 0
+                fi
+                if [ "$attempt" -eq 3 ]; then
+                  echo 'Ubuntu package repositories unavailable after retries' >&2
+                  return 1
+                fi
+                sleep $((attempt * 15))
+              done
+            }
+            apt_retry update
+            apt_retry install -y \
                build-essential \
                clang \
                curl \
@@ -3161,8 +3224,29 @@ jobs:
             --volume "${PWD}:/workspace"
           shell: /bin/bash
           install: |
-            apt-get update -y
-            apt-get install -y git flatpak flatpak-builder
+            # Keep bionic ABI compatibility but avoid runner-blocked HTTP mirrors.
+            # APT release signature verification remains enabled.
+            if [ -f /etc/apt/sources.list ]; then
+              sed -i \
+                -e 's#http://archive.ubuntu.com/ubuntu#https://archive.ubuntu.com/ubuntu#g' \
+                -e 's#http://security.ubuntu.com/ubuntu#https://security.ubuntu.com/ubuntu#g' \
+                /etc/apt/sources.list
+            fi
+            apt_retry() {
+              local attempt
+              for attempt in 1 2 3; do
+                if apt-get -o Acquire::Retries=3 -o Acquire::http::Timeout=45 -o Acquire::https::Timeout=45 "$@"; then
+                  return 0
+                fi
+                if [ "$attempt" -eq 3 ]; then
+                  echo 'Ubuntu package repositories unavailable after retries' >&2
+                  return 1
+                fi
+                sleep $((attempt * 15))
+              done
+            }
+            apt_retry update -y
+            apt_retry install -y git flatpak flatpak-builder
             flatpak-builder --version
           run: |
             # disable git safe.directory
