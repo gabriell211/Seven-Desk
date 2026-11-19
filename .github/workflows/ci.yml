@@ -140,8 +140,33 @@ jobs:
       run: |
         case ${{ matrix.job.target }} in
           x86_64-unknown-linux-gnu)
-            sudo apt-get -y update
-            sudo apt-get install -y \
+            # GitHub-hosted Ubuntu package mirrors occasionally return 503 or timeout.
+            # Keep APT signature verification enabled; use official HTTPS sources.
+            for apt_sources in /etc/apt/sources.list.d/ubuntu.sources /etc/apt/sources.list; do
+              if [ -f "$apt_sources" ]; then
+                sudo sed -i \
+                  -e 's#mirror+file:/etc/apt/apt-mirrors.txt#https://archive.ubuntu.com/ubuntu/#g' \
+                  -e 's#http://azure.archive.ubuntu.com/ubuntu/#https://archive.ubuntu.com/ubuntu/#g' \
+                  -e 's#http://archive.ubuntu.com/ubuntu/#https://archive.ubuntu.com/ubuntu/#g' \
+                  -e 's#http://security.ubuntu.com/ubuntu/#https://security.ubuntu.com/ubuntu/#g' \
+                  "$apt_sources"
+              fi
+            done
+            apt_retry() {
+              local attempt
+              for attempt in 1 2 3; do
+                if sudo apt-get -o Acquire::Retries=3 -o Acquire::http::Timeout=45 -o Acquire::https::Timeout=45 "$@"; then
+                  return 0
+                fi
+                if [ "$attempt" -ge 3 ]; then
+                  echo "APT dependencies remain unavailable after three attempts" >&2
+                  return 1
+                fi
+                sleep $((attempt * 20))
+              done
+            }
+            apt_retry update
+            apt_retry install -y \
                clang \
                cmake \
                curl \
