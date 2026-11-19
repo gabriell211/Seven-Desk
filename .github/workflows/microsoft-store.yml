@@ -1,0 +1,181 @@
+name: Seven Desk Microsoft Store MSIX
+
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/microsoft-store.yml"
+      - "scripts/store/**"
+      - "tests/test_microsoft_store_msix.py"
+      - "res/icon.png"
+  workflow_dispatch:
+    inputs:
+      source_run_id:
+        description: "Successful Flutter CI run containing complete Windows payload folders"
+        type: string
+        required: true
+      source_commit:
+        description: "Exact source SHA of the successful build"
+        type: string
+        required: true
+      version:
+        description: "Microsoft Store MSIX version, for example 1.5.4.0"
+        type: string
+        required: true
+      use_partner_center:
+        description: "Use registered Partner Center identity; does not submit automatically"
+        type: boolean
+        required: true
+        default: false
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: store-msix-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  validate:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+      - name: Test Microsoft Store MSIX contracts
+        run: python3 -m unittest discover -s tests -p 'test_microsoft_store_msix.py' -v
+
+  package:
+    name: Package unsigned MSIX (${{ matrix.arch }})
+    needs: validate
+    runs-on: windows-2022
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { arch: x64, artifact_arch: x86_64 }
+          - { arch: arm64, artifact_arch: aarch64 }
+    env:
+      SOURCE_RUN_ID: ${{ github.event_name == 'pull_request' && '44484512121' || inputs.source_run_id }}
+      SOURCE_SHA: ${{ github.event_name == 'pull_request' && 'f7f91b9b54efc674a260980590ff433864c3821b' || inputs.source_commit }}
+      STORE_VERSION: ${{ github.event_name == 'pull_request' && '1.5.4.0' || inputs.version }}
+      STORE_MODE: ${{ github.event_name == 'workflow_dispatch' && inputs.use_partner_center && 'true' || 'false' }}
+      STORE_PACKAGE_NAME: ${{ github.event_name == 'workflow_dispatch' && inputs.use_partner_center && vars.MS_STORE_PACKAGE_NAME || 'SevenDesk.StoreQA' }}
+      STORE_PUBLISHER: ${{ github.event_name == 'workflow_dispatch' && inputs.use_partner_center && vars.MS_STORE_PUBLISHER || 'CN=SevenDesk.StoreQA' }}
+      STORE_PUBLISHER_DISPLAY_NAME: ${{ github.event_name == 'workflow_dispatch' && inputs.use_partner_center && vars.MS_STORE_PUBLISHER_DISPLAY_NAME || 'Seven Desk QA' }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+
+      - name: Verify native build provenance and Partner Center identity
+        shell: pwsh
+        run: |
+          if ($env:SOURCE_RUN_ID -notmatch '^[0-9]{5,20}$') { throw 'Invalid workflow run ID' }
+          if ($env:SOURCE_SHA -notmatch '^[a-f0-9]{40}$') { throw 'Invalid source commit SHA' }
+          $build = gh api "repos/$env:GITHUB_REPOSITORY/actions/runs/$env:SOURCE_RUN_ID" | ConvertFrom-Json
+          if ($build.status -ne 'completed' -or $build.conclusion -ne 'success') {
+            throw 'Source build must have succeeded'
+          }
+          if ($build.head_sha -cne $env:SOURCE_SHA) { throw 'Source SHA mismatch' }
+          if ($build.head_repository.full_name -cne $env:GITHUB_REPOSITORY) {
+            throw 'Native payload must originate in the same Seven Desk repository'
+          }
+          if ($env:STORE_MODE -eq 'true') {
+            foreach ($name in @('STORE_PACKAGE_NAME','STORE_PUBLISHER','STORE_PUBLISHER_DISPLAY_NAME')) {
+              if ([string]::IsNullOrWhiteSpace([Environment]::GetEnvironmentVariable($name))) {
+                throw "Partner Center variable $name is not configured"
+              }
+            }
+            if ($env:STORE_PACKAGE_NAME -match '(?i)qa|test|dev') {
+              throw 'Cannot use QA package identity for Store submission'
+            }
+            if ($build.event -eq 'pull_request') {
+              throw 'Store candidate source must be a successful main/tag build, not pull request QA'
+            }
+          }
+          Write-Host "Verified source run=$env:SOURCE_RUN_ID commit=$env:SOURCE_SHA"
+
+      - name: Download native Flutter app folder, not installer
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: sevendesk-unsigned-windows-${{ matrix.artifact_arch }}
+          run-id: ${{ env.SOURCE_RUN_ID }}
+          github-token: ${{ github.token }}
+          repository: ${{ github.repository }}
+          path: native-payload
+
+      - name: Generate and verify MSIX with Windows SDK
+        shell: pwsh
+        run: |
+          $destination = Join-Path $PWD "store-output\sevendesk-$env:STORE_VERSION-${{ matrix.arch }}.msix"
+          & ./scripts/store/build_msix.ps1 -PayloadDirectory ./native-payload -IconPath ./res/icon.png -PackageName $env:STORE_PACKAGE_NAME -Publisher $env:STORE_PUBLISHER -PublisherDisplayName $env:STORE_PUBLISHER_DISPLAY_NAME -Version $env:STORE_VERSION -Architecture '${{ matrix.arch }}' -OutputPath $destination
+
+      - name: Retain unsigned package for manual Microsoft Store review only
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: sevendesk-store-msix-${{ matrix.arch }}
+          path: |
+            store-output/*.msix
+            store-output/*.sha256
+          retention-days: 14
+          if-no-files-found: error
+
+  bundle:
+    name: Create a single x64 and ARM64 Store bundle
+    needs: package
+    runs-on: windows-2022
+    env:
+      STORE_VERSION: ${{ github.event_name == 'pull_request' && '1.5.4.0' || inputs.version }}
+      STORE_MODE: ${{ github.event_name == 'workflow_dispatch' && inputs.use_partner_center && 'true' || 'false' }}
+    steps:
+      - name: Collect both packages
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          pattern: sevendesk-store-msix-*
+          merge-multiple: true
+          path: store-packages
+
+      - name: Create and validate MSIX bundle
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $packages = @(Get-ChildItem ./store-packages -File -Filter '*.msix')
+          if ($packages.Count -ne 2) { throw 'Two architecture packages are required' }
+          foreach ($arch in @('x64','arm64')) {
+            if (@($packages | Where-Object { $_.Name -like "*-$arch.msix" }).Count -ne 1) {
+              throw "Missing or duplicate $arch package"
+            }
+          }
+          $kits = Join-Path ([Environment]::GetFolderPath('ProgramFilesX86')) 'Windows Kits\10\bin'
+          $tool = @(Get-ChildItem -LiteralPath $kits -Recurse -File -Filter makeappx.exe | Where-Object { $_.DirectoryName -match '\\x64$' } | Sort-Object FullName -Descending)[0].FullName
+          $directory = Join-Path $env:RUNNER_TEMP 'msix-bundle-input'
+          New-Item -ItemType Directory -Path $directory -Force | Out-Null
+          foreach ($package in $packages) { Copy-Item -LiteralPath $package.FullName -Destination $directory }
+          New-Item -ItemType Directory -Path store-bundle -Force | Out-Null
+          $bundle = Join-Path $PWD "store-bundle\sevendesk-$env:STORE_VERSION.msixbundle"
+          & $tool bundle /d $directory /p $bundle /o
+          if ($LASTEXITCODE -ne 0) { throw 'MakeAppx bundle failed' }
+          $verify = Join-Path $env:RUNNER_TEMP 'msix-bundle-verify'
+          New-Item -ItemType Directory -Path $verify -Force | Out-Null
+          & $tool unbundle /p $bundle /d $verify /o
+          if ($LASTEXITCODE -ne 0) { throw 'MakeAppx bundle verification failed' }
+          if (@(Get-ChildItem -LiteralPath $verify -Filter '*.msix').Count -ne 2) {
+            throw 'Bundle must contain both architecture packages'
+          }
+          $digest = (Get-FileHash -LiteralPath $bundle -Algorithm SHA256).Hash.ToLowerInvariant()
+          Set-Content -Path "$bundle.sha256" -Value "$digest  $([IO.Path]::GetFileName($bundle))" -Encoding ascii
+          Write-Host "Verified Microsoft Store bundle SHA256=$digest"
+
+      - name: Retain bundle for manual submission, never publish on website
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: sevendesk-microsoft-store-${{ env.STORE_MODE == 'true' && 'candidate' || 'qa' }}
+          path: |
+            store-bundle/*.msixbundle
+            store-bundle/*.sha256
+          retention-days: 14
+          if-no-files-found: error
