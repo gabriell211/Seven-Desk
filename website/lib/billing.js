@@ -21,12 +21,25 @@ async function createOrder(pool, userId, plan) {
 // No write is needed, so logging in repeatedly cannot restart the free month.
 async function getEntitlement(pool, userId) {
   const result = await pool.query(
-    `SELECT u."createdAt" + interval '1 month' AS trial_ends_at,
+    `SELECT u."createdAt" AS trial_started_at,
+            u."createdAt" + interval '1 month' AS trial_ends_at,
             GREATEST(u."createdAt" + interval '1 month', COALESCE(s.paid_through, u."createdAt" + interval '1 month')) AS access_ends_at,
+            s.paid_through,
             COALESCE(s.extra_slots, 0) AS extra_slots,
+            latest_payment.plan AS paid_plan,
+            latest_payment.paid_at AS last_paid_at,
+            latest_payment.amount_cents AS last_paid_amount_cents,
             CASE WHEN now() < u."createdAt" + interval '1 month' THEN 'trial'
                  WHEN s.paid_through > now() THEN 'paid' ELSE 'expired' END AS status
        FROM seven_users u LEFT JOIN seven_desk_subscriptions s ON s.user_id = u.id
+       LEFT JOIN LATERAL (
+           SELECT o.plan, o.paid_at, o.amount_cents
+             FROM seven_desk_payment_orders o
+            WHERE o.user_id = u.id AND o.state = 'paid'
+              AND o.plan IN ('monthly', 'yearly')
+            ORDER BY o.paid_at DESC, o.order_id DESC
+            LIMIT 1
+       ) latest_payment ON TRUE
       WHERE u.id = $1 AND u."emailVerified" IS TRUE`, [userId],
   );
   return result.rows[0] || null;
