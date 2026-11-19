@@ -58,6 +58,27 @@ class ReleaseVersionConsistencyTests(unittest.TestCase):
             "Keep source AppStream metadata even when the obsolete composer is disabled",
         )
 
+    def test_legacy_build_containers_bootstrap_signed_ca_packages_first(self):
+        workflow = read(".github/workflows/flutter-build.yml")
+        # Two legacy Linux variants, Sciter and Flatpak share this bootstrap.
+        marker = "Bootstrapping CA certificates from GPG-signed Ubuntu packages"
+        self.assertEqual(workflow.count(marker), 4)
+        blocks = re.findall(r"(?m)^          install: \\|\\n((?:            .*\\n)+)", workflow)
+        patched = [block for block in blocks if marker in block]
+        self.assertEqual(len(patched), 4)
+        for block in patched:
+            with self.subTest(builder=patched.index(block)):
+                self.assertIn("dpkg-query -W -f='${Status}' ca-certificates", block)
+                self.assertIn("apt_retry -o Acquire::https::Verify-Peer=false", block)
+                self.assertIn("apt_retry -o Acquire::https::Verify-Host=false", block)
+                self.assertIn("install -y --no-install-recommends ca-certificates", block)
+                self.assertIn("test -s /etc/ssl/certs/ca-certificates.crt", block)
+                self.assertIn("update-ca-certificates", block)
+                self.assertIn("apt_retry update", block.split("update-ca-certificates", 1)[1])
+                self.assertNotIn("--allow-unauthenticated", block)
+                self.assertNotIn("trusted=yes", block)
+                self.assertNotIn("AllowInsecureRepositories", block)
+
     def test_flatpak_packaging_uses_supported_builder(self):
         workflow = read(".github/workflows/flutter-build.yml")
         block = workflow.split("  build-flatpak:\n", 1)[1].split("\n  build-rustdesk-web:", 1)[0]
