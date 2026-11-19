@@ -3,11 +3,11 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="theme-color" content="#071b3a" />
-  <meta name="description" content="Termos de uso, identidade da marca e avisos legais dos componentes utilizados pelo Seven Desk." />
+  <meta name="theme-color" content="#6d2bec" />
+  <meta name="description" content="Termos de serviço do Seven Desk, operação independente, propriedade intelectual, acesso remoto, assinaturas e licenças de terceiros." />
   <meta property="og:title" content="Termos e licenças | Seven Desk" />
   <meta property="og:description" content="Informações sobre uso do Seven Desk, identidade da marca e licenças de componentes de terceiros." />
-  <link rel="canonical" href="https://seven-desk-site.vercel.app/licencas" />
+  <link rel="canonical" href="https://www.sevendesk.tech/licencas.html" />
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
   <script src="/theme.js?v=20261118a"></script>
   <link rel="stylesheet" href="/styles.css?v=8" />
@@ -35,6 +35,17 @@
     .legal-footer{background:#071b3a;padding:29px 0;color:#b6c9dc;font-size:12px}
     .legal-footer-inner{display:flex;justify-content:space-between;gap:15px;flex-wrap:wrap}
     .legal-footer a{color:#c7e8ff}
+    html[data-theme] body.legal-page .legal-header,html[data-theme] body.legal-page .legal-footer{background:var(--sd-panel);border-color:var(--sd-border)}
+    html[data-theme] body.legal-page .legal-main h1,html[data-theme] body.legal-page .legal-section h2{color:var(--sd-title)}
+    html[data-theme] body.legal-page .legal-lead,html[data-theme] body.legal-page .legal-section p,html[data-theme] body.legal-page .legal-section li{color:var(--sd-text)}
+    html[data-theme] body.legal-page .legal-section a,html[data-theme] body.legal-page .legal-back,html[data-theme] body.legal-page .legal-footer a{color:var(--sd-link)}
+    html[data-theme] body.legal-page .legal-rule{background:var(--sd-border)}
+    html[data-theme] body.legal-page .legal-kicker{color:var(--sd-link)}
+    html[data-theme] body.legal-page .legal-footer{color:var(--sd-muted)}
+    html[data-theme] body.legal-page .legal-sections{margin-bottom:24px}
+    .legal-section li{font-size:15px;line-height:1.9;margin:0 0 7px}
+    .legal-section ul{margin:4px 0 12px;padding-left:20px}
+    .legal-effective{font-size:12px;color:var(--sd-muted);margin-top:12px}
     @media (max-width:680px){
       .legal-header-inner{min-height:74px}
       .legal-main{padding:54px 0 76px}
@@ -57,43 +68,48 @@
     </div>
   </header>
   <main class="container legal-main" id="conteudo">
-    <span class="legal-kicker">Informações legais</span>
-    <h1>Termos e licenças.</h1>
-    <p class="legal-lead">O Seven Desk é um produto de acesso remoto com identidade e distribuição próprias. Esta página explica as condições gerais de uso da marca e os direitos associados aos componentes de software utilizados pelo aplicativo.</p>
+    <span class="legal-kicker">Termos de serviço · Brasil</span>
+    <h1>Termos de uso e licenças.</h1>
+    <p class="legal-lead">O <strong>Seven Desk</strong> é um produto de acesso remoto identificado e operado de forma independente pelo seu responsável individual, sob o perfil público <a href="https://github.com/gabriell211" target="_blank" rel="noopener noreferrer">gabriell211</a>. Sua infraestrutura de serviços e seus contratos de acesso são próprios. Isso não altera os direitos dos autores do software de terceiros incorporado ao aplicativo.</p>
+    <p class="legal-effective">Última atualização: 18 de novembro de 2026.</p>
     <div class="legal-rule" aria-hidden="true"></div>
     <div class="legal-sections">
-      <section class="legal-section" aria-labelledby="identidade">
-        <div class="legal-section-heading">
-          <span class="legal-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 3.5 7.5v9L12 21l8.5-4.5v-9L12 3Z"/><path d="M12 12 3.5 7.5M12 12l8.5-4.5M12 12v9"/></svg></span>
-          <h2 id="identidade">Identidade do produto</h2>
-        </div>
-        <div><p>Seven Desk é a identidade utilizada para o aplicativo, o site e seus materiais de apresentação. O uso do nome, dos logotipos e dos materiais visuais próprios não é autorizado automaticamente pelo simples acesso ao site ou pela obtenção de um instalador.</p></div>
+      <section class="legal-section" aria-labelledby="operador">
+        <div class="legal-section-heading"><h2 id="operador">1. Identificação e titularidade</h2></div>
+        <div><p>O Seven Desk é mantido por um <strong>prestador individual independente</strong> identificado publicamente pelo projeto <a href="https://github.com/gabriell211/Seven-Desk" target="_blank" rel="noopener noreferrer">gabriell211/Seven-Desk</a>. A marca utilizada comercialmente, a apresentação do site, o gerenciamento de contas, os planos e a infraestrutura de conexão são administrados pelo serviço Seven Desk. Não há declaração de registro de marca ou de exclusividade sobre componentes de terceiros.</p><p>O serviço pode ser oferecido mediante planos comerciais. A cobrança pelo acesso à infraestrutura, suporte e recursos de conta não modifica nem restringe direitos concedidos por licenças livres aplicáveis ao código-fonte.</p></div>
       </section>
-      <section class="legal-section" aria-labelledby="distribuicao">
-        <div class="legal-section-heading">
-          <span class="legal-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M8 12l3 3 5-6"/></svg></span>
-          <h2 id="distribuicao">Uso e distribuição</h2>
-        </div>
-        <div><p>Instaladores, atualizações e serviços do Seven Desk são apresentados e disponibilizados por meio de seus canais de distribuição. O uso de cada versão deve respeitar seus avisos, permissões e termos aplicáveis, inclusive os direitos concedidos por licenças de componentes incorporados.</p><p>O acesso remoto deve ser realizado somente em dispositivos próprios ou mediante autorização expressa do responsável.</p></div>
+      <section class="legal-section" aria-labelledby="cadastro">
+        <div class="legal-section-heading"><h2 id="cadastro">2. Cadastro, técnicos e dispositivos</h2></div>
+        <div><p>O cadastro permite pessoa física ou jurídica, conforme informações solicitadas e verificações de segurança. A conta é pessoal para seu titular ou administrada por representante autorizado da organização. O titular responde pelas informações prestadas, dispositivos cadastrados, convites, perfis de técnicos e guarda dos códigos de acesso.</p><p>O período inicial gratuito, os limites de computadores e os valores de planos e vagas adicionais são informados em <a href="/#planos">Planos e preços</a> e no painel antes de qualquer pagamento. Condições promocionais e disponibilidade podem variar, sem alteração retroativa do que já foi contratado. Não compartilhe códigos de técnico ou ativação em canais públicos.</p></div>
       </section>
-      <section class="legal-section" aria-labelledby="terceiros">
-        <div class="legal-section-heading">
-          <span class="legal-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/><path d="m8.5 12 2.5 2.5 4.5-5"/></svg></span>
-          <h2 id="terceiros">Componentes e créditos</h2>
-        </div>
-        <div><p>O aplicativo incorpora tecnologias e código de terceiros, inclusive elementos derivados do ecossistema RustDesk. Os avisos de autoria e as licenças aplicáveis a esses componentes permanecem válidos, independentemente da marca Seven Desk ou da forma de distribuição.</p><p>O repositório atual inclui a <a href="https://github.com/gabriell211/Seven-Desk/blob/main/LICENCE" target="_blank" rel="noopener noreferrer">licença GNU AGPL-3.0</a>. Para as partes abrangidas por essa licença, devem ser respeitados os direitos de uso, redistribuição e acesso ao código-fonte previstos em seus termos. O <a href="https://github.com/gabriell211/Seven-Desk" target="_blank" rel="noopener noreferrer">código e os avisos correspondentes</a> podem ser consultados no repositório do projeto.</p></div>
+      <section class="legal-section" aria-labelledby="conexao">
+        <div class="legal-section-heading"><h2 id="conexao">3. Autorização de acesso remoto</h2></div>
+        <div><p>O Seven Desk somente deve ser utilizado em dispositivos próprios ou com autorização válida do responsável. Solicitações de conexão devem identificar o técnico quando a informação estiver disponível. O usuário deve conferir o solicitante e as permissões antes de aceitar. Acesso não autorizado, coleta indevida de dados, fraude, vigilância clandestina e tentativas de burlar controles de segurança são proibidos.</p><p>Permissões como controle de tela, envio de arquivos, áudio, elevação de privilégios ou acesso não supervisionado devem ser configuradas de forma consciente e de acordo com as regras do sistema operacional. A interrupção ou recusa da conexão deve ser respeitada. O titular da conta responde pelas atividades da sua equipe, sem prejuízo das responsabilidades legais do prestador.</p></div>
       </section>
-      <section class="legal-section" aria-labelledby="atualizacoes">
-        <div class="legal-section-heading">
-          <span class="legal-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 18v3h14v-3"/></svg></span>
-          <h2 id="atualizacoes">Versões e atualizações</h2>
-        </div>
-        <div><p>Os recursos e os formatos dos instaladores podem variar entre versões e sistemas operacionais. Para obter o aplicativo, utilize a <a href="/#plataformas">seção de plataformas</a> do site e confira as informações disponibilizadas com o pacote correspondente.</p></div>
+      <section class="legal-section" aria-labelledby="contrato">
+        <div class="legal-section-heading"><h2 id="contrato">4. Planos, pagamentos e cancelamento</h2></div>
+        <div><p>O valor, a periodicidade e as vagas disponíveis são apresentados antes da contratação. Os pagamentos podem ser processados pela <a href="https://www.infinitepay.io/" target="_blank" rel="noopener noreferrer">InfinitePay</a>. A liberação ou renovação de acesso depende de confirmação válida do pagamento pelo provedor, e não apenas do retorno do navegador ou da criação de um link.</p><p>Os planos exibidos atualmente são de contratação por período, sem renovação automática informada no site. O usuário pode deixar de contratar novo período; a disponibilidade de recursos pagos seguirá a vigência contratada. Solicitações de cancelamento, estorno e reembolso serão avaliadas segundo a legislação aplicável, inclusive os direitos previstos no Código de Defesa do Consumidor quando cabíveis. Os termos comerciais não afastam direitos legais do consumidor.</p></div>
+      </section>
+      <section class="legal-section" aria-labelledby="propriedade">
+        <div class="legal-section-heading"><h2 id="propriedade">5. Produto independente, marca e licenças</h2></div>
+        <div><p>O nome Seven Desk, sua identidade visual própria, o domínio, os serviços de autenticação, faturamento e gerenciamento mantidos pelo responsável são identificados como elementos do produto Seven Desk, nos limites dos direitos efetivamente detidos por seu criador. O acesso comercial à infraestrutura privada é um serviço distinto da licença de cada componente de software.</p><p>O aplicativo contém código derivado ou integrado do ecossistema RustDesk. As partes cobertas pela <a href="https://github.com/gabriell211/Seven-Desk/blob/main/LICENCE" target="_blank" rel="noopener noreferrer">GNU AGPL-3.0</a> continuam sujeitas aos seus termos, incluindo avisos de autoria e disponibilização do código-fonte correspondente quando exigida. É possível consultar o <a href="https://github.com/gabriell211/Seven-Desk" target="_blank" rel="noopener noreferrer">repositório de código</a> e a <a href="https://github.com/gabriell211/Seven-Desk/blob/7ddadfccb3ad701dbff937dee98a55a719a1960e/PROPRIEDADE-E-LICENCAS.md" target="_blank" rel="noopener noreferrer">declaração de titularidade do produto</a>.</p><p>O fato de o responsável operar servidores próprios não transforma o código de terceiros em código exclusivo nem permite eliminar direitos concedidos pela AGPL. Direitos de uso, estudo, modificação e redistribuição previstos em licenças livres não são restringidos por estes Termos. O uso da marca e dos logotipos próprios é tratado separadamente.</p></div>
+      </section>
+      <section class="legal-section" aria-labelledby="disponibilidade">
+        <div class="legal-section-heading"><h2 id="disponibilidade">6. Segurança, disponibilidade e atualizações</h2></div>
+        <div><p>O serviço poderá realizar atualizações, correções de vulnerabilidades e manutenções necessárias para proteger contas, infraestrutura e conexões. Nenhuma disponibilidade permanente ou ausência absoluta de falhas é garantida. Pacotes sem assinatura digital comercial podem gerar alertas dos sistemas operacionais; obtenha instaladores somente dos canais oficiais e confirme a versão antes de executar.</p><p>Eventuais limitações de serviço ou responsabilidade devem ser interpretadas dentro dos limites da legislação brasileira, sem exclusão de garantias legais ou deveres de segurança e privacidade.</p></div>
+      </section>
+      <section class="legal-section" aria-labelledby="dados">
+        <div class="legal-section-heading"><h2 id="dados">7. Dados pessoais e contato</h2></div>
+        <div><p>O tratamento de dados cadastrais, fotos de técnicos, identificadores de dispositivos, metadados de sessão e registros de pagamento está descrito na <a href="/privacidade.html">Política de Privacidade</a>. O suporte remoto não autoriza coleta de informações pessoais fora das finalidades e permissões necessárias à conexão.</p><p>O canal de contato associado à infraestrutura Seven Desk é <a href="mailto:sevendesk@sevendesk.tech">sevendesk@sevendesk.tech</a>. Para demandas de proteção de dados, indique no assunto “Privacidade Seven Desk” e evite enviar senhas, códigos de ativação ou documentos sensíveis por e-mail.</p></div>
+      </section>
+      <section class="legal-section" aria-labelledby="alteracoes">
+        <div class="legal-section-heading"><h2 id="alteracoes">8. Alterações e legislação aplicável</h2></div>
+        <div><p>Estes Termos podem ser revisados para refletir mudanças técnicas, operacionais ou legais. Alterações relevantes serão comunicadas por canais do serviço quando cabível, observados contratos vigentes e direitos do usuário. Aplicam-se as normas brasileiras pertinentes, inclusive as relativas a consumo e proteção de dados, sem afastar a competência legalmente estabelecida para solução de conflitos.</p></div>
       </section>
     </div>
   </main>
   <footer class="legal-footer">
-    <div class="container legal-footer-inner"><span>© Seven Desk · Identidade do produto e avisos legais</span><span><a href="/privacidade.html">Privacidade</a> · <a href="/">Início</a></span></div>
+    <div class="container legal-footer-inner"><span>© 2026 Seven Desk · Produto independente e avisos de licenciamento</span><span><a href="/privacidade.html">Privacidade</a> · <a href="/">Início</a></span></div>
   </footer>
 </body>
 </html>
