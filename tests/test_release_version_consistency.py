@@ -44,6 +44,20 @@ class ReleaseVersionConsistencyTests(unittest.TestCase):
                                  "Published tag must match the compiled package version")
 
 
+    def test_flatpak_sdk_2408_avoids_removed_appstream_compose(self):
+        import json
+
+        manifest = json.loads(read("flatpak/rustdesk.json"))
+        self.assertEqual(manifest["runtime-version"], "24.08")
+        self.assertIs(manifest["appstream-compose"], False)
+        self.assertTrue((ROOT / "flatpak/tech.sevendesk.app.metainfo.xml").is_file())
+        self.assertTrue(
+            any("tech.sevendesk.app.metainfo.xml" in cmd
+                for module in manifest["modules"] if isinstance(module, dict)
+                for cmd in module.get("build-commands", [])),
+            "Keep source AppStream metadata even when the obsolete composer is disabled",
+        )
+
     def test_flatpak_packaging_uses_supported_builder(self):
         workflow = read(".github/workflows/flutter-build.yml")
         block = workflow.split("  build-flatpak:\n", 1)[1].split("\n  build-rustdesk-web:", 1)[0]
