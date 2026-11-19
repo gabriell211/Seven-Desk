@@ -10,8 +10,9 @@ const css = fs.readFileSync(path.join(root, 'portal.css'), 'utf8');
 const html = fs.readFileSync(path.join(root, 'conta.html'), 'utf8');
 
 function rule(selector) {
-  const spaced = css.indexOf(selector + ' {');
-  const start = spaced >= 0 ? spaced : css.indexOf(selector + '{');
+  // Prefer the exact selector over a selector at the end of a combined rule.
+  const compact = css.indexOf(selector + '{');
+  const start = compact >= 0 ? compact : css.indexOf(selector + ' {');
   assert.notEqual(start, -1, 'Missing scoped CSS selector: ' + selector);
   return css.slice(start, css.indexOf('}', start) + 1);
 }
