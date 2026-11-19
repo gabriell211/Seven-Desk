@@ -23,3 +23,11 @@ As fontes de origem foram copiadas via Git, mantendo o histórico e as referênc
 ## Diagnóstico da falha original
 
 O cargo build --locked do macOS falhou ao buscar a revisão de hwcodec e depois o commit do submódulo externals via GitHub. Os espelhos removem a dependência direta desses dois endpoints, mantendo Cargo.lock e o conteúdo original. Os checks do PR #29 devem confirmar a mudança. Não confundir aprovação de CI com homologação real de conexão ou UAC em duas máquinas.
+
+## Window helper Windows (MIT)
+
+A biblioteca de janela auxiliar segue com os direitos do projeto original (MIT, copyright (c) 2022 fufesou). O commit fixado `ecd8d6a139eee76845ea66423fb739af450fda90` foi copiado como repositório Git somente leitura para `https://downloads.sevendesk.tech/deps/window-helper.git`. A workflow continua produzindo os mesmos DLLs `topmostwindow-artifacts-x64` e `topmostwindow-artifacts-ARM64`, mas usa diretório temporário `SevenDeskWindowHelper`.
+
+O `WindowInjection.vcxproj` original habilita PCH como `Use` nas configurações ARM64 e sobrescreve como `Create` em `pch.cpp`. Para evitar erro MSVC C3859/C1076 em CI, o script `scripts/ci/patch-window-helper-pch.ps1` desabilita **ambos os tipos de PCH somente na cópia de build ARM64**, mantendo o x64 inalterado. O MSBuild roda com paralelismo limitado e **não ignora falhas**. A compilação da DLL segue obrigatória.
+
+O repositório original não foi modificado. O código continua sendo uma dependência de terceiro com a licença MIT incluída e os avisos de autoria preservados. Os testes automatizados da configuração não substituem a validação real do binário ARM64 no GitHub Actions.
