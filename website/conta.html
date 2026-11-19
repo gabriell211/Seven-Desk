@@ -12,7 +12,7 @@
   <link rel="stylesheet" href="/styles.css?v=8" />
   <link rel="stylesheet" href="/conta.css?v=3" />
   <link rel="stylesheet" href="/theme.css?v=20261118b" />
-  <link rel="stylesheet" href="/portal.css?v=3" />
+  <link rel="stylesheet" href="/portal.css?v=4" />
   <script defer src="/conta.bundle.js"></script>
 </head>
 <body class="account-page">
@@ -159,7 +159,7 @@
               <div>
                 <p class="client-card-kicker">BEM-VINDO AO SEVEN DESK</p>
                 <h2>Seu espaço de trabalho, organizado.</h2>
-                <p>Gerencie computadores, técnicos, códigos de ativação e sua assinatura com segurança.</p>
+                <p>Gerencie a ativação do sistema, seus técnicos e sua assinatura com segurança.</p>
               </div>
               <button type="button" class="client-primary-action" data-account-view="devices">Gerenciar dispositivos</button>
             </div>
@@ -169,6 +169,23 @@
               <article class="client-metric"><span>Dispositivos ativos</span><strong id="account-summary-devices">—</strong><small>Ativações registradas</small></article>
               <article class="client-metric"><span>Técnicos cadastrados</span><strong id="account-summary-technicians">—</strong><small>Perfis vinculados à conta</small></article>
             </div>
+            <section class="client-surface client-activation-section" aria-labelledby="account-activation-heading">
+              <div class="client-surface-header">
+                <h2 id="account-activation-heading">Ativação do sistema</h2>
+                <span>COMPUTADORES</span>
+              </div>
+              <p>Gere o código de ativação do sistema para cada computador. O código do técnico é gerenciado separadamente em <strong>Computadores e técnicos</strong>.</p>
+              <p id="account-activation-unavailable" class="client-availability" role="status">Verificando disponibilidade dos computadores...</p>
+              <p id="account-activation-notice" class="technician-board-notice" role="status" aria-live="polite"></p>
+              <div id="account-activation-list" class="activation-card-grid" aria-label="Ativação por computador"></div>
+              <div id="account-app-token-label" class="activation-secret" hidden>
+                <label for="account-app-token">Código de ativação do sistema
+                  <input id="account-app-token" type="text" readonly spellcheck="false" autocomplete="off" aria-label="Código de ativação do sistema" />
+                </label>
+                <button id="account-app-copy" type="button" hidden>Copiar código de ativação do sistema</button>
+                <small>Copie e guarde agora. Por segurança, este código não poderá ser consultado novamente.</small>
+              </div>
+            </section>
             <div class="client-overview-grid">
               <article class="client-surface">
                 <div class="client-surface-header"><h2>Gerenciamento rápido</h2><span>ACESSOS</span></div>
@@ -198,15 +215,11 @@
           </div>
           <p id="account-app-notice" class="technician-board-notice" role="status" aria-live="polite"></p>
           <div id="account-device-list" class="technician-card-grid"></div>
-          <p class="technician-board-footnote">Cada técnico tem seu código <strong>tec_</strong> e cada computador recebe um código <strong>sd2_</strong>. Os códigos são diferentes, vinculados à vaga e só aparecem ao serem gerados.</p>
+          <p class="technician-board-footnote">O código do técnico é individual e diferente do código de ativação do sistema, disponível na Visão geral. Ambos só aparecem quando emitidos.</p>
           <label id="account-tech-code-label" class="account-app-token-label" hidden>Código exclusivo do técnico (tec_)
             <input id="account-tech-code" type="text" readonly spellcheck="false" autocomplete="off" aria-label="Código do técnico" />
           </label>
           <button id="account-tech-code-copy" class="account-signout" type="button" hidden>Copiar código do técnico</button>
-          <label id="account-app-token-label" class="account-app-token-label" hidden>Código de ativação
-            <input id="account-app-token" type="text" readonly spellcheck="false" autocomplete="off" />
-          </label>
-          <button id="account-app-copy" class="account-signout" type="button" hidden>Copiar código</button>
         </div>
           </section>
           <section id="account-panel-profile" class="client-panel" data-account-panel="profile" aria-label="Perfil" hidden>

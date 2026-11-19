@@ -57,7 +57,7 @@ test('devices view avoids duplicate heading and keeps technician controls and he
 
 test('light/dark, narrow viewports and visible theme selector remain available', () => {
   assert.match(html, /id="theme-select-account"[^>]*aria-label="Aparência do site"/);
-  assert.match(html, /href="\/portal\.css\?v=3"/);
+  assert.match(html, /href="\/portal\.css\?v=4"/);
   assert.match(css, /html\[data-theme="light"\] body\.account-page\.account-authenticated/);
   assert.match(css, /html\[data-theme="dark"\] body\.account-page\.account-authenticated/);
   assert.match(css, /@media\(max-width:760px\)/);
