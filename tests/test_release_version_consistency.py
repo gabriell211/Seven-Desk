@@ -64,7 +64,9 @@ class ReleaseVersionConsistencyTests(unittest.TestCase):
         self.assertEqual(block.count("distro: ubuntu24.04,"), 3)
         self.assertEqual(block.count("on: ubuntu-24.04,"), 2)
         self.assertEqual(block.count("on: ubuntu-24.04-arm,"), 1)
-        self.assertIn("apt-get install -y git flatpak flatpak-builder", block)
+        self.assertIn("apt_retry install -y git flatpak flatpak-builder", block)
+        self.assertIn("apt_retry update -y", block)
+        self.assertIn("https://archive.ubuntu.com/ubuntu", block)
         self.assertIn("flatpak-builder --version", block)
         self.assertNotIn("ubuntu22.04", block)
 
