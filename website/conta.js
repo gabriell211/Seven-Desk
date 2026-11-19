@@ -632,7 +632,7 @@ form.addEventListener('submit', async event=>{
       }
     } else {
       await refresh();
-      status('Entrada realizada.');
+      status(''); // Connected badge confirms the session without another banner.
     }
   } catch {
     status('Não foi possível concluir. Confira os dados ou tente novamente.', true);
