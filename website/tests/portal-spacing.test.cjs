@@ -50,5 +50,7 @@ test('light/dark, narrow viewports and visible theme selector remain available',
   assert.match(css, /html\[data-theme="light"\] body\.account-page\.account-authenticated/);
   assert.match(css, /html\[data-theme="dark"\] body\.account-page\.account-authenticated/);
   assert.match(css, /@media\(max-width:760px\)/);
+  assert.match(css, /\.client-nav-heading\{display:none\}/);
+  assert.match(css, /\.client-sidebar\{position:relative;min-height:0;height:auto;padding:14px 16px 10px/);
   assert.match(css, /@media\(max-width:420px\)/);
 });
