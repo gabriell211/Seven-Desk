@@ -2,9 +2,9 @@
 Name=Seven Desk
 NoDisplay=true
 MimeType=x-scheme-handler/rustdesk;
-TryExec=rustdesk
-Exec=rustdesk %u
-Icon=rustdesk
+TryExec=sevendesk
+Exec=sevendesk %u
+Icon=sevendesk
 Terminal=false
 Type=Application
 StartupNotify=false

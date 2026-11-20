@@ -30,12 +30,12 @@ mkdir -p "%{buildroot}/usr/bin"
 install -Dm 644 $HBB/res/rustdesk.service -t "%{buildroot}/usr/share/rustdesk/files"
 install -Dm 644 $HBB/res/rustdesk.desktop -t "%{buildroot}/usr/share/rustdesk/files"
 install -Dm 644 $HBB/res/rustdesk-link.desktop -t "%{buildroot}/usr/share/rustdesk/files"
-install -Dm 644 $HBB/res/128x128@2x.png "%{buildroot}/usr/share/icons/hicolor/256x256/apps/rustdesk.png"
+install -Dm 644 $HBB/res/128x128@2x.png "%{buildroot}/usr/share/icons/hicolor/256x256/apps/sevendesk.png"
 
 %files
 /usr/share/rustdesk/*
 /usr/share/rustdesk/files/rustdesk.service
-/usr/share/icons/hicolor/256x256/apps/rustdesk.png
+/usr/share/icons/hicolor/256x256/apps/sevendesk.png
 /usr/share/rustdesk/files/rustdesk.desktop
 /usr/share/rustdesk/files/rustdesk-link.desktop
 
@@ -59,6 +59,7 @@ cp /usr/share/rustdesk/files/rustdesk.service /etc/systemd/system/rustdesk.servi
 cp /usr/share/rustdesk/files/rustdesk.desktop /usr/share/applications/
 cp /usr/share/rustdesk/files/rustdesk-link.desktop /usr/share/applications/
 ln -sf /usr/share/rustdesk/rustdesk /usr/bin/rustdesk
+ln -sf /usr/share/rustdesk/rustdesk /usr/bin/sevendesk
 systemctl daemon-reload
 systemctl enable rustdesk
 systemctl start rustdesk
@@ -82,6 +83,7 @@ case "$1" in
   0)
     # for uninstall
     rm /usr/bin/rustdesk || true
+    rm /usr/bin/sevendesk || true
     rmdir /usr/lib/rustdesk || true
     rmdir /usr/local/rustdesk || true
     rmdir /usr/share/rustdesk || true

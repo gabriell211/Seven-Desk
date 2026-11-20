@@ -2460,7 +2460,16 @@ jobs:
         if: env.UPLOAD_ARTIFACT == 'true'
         with:
           name: sevendesk-${{ env.VERSION }}-${{ matrix.job.arch }}.deb
-          path: rustdesk-${{ env.VERSION }}-${{ matrix.job.arch }}.deb
+          path: sevendesk-${{ env.VERSION }}-${{ matrix.job.arch }}.deb
+          if-no-files-found: error
+
+      - name: Upload Linux RPM packages
+        if: env.UPLOAD_ARTIFACT == 'true'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: sevendesk-${{ env.VERSION }}-${{ matrix.job.arch }}-rpm
+          path: sevendesk-${{ env.VERSION }}*.rpm
+          if-no-files-found: error
 
       # only x86_64 for arch since we can not find newest arm64 docker image to build
       # old arch image does not make sense for arch since it is "arch" which always update to date
