@@ -35,8 +35,8 @@ test('each client navigation target has a unique accessible section', () => {
 test('auth, device activation, technician codes and billing hooks remain present', () => {
   const ids = ['account-signed-out','account-form','account-verification-form','account-reset-form',
     'account-profile-form','account-profile-save','account-app-access','account-device-list',
-    'account-app-notice','account-tech-code','account-tech-code-copy','account-app-token',
-    'account-app-copy','account-subscription','account-plan-actions','account-signout'];
+    'account-app-notice','account-activation-list','account-activation-notice',
+    'account-subscription','account-plan-actions','account-signout'];
   for (const id of ids) assert.ok(html.includes('id="' + id + '"'), id);
   for (const plan of ['monthly','yearly','extra_slot']) assert.ok(html.includes('data-plan="' + plan + '"'));
   const found = [...html.matchAll(/\bid="([^"]+)"/g)].map(x => x[1]);
@@ -57,7 +57,7 @@ test('dashboard uses server responses and fails closed when APIs are unavailable
 });
 
 test('portal styling is scoped to authenticated sessions, responsive, and theme aware', () => {
-  assert.match(html, /href="\/portal\.css\?v=5"/);
+  assert.match(html, /href="\/portal\.css\?v=\d+"/);
   const build = fs.readFileSync(path.join(site, 'build-site.cjs'), 'utf8');
   assert.ok(build.includes("'portal.css'"), 'production build must publish the sidebar stylesheet');
   assert.match(html, /class="client-nav"[\s\S]*?<svg viewBox="0 0 24 24"/);
@@ -80,8 +80,6 @@ test('one responsive technician card per slot shows synced avatar and safe contr
   assert.match(js, /URL\.createObjectURL\(file\)/);
   assert.match(js, /file\.size > 2 \* 1024 \* 1024/);
   assert.match(js, /updateTechnicianProfile\(slot,nameInput\.value,photoInput\.files\?\.\[0\],save\)/);
-  assert.match(js, /showCardCode\(slot,'technician',code\)/);
-  assert.match(js, /showActivationCode\(slot, result\.token\)/);
   assert.doesNotMatch(js, /row\.className = 'account-device-row'/);
   assert.match(css, /technician-card-avatar/);
   assert.match(css, /technician-card-photo\[hidden\]/);

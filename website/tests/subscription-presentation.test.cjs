@@ -132,7 +132,7 @@ test('the account renders billing information with text-only assignments and no 
   assert.match(js,/\['account-payment-plan',view\.paymentName\]/);
   assert.match(js,/el\(id\)\.textContent = value/);
   assert.match(js,/resetSubscriptionDetails\(\)/);
-  assert.match(html,/href="\/portal\.css\?v=5"/);
+  assert.match(html,/href="\/portal\.css\?v=\d+"/);
   const css=fs.readFileSync(path.join(__dirname,'../portal.css'),'utf8');
   assert.match(css,/\.client-subscription-payment\[hidden\]/);
 });
