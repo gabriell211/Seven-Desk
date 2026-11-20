@@ -2,7 +2,8 @@
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { appTokenUser, createAppTokenHandler } = require('../lib/app-tokens');
+const { appTokenUser, createAppTokenHandler, tokenHash } = require('../lib/app-tokens');
+const { technicianCodeHash } = require('../lib/technicians');
 const { createLicenseHandler } = require('../lib/license-routes');
 
 const userId = 'bbde939e-b2c5-45f5-9dc0-6645f59d78cf';
@@ -156,4 +157,43 @@ test('cutover makes old installers lose cloud activation while new tokens stay d
     if (old === undefined) delete process.env.SEVEN_ACTIVATION_GENERATION;
     else process.env.SEVEN_ACTIVATION_GENERATION = old;
   }
+});
+
+test('issuing a pair writes both hashes for one account and slot and requires a technician', async () => {
+  const issued = [];
+  const db = {
+    async query(sql, params) {
+      if (sql.startsWith('SELECT 5 +')) return {rows:[{max_slots:5}]};
+      issued.push({sql, params});
+      return {rows:params[1] === 2 ? [{slot:2}] : []};
+    },
+  };
+  const technicianCode = 'tec_' + 'a'.repeat(32);
+  const handler = createAppTokenHandler({
+    enabled: () => true,
+    authenticate: async () => userId,
+    pool: () => db,
+    random: () => Buffer.alloc(32, 1),
+    randomTechnicianCode: () => technicianCode,
+  });
+  const valid = request('POST', 'Bearer session', 2);
+  valid.body.issuePair = true;
+  const result = response();
+  await handler(valid, result);
+  assert.equal(result.code, 200);
+  assert.equal(result.body.technicianCode, technicianCode);
+  assert.equal(issued.length, 1);
+  assert.deepEqual(issued[0].params, [
+    userId, 2, 'Técnico 2', tokenHash(result.body.token), technicianCodeHash(technicianCode),
+  ]);
+  assert.match(issued[0].sql, /t\.user_id = \$1 AND t\.slot = \$2/);
+  assert.match(issued[0].sql, /u\."emailVerified" IS TRUE/);
+  assert.match(issued[0].sql, /FROM updated_technician/);
+  assert.match(issued[0].sql, /technician_verified = false/);
+  const missing = request('POST', 'Bearer session', 3);
+  missing.body.issuePair = true;
+  const rejected = response();
+  await handler(missing, rejected);
+  assert.equal(rejected.code, 409);
+  assert.deepEqual(Object.keys(rejected.body), ['error']);
 });

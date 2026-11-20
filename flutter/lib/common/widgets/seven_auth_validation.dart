@@ -11,9 +11,21 @@ bool isSevenDeskActivationCode(String token) =>
 bool isSevenDeskTechnicianCode(String code) =>
     _technicianPattern.hasMatch(code);
 
+enum SevenDeskValidationStatus {
+  verified,
+  rejected,
+  invalidCode,
+  serverUnavailable,
+  networkFailure,
+  unexpectedResponse,
+}
+
 /// Recheck current remote activation. Never cache revoked or offline accounts.
-Future<bool> sevenDeskHasValidAccount(String token, {http.Client? client}) async {
-  if (!isSevenDeskActivationCode(token)) return false;
+Future<SevenDeskValidationStatus> checkSevenDeskAccount(String token,
+    {http.Client? client}) async {
+  if (!isSevenDeskActivationCode(token)) {
+    return SevenDeskValidationStatus.invalidCode;
+  }
   try {
     final uri = Uri.parse('https://www.sevendesk.tech/api/app-profile');
     final headers = <String, String>{'Authorization': 'Bearer $token'};
@@ -21,22 +33,42 @@ Future<bool> sevenDeskHasValidAccount(String token, {http.Client? client}) async
             ? http.get(uri, headers: headers)
             : client.get(uri, headers: headers))
         .timeout(const Duration(seconds: 8));
-    if (response.statusCode != 200) return false;
+    if (response.statusCode == 401 || response.statusCode == 403) {
+      return SevenDeskValidationStatus.rejected;
+    }
+    if (response.statusCode >= 500) {
+      return SevenDeskValidationStatus.serverUnavailable;
+    }
+    if (response.statusCode != 200) {
+      return SevenDeskValidationStatus.unexpectedResponse;
+    }
     final profile = jsonDecode(response.body);
     return profile is Map &&
-        profile['name'] is String &&
-        (profile['name'] as String).trim().length >= 2 &&
-        profile['image'] is String;
+            profile['name'] is String &&
+            (profile['name'] as String).trim().length >= 2 &&
+            profile['image'] is String
+        ? SevenDeskValidationStatus.verified
+        : SevenDeskValidationStatus.unexpectedResponse;
+  } on FormatException {
+    return SevenDeskValidationStatus.unexpectedResponse;
   } catch (_) {
-    return false;
+    return SevenDeskValidationStatus.networkFailure;
   }
 }
 
+Future<bool> sevenDeskHasValidAccount(String token,
+        {http.Client? client}) async =>
+    await checkSevenDeskAccount(token, client: client) ==
+    SevenDeskValidationStatus.verified;
+
 /// Pair the technician and device codes once, then never persist the tec_ code.
-Future<bool> claimSevenDeskTechnician(String token, String technicianCode,
+Future<SevenDeskValidationStatus> checkSevenDeskTechnicianClaim(
+    String token, String technicianCode,
     {http.Client? client}) async {
   if (!isSevenDeskActivationCode(token) ||
-      !isSevenDeskTechnicianCode(technicianCode)) return false;
+      !isSevenDeskTechnicianCode(technicianCode)) {
+    return SevenDeskValidationStatus.invalidCode;
+  }
   try {
     final uri = Uri.parse('https://www.sevendesk.tech/api/technician-claim');
     final headers = <String, String>{'Content-Type': 'application/json'};
@@ -48,10 +80,31 @@ Future<bool> claimSevenDeskTechnician(String token, String technicianCode,
             ? http.post(uri, headers: headers, body: body)
             : client.post(uri, headers: headers, body: body))
         .timeout(const Duration(seconds: 8));
-    if (response.statusCode != 200) return false;
+    if (response.statusCode == 400) {
+      return SevenDeskValidationStatus.invalidCode;
+    }
+    if (response.statusCode == 401 || response.statusCode == 403) {
+      return SevenDeskValidationStatus.rejected;
+    }
+    if (response.statusCode >= 500) {
+      return SevenDeskValidationStatus.serverUnavailable;
+    }
+    if (response.statusCode != 200) {
+      return SevenDeskValidationStatus.unexpectedResponse;
+    }
     final result = jsonDecode(response.body);
-    return result is Map && result['verified'] == true;
+    return result is Map && result['verified'] == true
+        ? SevenDeskValidationStatus.verified
+        : SevenDeskValidationStatus.unexpectedResponse;
+  } on FormatException {
+    return SevenDeskValidationStatus.unexpectedResponse;
   } catch (_) {
-    return false;
+    return SevenDeskValidationStatus.networkFailure;
   }
 }
+
+Future<bool> claimSevenDeskTechnician(String token, String technicianCode,
+        {http.Client? client}) async =>
+    await checkSevenDeskTechnicianClaim(token, technicianCode,
+        client: client) ==
+    SevenDeskValidationStatus.verified;
