@@ -59,6 +59,22 @@ async function file(req, res, filename, cache = 'public, max-age=300') {
 const server = http.createServer(async (req, raw) => {
   const res = reply(raw);
   res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('Content-Security-Policy', [
+    "default-src 'self'",
+    "script-src 'self' https://www.googletagmanager.com https://www.google-analytics.com https://www.googleadservices.com",
+    "script-src-attr 'none'",
+    "style-src 'self' 'unsafe-inline'",
+    "img-src 'self' data: blob: https://www.google-analytics.com https://www.googleadservices.com https://www.google.com https://googleads.g.doubleclick.net",
+    "font-src 'self' data:",
+    "connect-src 'self' https://www.google-analytics.com https://region1.google-analytics.com https://www.googleadservices.com https://googleads.g.doubleclick.net https://www.google.com",
+    "frame-src 'none'",
+    "frame-ancestors 'none'",
+    "object-src 'none'",
+    "base-uri 'none'",
+    "form-action 'self'",
+    "upgrade-insecure-requests",
+  ].join('; '));
+
   res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
   res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
   try {

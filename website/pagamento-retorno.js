@@ -42,6 +42,8 @@ async function reconcileRedirect() {
       const confirmation = await response.json();
       if (confirmation.confirmed === true) {
         status.textContent = 'Pagamento confirmado com segurança. Consulte sua conta para verificar o período de acesso.';
+        // Only verified paid orders emit an event; trials and pending orders never do.
+        window.sevenDeskAnalytics?.subscriptionConfirmed(order_nsu);
         return;
       }
     }

@@ -1,0 +1,27 @@
+/* Preference controls are first-party and shown before any marketing tags load. */
+.sd-consent-panel {
+  position:fixed; bottom:18px; left:18px; z-index:9999;
+  width:min(450px,calc(100% - 36px)); padding:20px;
+  border:1px solid var(--sd-border,#d9c8e7);
+  border-radius:16px; color:var(--sd-text,#2c2440);
+  background:var(--sd-panel,#fff); box-shadow:0 14px 40px #0002;
+  font:14px/1.6 system-ui,-apple-system,sans-serif
+}
+.sd-consent-panel strong {font-size:17px;color:var(--sd-title,#241044)}
+.sd-consent-panel p {margin:8px 0 12px}
+.sd-consent-panel a {display:inline-block;margin-top:10px;color:var(--sd-link,#6d2bec);text-decoration:underline}
+.sd-consent-actions {display:flex;flex-wrap:wrap;gap:8px}
+.sd-consent-actions button {
+  cursor:pointer;min-height:42px;padding:8px 12px;border-radius:9px;
+  font:inherit;font-weight:700
+}
+.sd-consent-decline {border:1px solid var(--sd-border,#ddd);color:var(--sd-text,#333);background:transparent}
+.sd-consent-accept {border:1px solid #6d2bec;background:#6d2bec;color:#fff}
+.sd-consent-manage {
+  position:fixed;bottom:12px;left:12px;z-index:9000;
+  border:1px solid var(--sd-border,#ddd);padding:5px 9px;
+  border-radius:999px;background:var(--sd-panel,#fff);color:var(--sd-text,#333);
+  font:11px system-ui,sans-serif;cursor:pointer;opacity:.85
+}
+.sd-consent-panel button:focus-visible,.sd-consent-manage:focus-visible{outline:3px solid #7c3aed;outline-offset:3px}
+@media(max-width:550px) {.sd-consent-panel{bottom:10px;left:10px;width:calc(100% - 20px);padding:15px}.sd-consent-manage{bottom:8px;left:8px}}
