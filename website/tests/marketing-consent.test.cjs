@@ -52,8 +52,10 @@ test('GTM does not load or record conversions without consent', () => {
 test('after consent, single GTM script loads and confirmed orders deduplicate', () => {
   const app=setup();
   buttons(app.document.getElementById('sd-consent-panel'))[1].handlers.click();
-  assert.equal(app.scripts.length,1);
+  assert.equal(app.scripts.length,2);
   assert.match(app.scripts[0].src,/^https:\/\/www\.googletagmanager\.com\/gtm\.js\?id=GTM-KD893LRD$/);
+  assert.match(app.scripts[1].src,/^https:\/\/www\.googletagmanager\.com\/gtag\/js\?id=G-BYGEEMMYZ8$/);
+  assert.equal(app.window.dataLayer.some(x=>x[0]==='config' && x[1]==='G-BYGEEMMYZ8'),true);
   assert.equal(app.window.sevenDeskAnalytics.subscriptionConfirmed('order-2'),true);
   assert.equal(app.window.sevenDeskAnalytics.subscriptionConfirmed('order-2'),false);
   assert.equal(app.window.dataLayer.filter(e=>e.event==='seven_desk_subscription_paid').length,1);
@@ -63,7 +65,7 @@ test('denied consent persists and accepted consent can be revoked',()=>{
   const denied=setup('denied');
   assert.equal(denied.scripts.length,0);
   const accepted=setup('granted');
-  assert.equal(accepted.scripts.length,1);
+  assert.equal(accepted.scripts.length,2);
   accepted.window.sevenDeskAnalytics.openPreferences();
   buttons(accepted.document.getElementById('sd-consent-panel'))[0].handlers.click();
   assert.equal(accepted.getReloads(),1);

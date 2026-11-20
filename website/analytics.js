@@ -2,6 +2,7 @@
   'use strict';
 
   const CONTAINER_ID = 'GTM-KD893LRD';
+  const MEASUREMENT_ID = 'G-BYGEEMMYZ8';
   const CONSENT_KEY = 'seven-desk-marketing-consent-v1';
   const SENT_PREFIX = 'seven-desk-paid-conversion:';
   let selection = null;
@@ -34,6 +35,14 @@
     script.async = true;
     script.src = 'https://www.googletagmanager.com/gtm.js?id=' + CONTAINER_ID;
     document.head.appendChild(script);
+    // GA4 is a separate Google tag. Run it only with explicit opt-in.
+    // Do not add another GA4 Google tag to this GTM container.
+    gtag('js', new Date());
+    gtag('config', MEASUREMENT_ID, { send_page_view: true });
+    const analyticsScript = document.createElement('script');
+    analyticsScript.async = true;
+    analyticsScript.src = 'https://www.googletagmanager.com/gtag/js?id=' + MEASUREMENT_ID;
+    document.head.appendChild(analyticsScript);
   }
 
   function choose(value) {
