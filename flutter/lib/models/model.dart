@@ -68,6 +68,57 @@ bool isSevenDeskClientCancellationMessage(
     title == 'Connection Error' &&
     message == 'Cancelled by the client';
 
+// Only terminal connectivity failures from the native core are shown in the
+// pending support overlay. Keep authentication, offline/reconnect and ordinary
+// session errors on their existing routes.
+SevenDeskWaitingFailure? classifySevenDeskConnectionFailure(
+  Object? type,
+  Object? title,
+  Object? message,
+) {
+  if (isSevenDeskClientCancellationMessage(type, title, message)) {
+    return SevenDeskWaitingFailure.clientCancelled;
+  }
+  if (type != 'error' ||
+      (title != 'Connection Error' && title != 'Error') ||
+      message is! String) {
+    return null;
+  }
+
+  final reason = message.trim().toLowerCase();
+  if (reason == 'timeout' ||
+      reason.contains('timed out') ||
+      reason.contains('time out') ||
+      reason.contains('deadline has elapsed') ||
+      reason.contains('deadline exceeded') ||
+      reason.contains('deadline elapsed')) {
+    return SevenDeskWaitingFailure.timeout;
+  }
+
+  const networkReasons = [
+    'failed to connect',
+    'reset by the peer',
+    'connection reset',
+    'connection refused',
+    'network is unreachable',
+    'no route to host',
+    'host is unreachable',
+    'connection aborted',
+    'broken pipe',
+    'name or service not known',
+    'failed to resolve',
+    'could not resolve host',
+    'dns lookup',
+    'socketexception',
+    'network unreachable',
+    'connection closed',
+  ];
+  if (networkReasons.any(reason.contains)) {
+    return SevenDeskWaitingFailure.network;
+  }
+  return null;
+}
+
 typedef HandleMsgBox = Function(Map<String, dynamic> evt, String id);
 typedef ReconnectHandle = Function(OverlayDialogManager, SessionID, bool);
 final _constSessionId = Uuid().v4obj();
@@ -946,17 +997,30 @@ class FfiModel with ChangeNotifier {
       return;
     }
 
-    if (isSevenDeskClientCancellationMessage(type, title, text)) {
+    final waitingFailure =
+        classifySevenDeskConnectionFailure(type, title, text);
+    final isClientRefusal =
+        waitingFailure == SevenDeskWaitingFailure.clientCancelled;
+    if (isClientRefusal ||
+        (isDesktop &&
+            !isWeb &&
+            waitingFailure != null &&
+            hasSevenDeskSessionProgress(dialogManager, sessionId))) {
       _timer?.cancel();
       _timer = null;
       _reconnects = 1;
       _offlineReconnectStartTime = null;
       resetRestartReconnectState();
       if (isDesktop && !isWeb) {
-        showSevenDeskClientCancelledDialog(dialogManager, sessionId, () {
-          dialogManager.dismissAll();
-          closeConnection(id: peerId);
-        });
+        showSevenDeskWaitingFailureDialog(
+          dialogManager,
+          sessionId,
+          waitingFailure!,
+          () {
+            dialogManager.dismissAll();
+            closeConnection(id: peerId);
+          },
+        );
       } else {
         showMsgBox(
           sessionId,
@@ -968,7 +1032,10 @@ class FfiModel with ChangeNotifier {
           dialogManager,
         );
       }
-    } else if (type == 're-input-password') {
+      return;
+    }
+
+    if (type == 're-input-password') {
       wrongPasswordDialog(sessionId, dialogManager, type, title, text);
     } else if (type == 'input-2fa') {
       enter2FaDialog(sessionId, dialogManager);
