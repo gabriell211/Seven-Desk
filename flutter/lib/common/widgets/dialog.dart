@@ -1416,10 +1416,16 @@ class SevenDeskSessionProgressCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Dialog(
-      backgroundColor: Colors.transparent,
-      insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
-      child: ConstrainedBox(
+    return CallbackShortcuts(
+      bindings: <ShortcutActivator, VoidCallback>{
+        const SingleActivator(LogicalKeyboardKey.escape): onCancel,
+      },
+      child: Focus(
+        autofocus: true,
+        child: Dialog(
+          backgroundColor: Colors.transparent,
+          insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+          child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 440),
         child: Container(
           padding: const EdgeInsets.fromLTRB(23, 21, 23, 19),
@@ -1453,15 +1459,17 @@ class SevenDeskSessionProgressCard extends StatelessWidget {
                     color: _sevenProgressPurple, size: 23),
               ]),
               const SizedBox(height: 18),
-              Container(
-                height: 76, width: 76,
-                alignment: Alignment.center,
-                decoration: const BoxDecoration(
-                  color: Color(0xFF2A1B42), shape: BoxShape.circle),
-                child: const SizedBox(
-                  width: 41, height: 41,
-                  child: CircularProgressIndicator(
-                    color: _sevenProgressPurple, strokeWidth: 3.2),
+              Center(
+                child: Container(
+                  height: 76, width: 76,
+                  alignment: Alignment.center,
+                  decoration: const BoxDecoration(
+                    color: Color(0xFF2A1B42), shape: BoxShape.circle),
+                  child: const SizedBox(
+                    width: 41, height: 41,
+                    child: CircularProgressIndicator(
+                      color: _sevenProgressPurple, strokeWidth: 3.2),
+                  ),
                 ),
               ),
               const SizedBox(height: 17),
@@ -1513,6 +1521,8 @@ class SevenDeskSessionProgressCard extends StatelessWidget {
               ),
             ],
           ),
+          ),
+        ),
         ),
       ),
     );
