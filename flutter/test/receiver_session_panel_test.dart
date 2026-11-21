@@ -94,6 +94,26 @@ void main() {
     expect(expanded, 1);
   });
 
+  testWidgets('options remain inside the floating panel without disconnecting',
+      (tester) async {
+    var disconnected = 0;
+    await tester.pumpWidget(app(
+      compact: false,
+      view: ReceiverPanelView.controls,
+      onChat: () {},
+      onFiles: () {},
+      onScreen: () {},
+      onDisconnect: () => disconnected++,
+      onMinimize: () {},
+      onRestore: () {},
+    ));
+    expect(find.text('Opções da sessão'), findsOneWidget);
+    expect(find.text('Detalhes de sessão'), findsOneWidget);
+    expect(find.byTooltip('Opções'), findsOneWidget);
+    expect(find.byTooltip('Chat'), findsOneWidget);
+    expect(disconnected, 0);
+  });
+
   testWidgets('compact mode retains disconnect and restore', (tester) async {
     var restore=0,disconnect=0;
     await tester.pumpWidget(app(
