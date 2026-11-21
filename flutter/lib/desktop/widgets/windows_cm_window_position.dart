@@ -27,8 +27,8 @@ Future<void> setWindowsCmWindowBounds(Size size, {
 
   // Window bounds and screen frame use physical pixels on Windows.
   final scaledSize = size * window.scaleFactor;
-  final width = scaledSize.width.clamp(1.0, screen.visibleFrame.width);
-  final height = scaledSize.height.clamp(1.0, screen.visibleFrame.height);
+  final width = scaledSize.width.clamp(1.0, screen.visibleFrame.width).toDouble();
+  final height = scaledSize.height.clamp(1.0, screen.visibleFrame.height).toDouble();
   final x = centered
       ? screen.visibleFrame.left + (screen.visibleFrame.width - width) / 2
       : screen.visibleFrame.right - width;
