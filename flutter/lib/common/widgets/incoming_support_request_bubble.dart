@@ -31,7 +31,7 @@ class IncomingSupportRequestBubble extends StatelessWidget {
   Widget build(BuildContext context) {
     return LayoutBuilder(builder: (context, constraints) {
       final compact = constraints.maxWidth < 590;
-      final avatarSize = compact ? 68.0 : 112.0;
+      final avatarSize = compact ? 56.0 : 112.0;
       final fallback = CircleAvatar(
         radius: avatarSize / 2,
         backgroundColor: const Color(0xFF38224E),
@@ -51,7 +51,7 @@ class IncomingSupportRequestBubble extends StatelessWidget {
         style: FilledButton.styleFrom(
           backgroundColor: _purple,
           foregroundColor: Colors.white,
-          minimumSize: const Size(0, 48),
+          minimumSize: Size(0, compact ? 42 : 48),
           shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(13)),
         ),
@@ -66,7 +66,7 @@ class IncomingSupportRequestBubble extends StatelessWidget {
           label: const Text('Aceitar como administrador',
               textAlign: TextAlign.center, maxLines: 2),
           style: FilledButton.styleFrom(
-            minimumSize: const Size(0, 48),
+            minimumSize: Size(0, compact ? 42 : 48),
             foregroundColor: Colors.white,
             disabledForegroundColor: _muted,
             backgroundColor: const Color(0xFF292039),
@@ -84,7 +84,7 @@ class IncomingSupportRequestBubble extends StatelessWidget {
         label: const Text('Recusar'),
         style: OutlinedButton.styleFrom(
           foregroundColor: Colors.white,
-          minimumSize: const Size(0, 48),
+          minimumSize: Size(0, compact ? 42 : 48),
           side: const BorderSide(color: Color(0xFF625372)),
           shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(13)),
