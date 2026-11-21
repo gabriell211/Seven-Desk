@@ -20,6 +20,7 @@ void main() {
     required VoidCallback onMinimize,
     required VoidCallback onRestore,
     VoidCallback? onNextSession,
+    VoidCallback? onFullScreen,
   }) {
     return MaterialApp(
       home: Scaffold(
@@ -34,6 +35,7 @@ void main() {
               onMinimize: onMinimize,
               onRestore: onRestore,
               onNextSession: onNextSession,
+              onToggleFullScreen: onFullScreen,
               onChat: onChat,
               onTransfers: onFiles,
               onNextMonitor: onScreen,
@@ -69,6 +71,27 @@ void main() {
     await tester.tap(find.byTooltip('Desconectar sessão'));
     await tester.tap(find.byTooltip('Minimizar painel'));
     expect([chat,files,monitor,disconnect,minimize], [1,1,1,1,1]);
+  });
+
+  testWidgets('five actions include a working fullscreen callback', (tester) async {
+    var expanded = 0;
+    await tester.pumpWidget(app(
+      compact: false,
+      view: ReceiverPanelView.chat,
+      onChat: () {},
+      onFiles: () {},
+      onScreen: () {},
+      onDisconnect: () {},
+      onMinimize: () {},
+      onRestore: () {},
+      onFullScreen: () => expanded++,
+    ));
+
+    expect(find.text('Chat com o técnico'), findsOneWidget);
+    expect(find.text('Arquivos'), findsOneWidget);
+    expect(find.text('Opções'), findsOneWidget);
+    await tester.tap(find.byTooltip('Alternar tela cheia do painel'));
+    expect(expanded, 1);
   });
 
   testWidgets('compact mode retains disconnect and restore', (tester) async {
