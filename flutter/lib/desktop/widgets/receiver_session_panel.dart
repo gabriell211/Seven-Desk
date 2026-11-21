@@ -316,7 +316,9 @@ class _ReceiverSessionPanelState extends State<ReceiverSessionPanel> {
     );
   }
 
-  Widget _header() => Row(children: [
+  Widget _header() => SizedBox(
+    height: 48,
+    child: Row(children: [
     GestureDetector(
       behavior: HitTestBehavior.opaque,
       onPanStart: (_) => windowManager.startDragging(),
@@ -355,7 +357,8 @@ class _ReceiverSessionPanelState extends State<ReceiverSessionPanel> {
           ? Icons.open_in_full_rounded : Icons.remove_rounded),
       color: _muted, iconSize: 20,
     ),
-  ]);
+    ]),
+  );
 
   Widget _action(String label, IconData icon, VoidCallback? callback, {
     bool selected = false,
