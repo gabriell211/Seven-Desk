@@ -1705,6 +1705,9 @@ void showSevenDeskConnectingDialog(
   OverlayDialogManager dialogManager,
   SessionID sessionId,
 ) {
+  // The initial post-frame callback can be later than the native
+  // authorization/error event. Never replace a newer status with loading.
+  if (hasSevenDeskSessionProgress(dialogManager, sessionId)) return;
   _showSevenDeskSessionProgress(
     dialogManager: dialogManager,
     sessionId: sessionId,
