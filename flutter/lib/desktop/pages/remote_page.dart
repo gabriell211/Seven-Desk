@@ -33,6 +33,16 @@ final SimpleWrapper<bool> _firstEnterImage = SimpleWrapper(false);
 // Used to skip session close if "move to new window" is clicked.
 final Map<String, bool> closeSessionOnDispose = {};
 
+/// Only switch to a fullscreen support session once the client has
+/// authorized the connection and an actual remote image has arrived.
+@visibleForTesting
+bool shouldEnterSevenDeskRemoteFullscreen({
+  required bool nativeDesktop,
+  required bool firstFrameReady,
+  required bool alreadyEntered,
+}) =>
+    nativeDesktop && firstFrameReady && !alreadyEntered;
+
 class RemotePage extends StatefulWidget {
   RemotePage({
     Key? key,
@@ -180,7 +190,11 @@ class _RemotePageState extends State<RemotePage>
 
         // The client has approved the session and the first usable frame
         // arrived. Do not enter fullscreen while still awaiting approval.
-        if (isDesktop && !isWeb && !_enteredSevenDeskFullscreen) {
+        if (shouldEnterSevenDeskRemoteFullscreen(
+          nativeDesktop: isDesktop && !isWeb,
+          firstFrameReady: _ffi.ffiModel.waitForFirstImage.isFalse,
+          alreadyEntered: _enteredSevenDeskFullscreen,
+        )) {
           _enteredSevenDeskFullscreen = true;
           WidgetsBinding.instance.addPostFrameCallback((_) {
             if (mounted && stateGlobal.fullscreen.isFalse) {
