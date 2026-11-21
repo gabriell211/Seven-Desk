@@ -86,17 +86,20 @@ SevenDeskWaitingFailure? classifySevenDeskConnectionFailure(
   }
 
   final reason = message.trim().toLowerCase();
-  if (reason == 'timeout' ||
+  if (reason.contains('timeout') ||
       reason.contains('timed out') ||
       reason.contains('time out') ||
-      reason.contains('deadline has elapsed') ||
-      reason.contains('deadline exceeded') ||
-      reason.contains('deadline elapsed')) {
+      reason.contains('deadline')) {
     return SevenDeskWaitingFailure.timeout;
   }
 
   const networkReasons = [
     'failed to connect',
+    'unable to connect',
+    'could not connect',
+    'network error',
+    'network connection lost',
+    'no internet',
     'reset by the peer',
     'connection reset',
     'connection refused',
