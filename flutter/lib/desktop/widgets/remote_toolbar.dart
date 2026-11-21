@@ -846,7 +846,9 @@ class _RemoteToolbarState extends State<RemoteToolbar> {
                     SizedBox(
                       height: (viewport.height - 160)
                           .clamp(90.0, 370.0).toDouble(),
-                      child: ChatPage(chatModel: widget.ffi.chatModel),
+                      child: ChatPage(
+                        chatModel: widget.ffi.chatModel,
+                        sevenBubbleStyle: true),
                     ),
                   if (_sevenBubbleView == _SevenBubbleView.settings)
                     Flexible(
