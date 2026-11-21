@@ -946,6 +946,10 @@ jobs:
     name: ${{ matrix.job.target }}
     runs-on: ${{ matrix.job.os }}
     needs: [generate-bridge]
+    # On macOS, use the immutable GitHub upstream commits from Cargo.lock.
+    # The static VPS Git mirror is only used by other platform jobs.
+    env:
+      GIT_CONFIG_COUNT: "0"
     strategy:
       fail-fast: false
       matrix:
@@ -980,9 +984,26 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Verify pinned Seven Desk Git dependency mirrors
+      - name: Verify pinned upstream Git dependencies (macOS)
         shell: bash
-        run: bash .github/scripts/verify-dependency-mirrors.sh
+        run: |
+          set -euo pipefail
+          probe_dir="$(mktemp -d)"
+          trap 'rm -rf -- "$probe_dir"' EXIT
+          for record in \
+            "hwcodec ec38ebaf2454269d4c5668a57e3813c6e5541be7" \
+            "externals 8903740a1f47884906a6e347ad3d8d56304d9771"; do
+            name="${record%% *}"
+            sha="${record#* }"
+            git init -q "$probe_dir/$name"
+            GIT_TERMINAL_PROMPT=0 git -C "$probe_dir/$name" \
+              -c http.lowSpeedLimit=1024 -c http.lowSpeedTime=15 \
+              fetch --quiet "https://github.com/rustdesk-org/$name.git" \
+              "+$sha:refs/commit/$sha"
+            test "$(git -C "$probe_dir/$name" rev-parse "refs/commit/$sha")" = "$sha"
+            git -C "$probe_dir/$name" cat-file -e "$sha^{commit}"
+            echo "Verified pinned upstream Git commit: $name $sha"
+          done
 
       - name: Import the codesign cert
         if: env.MACOS_P12_BASE64 != null
