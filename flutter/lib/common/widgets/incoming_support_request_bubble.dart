@@ -109,7 +109,8 @@ class IncomingSupportRequestBubble extends StatelessWidget {
                   offset: Offset(0, 7)),
             ],
           ),
-          child: Column(
+          child: SingleChildScrollView(
+            child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
@@ -232,6 +233,7 @@ class IncomingSupportRequestBubble extends StatelessWidget {
                     style: const TextStyle(color: _muted, fontSize: 12)),
               ],
             ],
+            ),
           ),
         ),
       );
