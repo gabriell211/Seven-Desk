@@ -793,9 +793,8 @@ impl Connection {
                             conn.file_transferred = false; //seen
                             // Explicit local refusal before approval must not be
                             // confused with a normal disconnection after approval.
-                            conn.send_close_reason_no_retry(
-                                cm_manual_close_reason(conn.authorized)
-                            ).await;
+                            let close_reason = cm_manual_close_reason(conn.authorized);
+                            conn.send_close_reason_no_retry(close_reason).await;
                             conn.on_close("connection manager", true).await;
                             break;
                         }
