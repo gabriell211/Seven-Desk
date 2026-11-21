@@ -15,12 +15,13 @@ void main() {
     VoidCallback? onAccept,
     required VoidCallback onReject,
     String? disabledReason,
+    double width = 300,
   }) {
     return MaterialApp(
       home: Scaffold(
         body: Center(
           child: SizedBox(
-            width: 300,
+            width: width,
             child: IncomingSupportRequestBubble(
               identity: identity,
               requesterId: '123-456-789',
@@ -44,6 +45,20 @@ void main() {
     expect(find.text('ID: 123-456-789'), findsOneWidget);
     expect(find.text('Aceitar como administrador'), findsOneWidget);
     expect(find.text('Aceitar'), findsOneWidget);
+    expect(find.text('Recusar'), findsOneWidget);
+  });
+
+  testWidgets('wide receiver request keeps the three approval actions', (tester) async {
+    await tester.pumpWidget(screen(
+      width: 720,
+      onReject: () {},
+      onAccept: () {},
+      onAdmin: () {},
+    ));
+    expect(find.text('Solicitação de acesso remoto'), findsOneWidget);
+    expect(find.text('ID: 123-456-789'), findsOneWidget);
+    expect(find.text('Aceitar'), findsOneWidget);
+    expect(find.text('Aceitar como administrador'), findsOneWidget);
     expect(find.text('Recusar'), findsOneWidget);
   });
 
