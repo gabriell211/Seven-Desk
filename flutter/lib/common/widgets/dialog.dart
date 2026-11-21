@@ -1407,12 +1407,14 @@ class SevenDeskSessionProgressCard extends StatelessWidget {
     required this.description,
     required this.onCancel,
     this.waitingForApproval = false,
+    this.cancelledByClient = false,
   });
 
   final String title;
   final String description;
   final VoidCallback onCancel;
   final bool waitingForApproval;
+  final bool cancelledByClient;
 
   @override
   Widget build(BuildContext context) {
@@ -1487,18 +1489,26 @@ class SevenDeskSessionProgressCard extends StatelessWidget {
                         height: 76,
                         width: 76,
                         alignment: Alignment.center,
-                        decoration: const BoxDecoration(
-                          color: Color(0xFF2A1B42),
+                        decoration: BoxDecoration(
+                          color: cancelledByClient
+                              ? const Color(0xFF3B1D34)
+                              : const Color(0xFF2A1B42),
                           shape: BoxShape.circle,
                         ),
-                        child: const SizedBox(
-                          width: 41,
-                          height: 41,
-                          child: CircularProgressIndicator(
-                            color: _sevenProgressPurple,
-                            strokeWidth: 3.2,
-                          ),
-                        ),
+                        child: cancelledByClient
+                            ? const Icon(
+                                Icons.cancel_outlined,
+                                color: Color(0xFFFF6A81),
+                                size: 43,
+                              )
+                            : const SizedBox(
+                                width: 41,
+                                height: 41,
+                                child: CircularProgressIndicator(
+                                  color: _sevenProgressPurple,
+                                  strokeWidth: 3.2,
+                                ),
+                              ),
                       ),
                     ),
                     const SizedBox(height: 17),
@@ -1534,18 +1544,22 @@ class SevenDeskSessionProgressCard extends StatelessWidget {
                       child: Row(
                         children: [
                           Icon(
-                            waitingForApproval
-                                ? Icons.verified_user_outlined
-                                : Icons.lock_outline_rounded,
+                            cancelledByClient
+                                ? Icons.info_outline_rounded
+                                : waitingForApproval
+                                    ? Icons.verified_user_outlined
+                                    : Icons.lock_outline_rounded,
                             size: 19,
                             color: _sevenProgressPurple,
                           ),
                           const SizedBox(width: 9),
                           Expanded(
                             child: Text(
-                              waitingForApproval
-                                  ? 'O acesso depende da aprovação do cliente.'
-                                  : 'Estabelecendo uma conexão protegida.',
+                              cancelledByClient
+                                  ? 'A solicitação foi encerrada sem autorizar o acesso.'
+                                  : waitingForApproval
+                                      ? 'O acesso depende da aprovação do cliente.'
+                                      : 'Estabelecendo uma conexão protegida.',
                               style: const TextStyle(
                                 color: _sevenProgressMuted,
                                 fontSize: 12,
@@ -1560,7 +1574,9 @@ class SevenDeskSessionProgressCard extends StatelessWidget {
                       key: const ValueKey('seven-progress-cancel'),
                       onPressed: onCancel,
                       icon: const Icon(Icons.close_rounded, size: 19),
-                      label: const Text('Cancelar conexão'),
+                      label: Text(
+                        cancelledByClient ? 'Fechar' : 'Cancelar conexão',
+                      ),
                       style: OutlinedButton.styleFrom(
                         foregroundColor: Colors.white,
                         minimumSize: const Size.fromHeight(44),
@@ -1592,6 +1608,21 @@ void showSevenDeskConnectingDialog(OverlayDialogManager dialogManager) {
         dialogManager.dismissAll();
         closeConnection();
       },
+    ),
+  );
+}
+
+void showSevenDeskClientCancelledDialog(
+  OverlayDialogManager dialogManager,
+  VoidCallback onClose,
+) {
+  dialogManager.dismissAll();
+  dialogManager.show(
+    (_, close, __) => SevenDeskSessionProgressCard(
+      title: 'Cancelado pelo cliente',
+      description: 'O cliente recusou ou cancelou a solicitação de suporte remoto.',
+      cancelledByClient: true,
+      onCancel: onClose,
     ),
   );
 }
