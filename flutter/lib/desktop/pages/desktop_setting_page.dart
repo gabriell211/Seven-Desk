@@ -836,7 +836,7 @@ class _GeneralState extends State<_General> {
         _OptionCheckBox(context, 'Confirm before closing multiple tabs',
             kOptionEnableConfirmClosingTabs,
             isServer: false),
-      if (!incomingOnly)
+      if (!incomingOnly && (isWeb || !useHomeDashboard))
         _OptionCheckBox(
           context,
           'allow-remote-toolbar-docking-any-edge',
@@ -976,7 +976,7 @@ class _GeneralState extends State<_General> {
         },
       ));
     }
-    children.add(_OptionCheckBox(
+    if (isWeb || !useHomeDashboard) children.add(_OptionCheckBox(
       context,
       'Show monitor switch button on the main toolbar',
       kOptionAllowMonitorSwitchMainToolbar,
@@ -1003,7 +1003,8 @@ class _GeneralState extends State<_General> {
         }
       },
     ));
-    if (mainGetLocalBoolOptionSync(kOptionAllowMonitorSwitchMainToolbar)) {
+    if ((isWeb || !useHomeDashboard) &&
+        mainGetLocalBoolOptionSync(kOptionAllowMonitorSwitchMainToolbar)) {
       children.add(KeyedSubtree(
         key: _minToolbarOptionKey,
         child: _OptionCheckBox(
@@ -3036,6 +3037,54 @@ Widget _Card(
     {required String title,
     required List<Widget> children,
     List<Widget>? title_suffix}) {
+  if (!isWeb && useHomeDashboard) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 10, bottom: 4, right: 6),
+      child: Align(
+        alignment: Alignment.topLeft,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 880),
+          child: Container(
+            width: double.infinity,
+            padding: const EdgeInsets.fromLTRB(15, 14, 15, 17),
+            decoration: BoxDecoration(
+              color: _sevenSurface,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: _sevenBorder),
+              boxShadow: const [
+                BoxShadow(color: Color(0x21000000), blurRadius: 12),
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Row(children: [
+                  Container(
+                    width: 4, height: 23,
+                    decoration: BoxDecoration(
+                      color: _sevenPurple,
+                      borderRadius: BorderRadius.circular(5)),
+                  ),
+                  const SizedBox(width: 11),
+                  Expanded(child: Text(translate(title),
+                    style: const TextStyle(
+                      color: Colors.white, fontSize: 17,
+                      fontWeight: FontWeight.w700))),
+                  ...?title_suffix,
+                ]),
+                const SizedBox(height: 13),
+                for (final child in children)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 5),
+                    child: child,
+                  ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
   return Row(
     children: [
       Flexible(
