@@ -15,7 +15,7 @@ import 'package:get/get.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:flutter_hbb/utils/http_service.dart' as http;
 
-import '../../common.dart';
+import '../../common.dart' hide Dialog;
 import '../../models/model.dart';
 import '../../models/platform_model.dart';
 import 'address_book.dart';
