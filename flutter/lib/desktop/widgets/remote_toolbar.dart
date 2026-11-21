@@ -884,8 +884,16 @@ class _RemoteToolbarState extends State<RemoteToolbar> {
                                   ffi: widget.ffi)),
                             ]),
                             _bubbleSection('Comunicação', [
-                              _bubbleControl('Chat', _ChatMenu(
-                                id: widget.id, ffi: widget.ffi)),
+                              _bubbleControl('Chat', IconButton(
+                                tooltip: 'Abrir chat no balão',
+                                onPressed: () => _openSevenBubble(
+                                    _SevenBubbleView.chat),
+                                icon: const Icon(Icons.chat_bubble_outline_rounded))),
+                              _bubbleControl('Ligar', IconButton(
+                                tooltip: 'Solicitar chamada de voz',
+                                onPressed: () => bind.sessionRequestVoiceCall(
+                                    sessionId: widget.ffi.sessionId),
+                                icon: const Icon(Icons.call_outlined))),
                               _bubbleControl('Chamada', _VoiceCallMenu(
                                 id: widget.id, ffi: widget.ffi)),
                             ]),
