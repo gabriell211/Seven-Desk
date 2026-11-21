@@ -5243,6 +5243,7 @@ lazy_static::lazy_static! {
 pub fn check_if_retry(msgtype: &str, title: &str, text: &str, retry_for_relay: bool) -> bool {
     msgtype == "error"
         && title == "Connection Error"
+        && text != "Cancelled by the client"
         && ((text.contains("10054") || text.contains("104")) && retry_for_relay
             || (!text.to_lowercase().contains("offline")
                 && !text.to_lowercase().contains("not exist")
@@ -5263,6 +5264,18 @@ pub fn check_if_retry(msgtype: &str, title: &str, text: &str, retry_for_relay: b
 #[cfg(test)]
 mod retry_tests {
     use super::check_if_retry;
+
+    #[test]
+    fn client_refusal_is_never_retried() {
+        for retry_for_relay in [false, true] {
+            assert!(!check_if_retry(
+                "error",
+                "Connection Error",
+                "Cancelled by the client",
+                retry_for_relay,
+            ));
+        }
+    }
 
     #[test]
     fn incoming_only_error_is_not_retryable() {
