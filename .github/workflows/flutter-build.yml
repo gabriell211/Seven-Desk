@@ -3162,9 +3162,11 @@ jobs:
           name: sevendesk-${{ env.VERSION }}-${{ matrix.job.arch }}.deb
           path: .
 
-      - name: Rename Binary
+      - name: Validate Debian package for AppImage
+        shell: bash
         run: |
-          mv rustdesk-${{ env.VERSION }}-${{ matrix.job.arch }}.deb appimage/rustdesk.deb
+          bash .github/scripts/prepare-linux-deb-for-packaging.sh \
+            "${{ env.VERSION }}" "${{ matrix.job.arch }}" "appimage/rustdesk.deb"
 
       - name: Build appimage package
         shell: bash
@@ -3271,9 +3273,11 @@ jobs:
           name: sevendesk-${{ env.VERSION }}-${{ matrix.job.arch }}${{ matrix.job.suffix }}.deb
           path: .
 
-      - name: Rename Binary
+      - name: Validate Debian package for Flatpak
+        shell: bash
         run: |
-          mv rustdesk-${{ env.VERSION }}-${{ matrix.job.arch }}${{ matrix.job.suffix }}.deb flatpak/rustdesk.deb
+          bash .github/scripts/prepare-linux-deb-for-packaging.sh \
+            "${{ env.VERSION }}" "${{ matrix.job.arch }}" "flatpak/rustdesk.deb" "${{ matrix.job.suffix }}"
 
       - uses: rustdesk-org/run-on-arch-action@d3fcfbb632b84cf7f6bc772bfaaa2c2f4f8789a8 # no release tag; commit 2026-05-26
         name: Build Seven Desk flatpak package for ${{ matrix.job.arch }}
