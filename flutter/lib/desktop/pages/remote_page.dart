@@ -776,6 +776,37 @@ class _RemotePageState extends State<RemotePage>
                   },
                   inputModel: _ffi.inputModel,
                   child: getBodyForDesktop(context))),
+          // Use Seven Desk's own workspace while the remote peer has not
+          // supplied its first display. Never cover a live remote frame.
+          if (isDesktop && !isWeb && _ffi.ffiModel.pi.isSet.isFalse)
+            Positioned.fill(
+              child: IgnorePointer(
+                child: DecoratedBox(
+                  decoration: const BoxDecoration(
+                    gradient: RadialGradient(
+                      center: Alignment(0, -0.65),
+                      radius: 1.2,
+                      colors: [Color(0xFF26143C), Color(0xFF0C091A)],
+                    ),
+                  ),
+                  child: const Align(
+                    alignment: Alignment.bottomCenter,
+                    child: Padding(
+                      padding: EdgeInsets.only(bottom: 24),
+                      child: Text(
+                        'SEVEN DESK  •  SUPORTE REMOTO',
+                        style: TextStyle(
+                          color: Color(0xFF6F5F8A),
+                          fontSize: 11,
+                          letterSpacing: 1.7,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
           Stack(
             children: [
               _ffi.ffiModel.pi.isSet.isTrue &&
