@@ -24,17 +24,17 @@ AppDir:
   apt:
     arch:
     - amd64
-    allow_unauthenticated: true
+    allow_unauthenticated: false
     sources:
-    - sourceline: deb http://archive.ubuntu.com/ubuntu/ focal main restricted
-    - sourceline: deb http://archive.ubuntu.com/ubuntu/ focal-updates main restricted
-    - sourceline: deb http://archive.ubuntu.com/ubuntu/ focal universe
-    - sourceline: deb http://archive.ubuntu.com/ubuntu/ focal-updates universe
-    - sourceline: deb http://archive.ubuntu.com/ubuntu/ focal multiverse
-    - sourceline: deb http://archive.ubuntu.com/ubuntu/ focal-updates multiverse
-    - sourceline: deb http://archive.ubuntu.com/ubuntu/ focal-backports main restricted
+    - sourceline: deb https://archive.ubuntu.com/ubuntu/ focal main restricted
+    - sourceline: deb https://archive.ubuntu.com/ubuntu/ focal-updates main restricted
+    - sourceline: deb https://archive.ubuntu.com/ubuntu/ focal universe
+    - sourceline: deb https://archive.ubuntu.com/ubuntu/ focal-updates universe
+    - sourceline: deb https://archive.ubuntu.com/ubuntu/ focal multiverse
+    - sourceline: deb https://archive.ubuntu.com/ubuntu/ focal-updates multiverse
+    - sourceline: deb https://archive.ubuntu.com/ubuntu/ focal-backports main restricted
         universe multiverse
-    - sourceline: deb http://archive.ubuntu.com/ubuntu/ focal-security main restricted
+    - sourceline: deb https://archive.ubuntu.com/ubuntu/ focal-security main restricted
         universe multiverse
     include:
     # https://github.com/rustdesk/rustdesk/issues/9103
@@ -50,6 +50,9 @@ AppDir:
     - libasound2
     - libsystemd0
     - curl
+    - bash
+    - dash
+    - gstreamer1.0-tools
     - libva2
     - libva-drm2
     - libva-x11-2

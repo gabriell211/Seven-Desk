@@ -24,18 +24,18 @@ AppDir:
   apt:
     arch:
     - arm64
-    allow_unauthenticated: true
+    allow_unauthenticated: false
     sources:
-    - sourceline: deb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports/ focal main restricted universe multiverse
-      key_url: 'http://keyserver.ubuntu.com/pks/lookup?op=get&search=0x3b4fe6acc0b21f32'
-    - sourceline: deb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports/ focal-updates main restricted universe multiverse
-      key_url: 'http://keyserver.ubuntu.com/pks/lookup?op=get&search=0x3b4fe6acc0b21f32'
-    - sourceline: deb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports/ focal-backports main restricted
+    - sourceline: deb [arch=arm64] https://ports.ubuntu.com/ubuntu-ports/ focal main restricted universe multiverse
+      key_url: 'https://keyserver.ubuntu.com/pks/lookup?op=get&search=0x3b4fe6acc0b21f32'
+    - sourceline: deb [arch=arm64] https://ports.ubuntu.com/ubuntu-ports/ focal-updates main restricted universe multiverse
+      key_url: 'https://keyserver.ubuntu.com/pks/lookup?op=get&search=0x3b4fe6acc0b21f32'
+    - sourceline: deb [arch=arm64] https://ports.ubuntu.com/ubuntu-ports/ focal-backports main restricted
         universe multiverse
-      key_url: 'http://keyserver.ubuntu.com/pks/lookup?op=get&search=0x3b4fe6acc0b21f32'
-    - sourceline: deb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports/ focal-security main restricted
+      key_url: 'https://keyserver.ubuntu.com/pks/lookup?op=get&search=0x3b4fe6acc0b21f32'
+    - sourceline: deb [arch=arm64] https://ports.ubuntu.com/ubuntu-ports/ focal-security main restricted
         universe multiverse
-      key_url: 'http://keyserver.ubuntu.com/pks/lookup?op=get&search=0x3b4fe6acc0b21f32'
+      key_url: 'https://keyserver.ubuntu.com/pks/lookup?op=get&search=0x3b4fe6acc0b21f32'
     include:
     - libc6:arm64
     - libgtk-3-0
@@ -47,6 +47,9 @@ AppDir:
     - libasound2
     - libsystemd0
     - curl
+    - bash
+    - dash
+    - gstreamer1.0-tools
     - libva2
     - libva-drm2
     - libva-x11-2
