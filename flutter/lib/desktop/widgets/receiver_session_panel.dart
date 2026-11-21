@@ -143,12 +143,6 @@ class _ReceiverSessionPanelState extends State<ReceiverSessionPanel> {
                     maxLines: 1, overflow: TextOverflow.ellipsis,
                     style: const TextStyle(color: Colors.white,
                         fontWeight: FontWeight.w700))),
-                  IconButton(
-                    tooltip: 'Restaurar painel',
-                    onPressed: widget.onRestore,
-                    icon: const Icon(Icons.open_in_full_rounded,
-                        color: Colors.white),
-                  ),
                 ],
               ),
               const Spacer(),
