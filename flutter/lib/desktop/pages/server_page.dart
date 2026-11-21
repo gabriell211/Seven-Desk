@@ -255,16 +255,60 @@ class ConnectionManagerState extends State<ConnectionManager>
     });
   }
 
+  Widget _receiverOptionGroup({
+    required String title,
+    required IconData icon,
+    required String description,
+    required bool expanded,
+    required Widget child,
+  }) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      decoration: BoxDecoration(
+        border: Border.all(color: const Color(0xFF513C69)),
+        color: const Color(0xFF241934),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: ExpansionTile(
+        initiallyExpanded: expanded,
+        backgroundColor: Colors.transparent,
+        collapsedBackgroundColor: Colors.transparent,
+        iconColor: const Color(0xFFB83CF7),
+        collapsedIconColor: const Color(0xFFCEC2DC),
+        leading: Icon(icon, color: const Color(0xFFB83CF7)),
+        title: Text(title, style: const TextStyle(
+          color: Colors.white, fontWeight: FontWeight.w700, fontSize: 13)),
+        subtitle: Text(description, style: const TextStyle(
+          color: Color(0xFFCBBEDB), fontSize: 11)),
+        childrenPadding: const EdgeInsets.fromLTRB(7, 0, 7, 9),
+        children: [child],
+      ),
+    );
+  }
+
   Widget _buildConnectedPanel(Client client, List<Client> active) {
     final content = switch (_panelView) {
       ReceiverPanelView.chat => ChatPage(type: ChatPageType.desktopCM),
       ReceiverPanelView.transfers => _FileTransferLogPage(),
-      ReceiverPanelView.controls => SingleChildScrollView(
-          child: Column(children: [
+      ReceiverPanelView.controls => ListView(
+          padding: const EdgeInsets.all(10),
+          children: [
             if (client.type_() == ClientType.remote)
-              _PrivilegeBoard(client: client),
-            _CmControlPanel(client: client),
-          ]),
+              _receiverOptionGroup(
+                title: 'Permissões de acesso',
+                icon: Icons.admin_panel_settings_outlined,
+                description: 'Teclado, mouse, áudio e captura permitidos.',
+                expanded: true,
+                child: _PrivilegeBoard(client: client),
+              ),
+            _receiverOptionGroup(
+              title: 'Controles da sessão',
+              icon: Icons.tune_rounded,
+              description: 'Chamada, privilégios e encerramento.',
+              expanded: client.type_() != ClientType.remote,
+              child: _CmControlPanel(client: client),
+            ),
+          ],
         ),
       ReceiverPanelView.none => const SizedBox.shrink(),
     };
