@@ -1612,15 +1612,48 @@ void showSevenDeskConnectingDialog(OverlayDialogManager dialogManager) {
   );
 }
 
+// Preserve the same overlay and card when the remote client refuses approval.
+// Each session owns its own dialog manager; no global status can leak to
+// another open remote connection.
+final Expando<_SevenDeskPendingApproval> _sevenDeskPendingApprovals =
+    Expando<_SevenDeskPendingApproval>();
+
+class _SevenDeskPendingApproval {
+  _SevenDeskPendingApproval(this.tag);
+
+  final String tag;
+  StateSetter? refresh;
+  bool cancelledByClient = false;
+  VoidCallback? onClosed;
+}
+
 void showSevenDeskClientCancelledDialog(
   OverlayDialogManager dialogManager,
+  SessionID sessionId,
   VoidCallback onClose,
 ) {
+  final pending = _sevenDeskPendingApprovals[dialogManager];
+  if (pending != null &&
+      pending.tag == '$sessionId-seven-desk-approval' &&
+      dialogManager.existing(pending.tag) &&
+      pending.refresh != null) {
+    // Only the content of the existing "Aguardando o cliente" card changes;
+    // no new route, modal or overlay is opened.
+    pending.refresh!(() {
+      pending.cancelledByClient = true;
+      pending.onClosed = onClose;
+    });
+    return;
+  }
+
+  // A refusal may arrive before the waiting overlay is mounted. Keep the
+  // correct outcome visible rather than resurrecting a loading indicator.
   dialogManager.dismissAll();
   dialogManager.show(
     (_, close, __) => SevenDeskSessionProgressCard(
       title: 'Cancelado pelo cliente',
-      description: 'O cliente recusou ou cancelou a solicitação de suporte remoto.',
+      description:
+          'O cliente recusou ou cancelou a solicitação de suporte remoto.',
       cancelledByClient: true,
       onCancel: onClose,
     ),
@@ -1630,17 +1663,31 @@ void showSevenDeskClientCancelledDialog(
 void showWaitAcceptDialog(SessionID sessionId, String type, String title,
     String text, OverlayDialogManager dialogManager) {
   dialogManager.dismissAll();
+  final pending = _SevenDeskPendingApproval('$sessionId-seven-desk-approval');
+  _sevenDeskPendingApprovals[dialogManager] = pending;
   dialogManager.show((setState, close, context) {
+    pending.refresh = setState;
+
     onCancel() {
-      closeConnection();
+      if (pending.cancelledByClient) {
+        dialogManager.dismissAll();
+        pending.onClosed?.call();
+      } else {
+        closeConnection();
+      }
     }
 
     if (isDesktop && !isWeb) {
       return SevenDeskSessionProgressCard(
-        title: 'Aguardando o cliente',
-        description: 'Solicitação enviada. O cliente precisa aceitar o acesso no próprio computador.',
+        title: pending.cancelledByClient
+            ? 'Cancelado pelo cliente'
+            : 'Aguardando o cliente',
+        description: pending.cancelledByClient
+            ? 'O cliente recusou ou cancelou a solicitação de suporte remoto.'
+            : 'Solicitação enviada. O cliente precisa aceitar o acesso no próprio computador.',
         onCancel: onCancel,
-        waitingForApproval: true,
+        waitingForApproval: !pending.cancelledByClient,
+        cancelledByClient: pending.cancelledByClient,
       );
     }
     return CustomAlertDialog(
@@ -1651,6 +1698,11 @@ void showWaitAcceptDialog(SessionID sessionId, String type, String title,
       ],
       onCancel: onCancel,
     );
+  }, tag: pending.tag).whenComplete(() {
+    pending.refresh = null;
+    if (identical(_sevenDeskPendingApprovals[dialogManager], pending)) {
+      _sevenDeskPendingApprovals[dialogManager] = null;
+    }
   });
 }
 
