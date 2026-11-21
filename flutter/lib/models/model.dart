@@ -57,6 +57,17 @@ bool acceptsConnectionUriScheme(String url, String currentPrefix,
     url.startsWith(currentPrefix) ||
     (onMacOS && url.startsWith('rustdesk://'));
 
+// Use only the explicit protocol reason from a locally refused request.
+// A network drop, timeout or normal post-approval disconnect is not a refusal.
+bool isSevenDeskClientCancellationMessage(
+  Object? type,
+  Object? title,
+  Object? message,
+) =>
+    type == 'error' &&
+    title == 'Connection Error' &&
+    message == 'Cancelled by the client';
+
 typedef HandleMsgBox = Function(Map<String, dynamic> evt, String id);
 typedef ReconnectHandle = Function(OverlayDialogManager, SessionID, bool);
 final _constSessionId = Uuid().v4obj();
@@ -935,7 +946,29 @@ class FfiModel with ChangeNotifier {
       return;
     }
 
-    if (type == 're-input-password') {
+    if (isSevenDeskClientCancellationMessage(type, title, text)) {
+      _timer?.cancel();
+      _timer = null;
+      _reconnects = 1;
+      _offlineReconnectStartTime = null;
+      resetRestartReconnectState();
+      if (isDesktop && !isWeb) {
+        showSevenDeskClientCancelledDialog(dialogManager, () {
+          dialogManager.dismissAll();
+          closeConnection(id: peerId);
+        });
+      } else {
+        showMsgBox(
+          sessionId,
+          'error',
+          'Connection Error',
+          'Cancelado pelo cliente',
+          '',
+          false,
+          dialogManager,
+        );
+      }
+    } else if (type == 're-input-password') {
       wrongPasswordDialog(sessionId, dialogManager, type, title, text);
     } else if (type == 'input-2fa') {
       enter2FaDialog(sessionId, dialogManager);
