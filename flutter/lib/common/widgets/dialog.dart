@@ -1393,6 +1393,145 @@ void showElevationError(SessionID sessionId, String type, String title,
   });
 }
 
+
+const _sevenProgressBackground = Color(0xFF140E25);
+const _sevenProgressPurple = Color(0xFFAE36FA);
+const _sevenProgressMuted = Color(0xFFC9BEDD);
+
+/// Waiting states for outgoing desktop support sessions. This widget never
+/// accepts a connection remotely; only the client can approve that request.
+class SevenDeskSessionProgressCard extends StatelessWidget {
+  const SevenDeskSessionProgressCard({
+    super.key,
+    required this.title,
+    required this.description,
+    required this.onCancel,
+    this.waitingForApproval = false,
+  });
+
+  final String title;
+  final String description;
+  final VoidCallback onCancel;
+  final bool waitingForApproval;
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      backgroundColor: Colors.transparent,
+      insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 440),
+        child: Container(
+          padding: const EdgeInsets.fromLTRB(23, 21, 23, 19),
+          decoration: BoxDecoration(
+            color: _sevenProgressBackground,
+            borderRadius: BorderRadius.circular(21),
+            border: Border.all(color: _sevenProgressPurple, width: 1.5),
+            boxShadow: const [
+              BoxShadow(color: Color(0x66000000), blurRadius: 24,
+                  offset: Offset(0, 7)),
+            ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Row(children: [
+                loadIcon(34),
+                const SizedBox(width: 10),
+                const Expanded(child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Seven Desk',
+                      style: TextStyle(color: Colors.white,
+                        fontSize: 19, fontWeight: FontWeight.w800)),
+                    Text('Suporte remoto',
+                      style: TextStyle(color: _sevenProgressMuted, fontSize: 12)),
+                  ],
+                )),
+                const Icon(Icons.shield_outlined,
+                    color: _sevenProgressPurple, size: 23),
+              ]),
+              const SizedBox(height: 18),
+              Container(
+                height: 76, width: 76,
+                alignment: Alignment.center,
+                decoration: const BoxDecoration(
+                  color: Color(0xFF2A1B42), shape: BoxShape.circle),
+                child: const SizedBox(
+                  width: 41, height: 41,
+                  child: CircularProgressIndicator(
+                    color: _sevenProgressPurple, strokeWidth: 3.2),
+                ),
+              ),
+              const SizedBox(height: 17),
+              Text(title,
+                textAlign: TextAlign.center,
+                style: const TextStyle(color: Colors.white,
+                    fontSize: 21, fontWeight: FontWeight.w800)),
+              const SizedBox(height: 8),
+              Text(description,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                    color: _sevenProgressMuted, fontSize: 13, height: 1.4)),
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF251A38),
+                  borderRadius: BorderRadius.circular(11),
+                  border: Border.all(color: const Color(0xFF4B3867)),
+                ),
+                child: Row(children: [
+                  Icon(waitingForApproval
+                      ? Icons.verified_user_outlined
+                      : Icons.lock_outline_rounded,
+                    size: 19, color: _sevenProgressPurple),
+                  const SizedBox(width: 9),
+                  Expanded(child: Text(
+                    waitingForApproval
+                        ? 'O acesso depende da aprovação do cliente.'
+                        : 'Estabelecendo uma conexão protegida.',
+                    style: const TextStyle(
+                        color: _sevenProgressMuted, fontSize: 12),
+                  )),
+                ]),
+              ),
+              const SizedBox(height: 14),
+              OutlinedButton.icon(
+                key: const ValueKey('seven-progress-cancel'),
+                onPressed: onCancel,
+                icon: const Icon(Icons.close_rounded, size: 19),
+                label: const Text('Cancelar conexão'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: Colors.white,
+                  minimumSize: const Size.fromHeight(44),
+                  side: const BorderSide(color: Color(0xFF6A557F)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+void showSevenDeskConnectingDialog(OverlayDialogManager dialogManager) {
+  dialogManager.show(
+    (_, close, __) => SevenDeskSessionProgressCard(
+      title: 'Conectando ao cliente',
+      description: 'Preparando a solicitação de suporte remoto.',
+      onCancel: () {
+        dialogManager.dismissAll();
+        closeConnection();
+      },
+    ),
+  );
+}
+
 void showWaitAcceptDialog(SessionID sessionId, String type, String title,
     String text, OverlayDialogManager dialogManager) {
   dialogManager.dismissAll();
@@ -1401,13 +1540,11 @@ void showWaitAcceptDialog(SessionID sessionId, String type, String title,
       closeConnection();
     }
 
-    return CustomAlertDialog(
-      title: null,
-      content: msgboxContent(type, title, text),
-      actions: [
-        dialogButton('Cancel', onPressed: onCancel, isOutline: true),
-      ],
+    return SevenDeskSessionProgressCard(
+      title: 'Aguardando o cliente',
+      description: 'Solicitação enviada. O cliente precisa aceitar o acesso no próprio computador.',
       onCancel: onCancel,
+      waitingForApproval: true,
     );
   });
 }
