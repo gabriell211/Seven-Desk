@@ -4,7 +4,6 @@ These checks fail fast before MSI/AppImage packaging; platform compilation,
 signature validation and actual installer tests remain mandatory in CI.
 """
 from pathlib import Path
-import re
 import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -20,9 +19,12 @@ class InstallerWarningRegressionTests(unittest.TestCase):
 
     def test_msi_uses_unconditional_install_validate(self):
         package = (ROOT / "res/msi/Package/Package.wxs").read_text(encoding="utf-8-sig")
-        self.assertNotRegex(package, r"<InstallValidate\\s+Condition=")
+        self.assertNotRegex(package, r"<InstallValidate\s+Condition=")
         self.assertNotIn('AllowSameVersionUpgrades="yes"', package)
         self.assertIn('AllowSameVersionUpgrades="no"', package)
+        self.assertIn("SEVENDESK_SAME_OR_NEWER_INSTALLED", package)
+        self.assertIn('OnlyDetect="yes"', package)
+        self.assertIn('IncludeMinimum="yes"', package)
 
     def test_harvested_files_have_default_language(self):
         generator = (ROOT / "res/msi/preprocess.py").read_text(encoding="utf-8")
