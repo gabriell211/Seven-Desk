@@ -112,6 +112,13 @@ void main() {
     expect(find.byType(CircularProgressIndicator), findsNothing);
     expect(find.text('Fechar'), findsOneWidget);
 
+    // A later socket reset cannot replace an explicit client refusal.
+    showSevenDeskWaitingFailureDialog(
+      manager, sessionId, SevenDeskWaitingFailure.network, () => closed++);
+    await tester.pump();
+    expect(find.text('Cancelado pelo cliente'), findsOneWidget);
+    expect(find.text('Problema de rede'), findsNothing);
+
     await tester.tap(find.byKey(const ValueKey('seven-progress-cancel')));
     await tester.pump();
     expect(closed, 1);
@@ -204,6 +211,14 @@ void main() {
     expect(find.text('Tempo limite esgotado'), findsOneWidget);
     expect(find.text('Aguardando o cliente'), findsNothing);
     expect(find.byType(CircularProgressIndicator), findsNothing);
+
+    // Out-of-order approval prompts must not resurrect the spinner.
+    showWaitAcceptDialog(
+      sessionId, 'wait-remote-accept-nook',
+      'Prompt', 'Waiting for approval', manager);
+    await tester.pump();
+    expect(find.text('Tempo limite esgotado'), findsOneWidget);
+    expect(find.text('Aguardando o cliente'), findsNothing);
     expect(find.byIcon(Icons.access_time_rounded), findsOneWidget);
     expect(find.text('Fechar'), findsOneWidget);
     await tester.tap(find.byKey(const ValueKey('seven-progress-cancel')));
