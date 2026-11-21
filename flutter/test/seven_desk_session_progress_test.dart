@@ -5,7 +5,8 @@ import 'package:flutter_hbb/common.dart' show OverlayDialogManager, OverlayKeySt
 import 'package:uuid/uuid.dart';
 import 'package:flutter_hbb/common/widgets/dialog.dart';
 import 'package:flutter_hbb/models/model.dart'
-    show isSevenDeskClientCancellationMessage;
+    show isSevenDeskClientCancellationMessage,
+        classifySevenDeskConnectionFailure;
 
 void main() {
   testWidgets('Seven Desk shows its own awaiting-approval dialog', (tester) async {
@@ -115,6 +116,141 @@ void main() {
     await tester.pump();
     expect(closed, 1);
     expect(manager.existing('$sessionId-seven-desk-approval'), isFalse);
+  });
+
+  test('timeout and network errors have distinct classified outcomes', () {
+    for (final value in [
+      'Timeout',
+      'Operation timed out',
+      'deadline exceeded',
+    ]) {
+      expect(
+        classifySevenDeskConnectionFailure(
+          'error', 'Connection Error', value),
+        SevenDeskWaitingFailure.timeout,
+        reason: value,
+      );
+    }
+    for (final value in [
+      'Reset by the peer',
+      'Failed to connect to sevendesk.tech:21116',
+      'Connection refused',
+      'No route to host',
+      'Network is unreachable',
+    ]) {
+      expect(
+        classifySevenDeskConnectionFailure(
+          'error', 'Connection Error', value),
+        SevenDeskWaitingFailure.network,
+        reason: value,
+      );
+    }
+
+    expect(
+      classifySevenDeskConnectionFailure(
+        'error', 'Connection Error', 'Cancelled by the client'),
+      SevenDeskWaitingFailure.clientCancelled,
+    );
+    for (final value in [
+      'Wrong Password',
+      'Remote desktop is offline',
+      'Connection not allowed',
+      'Closed manually by the peer',
+    ]) {
+      expect(
+        classifySevenDeskConnectionFailure(
+          'error', 'Connection Error', value),
+        isNull,
+        reason: value,
+      );
+    }
+    expect(
+      classifySevenDeskConnectionFailure(
+        'restarting-show', 'Connecting...', 'Timeout'),
+      isNull,
+    );
+  });
+
+  testWidgets('timeout changes the approval card in the same overlay',
+      (tester) async {
+    final manager = OverlayDialogManager();
+    final overlayKey = OverlayKeyState();
+    manager.setOverlayState(overlayKey);
+    final sessionId = const Uuid().v4obj();
+    var closed = 0;
+
+    await tester.pumpWidget(MaterialApp(
+      home: Scaffold(body: Overlay(
+        key: overlayKey.key,
+        initialEntries: [
+          OverlayEntry(builder: (_) => const SizedBox.shrink()),
+        ],
+      )),
+    ));
+
+    showWaitAcceptDialog(
+      sessionId, 'wait-remote-accept-nook',
+      'Prompt', 'Waiting for approval', manager);
+    await tester.pump();
+    final card = find.byType(SevenDeskSessionProgressCard);
+    final before = tester.element(card);
+
+    showSevenDeskWaitingFailureDialog(
+      manager, sessionId, SevenDeskWaitingFailure.timeout,
+      () => closed++);
+    await tester.pump();
+
+    expect(identical(tester.element(card), before), isTrue);
+    expect(find.text('Tempo limite esgotado'), findsOneWidget);
+    expect(find.text('Aguardando o cliente'), findsNothing);
+    expect(find.byType(CircularProgressIndicator), findsNothing);
+    expect(find.byIcon(Icons.access_time_rounded), findsOneWidget);
+    expect(find.text('Fechar'), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('seven-progress-cancel')));
+    await tester.pump();
+    expect(closed, 1);
+    expect(hasSevenDeskSessionProgress(manager, sessionId), isFalse);
+  });
+
+  testWidgets('network problem replaces the connecting state in place',
+      (tester) async {
+    final manager = OverlayDialogManager();
+    final overlayKey = OverlayKeyState();
+    manager.setOverlayState(overlayKey);
+    final sessionId = const Uuid().v4obj();
+    var closed = 0;
+
+    await tester.pumpWidget(MaterialApp(
+      home: Scaffold(body: Overlay(
+        key: overlayKey.key,
+        initialEntries: [
+          OverlayEntry(builder: (_) => const SizedBox.shrink()),
+        ],
+      )),
+    ));
+
+    // This also verifies the earlier "Conectando" phase, before any
+    // client approval prompt has been sent.
+    showSevenDeskConnectingDialog(manager, sessionId);
+    await tester.pump();
+    final card = find.byType(SevenDeskSessionProgressCard);
+    final before = tester.element(card);
+    expect(find.text('Conectando ao cliente'), findsOneWidget);
+
+    showSevenDeskWaitingFailureDialog(
+      manager, sessionId, SevenDeskWaitingFailure.network,
+      () => closed++);
+    await tester.pump();
+
+    expect(identical(tester.element(card), before), isTrue);
+    expect(find.text('Problema de rede'), findsOneWidget);
+    expect(find.text('Conectando ao cliente'), findsNothing);
+    expect(find.byIcon(Icons.wifi_off_rounded), findsOneWidget);
+    expect(find.byType(CircularProgressIndicator), findsNothing);
+    expect(find.text('Fechar'), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('seven-progress-cancel')));
+    await tester.pump();
+    expect(closed, 1);
   });
 
   testWidgets('client cancellation is not shown as a loading state',
