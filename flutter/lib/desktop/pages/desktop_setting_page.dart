@@ -10,6 +10,7 @@ import 'package:flutter_hbb/common/widgets/audio_input.dart';
 import 'package:flutter_hbb/common/widgets/setting_widgets.dart';
 import 'package:flutter_hbb/consts.dart';
 import 'package:flutter_hbb/desktop/pages/desktop_home_page.dart';
+import 'package:flutter_hbb/desktop/widgets/home_dashboard.dart';
 import 'package:flutter_hbb/common/widgets/keyboard_shortcuts/page_body.dart';
 import 'package:flutter_hbb/desktop/pages/desktop_keyboard_shortcuts_page.dart';
 import 'package:flutter_hbb/desktop/pages/desktop_tab_page.dart';
@@ -44,6 +45,11 @@ const double _kContentFontSize = 15;
 const Color _accentColor = MyTheme.accent;
 const String _kSettingPageControllerTag = 'settingPageController';
 const String _kSettingPageTabKeyTag = 'settingPageTabKey';
+const _sevenBg = Color(0xFF0C0A19);
+const _sevenSurface = Color(0xFF171326);
+const _sevenBorder = Color(0xFF403752);
+const _sevenMuted = Color(0xFFC3BDD4);
+const _sevenPurple = Color(0xFFBA64FD);
 
 class _TabInfo {
   late final SettingsTabKey key;
@@ -278,6 +284,7 @@ class _DesktopSettingPageState extends State<DesktopSettingPage>
   @override
   Widget build(BuildContext context) {
     super.build(context);
+    if (!isWeb && useHomeDashboard) return _buildSevenSettings();
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.background,
       body: _buildBlock(
@@ -306,6 +313,277 @@ class _DesktopSettingPageState extends State<DesktopSettingPage>
       ),
     );
   }
+
+
+  // The classic settings PageView still owns each option and callback.
+  // Only its desktop dashboard navigation and presentation change.
+  Widget _buildSevenSettings() {
+    final dark = MyTheme.darkTheme;
+    return Theme(
+      data: dark.copyWith(
+        colorScheme: dark.colorScheme.copyWith(
+          primary: _sevenPurple, surface: _sevenSurface),
+        scaffoldBackgroundColor: _sevenBg,
+        dividerColor: _sevenBorder,
+        hintColor: _sevenMuted,
+      ),
+      child: Scaffold(
+        backgroundColor: _sevenBg,
+        body: _buildBlock(children: [
+          Expanded(
+            child: LayoutBuilder(builder: (context, constraints) {
+              final compact = constraints.maxWidth < 760;
+              return compact
+                  ? Column(children: [
+                      _sevenCompactTabs(),
+                      const Divider(height: 1, color: _sevenBorder),
+                      Expanded(child: _sevenWorkspace()),
+                    ])
+                  : Row(children: [
+                      _sevenSidebar(),
+                      const VerticalDivider(width: 1, color: _sevenBorder),
+                      Expanded(child: _sevenWorkspace()),
+                    ]);
+            }),
+          ),
+        ]),
+      ),
+    );
+  }
+
+  String _sevenTitle(SettingsTabKey tab) => switch (tab) {
+    SettingsTabKey.general => 'Gerais',
+    SettingsTabKey.safety => 'Segurança',
+    SettingsTabKey.network => 'Rede e conexão',
+    SettingsTabKey.display => 'Tela e imagem',
+    SettingsTabKey.account => 'Minha conta',
+    SettingsTabKey.printer => 'Impressão',
+    SettingsTabKey.about => 'Sobre o Seven Desk',
+  };
+
+  String _sevenDescription(SettingsTabKey tab) => switch (tab) {
+    SettingsTabKey.general => 'Aparência, idioma, áudio e preferências.',
+    SettingsTabKey.safety => 'Senhas, autenticação e permissões de acesso.',
+    SettingsTabKey.network => 'Servidores, proxy e comunicação remota.',
+    SettingsTabKey.display => 'Qualidade, resolução e visualização.',
+    SettingsTabKey.account => 'Perfil, ativação e conta vinculada.',
+    SettingsTabKey.printer => 'Preferências de impressão remota.',
+    SettingsTabKey.about => 'Versão e informações do aplicativo.',
+  };
+
+  IconData _sevenIcon(SettingsTabKey tab) => switch (tab) {
+    SettingsTabKey.general => Icons.tune_rounded,
+    SettingsTabKey.safety => Icons.shield_outlined,
+    SettingsTabKey.network => Icons.lan_outlined,
+    SettingsTabKey.display => Icons.display_settings_outlined,
+    SettingsTabKey.account => Icons.person_outline_rounded,
+    SettingsTabKey.printer => Icons.print_outlined,
+    SettingsTabKey.about => Icons.info_outline_rounded,
+  };
+
+  void _selectSevenTab(SettingsTabKey tab) {
+    final index = DesktopSettingPage.tabKeys.indexOf(tab);
+    if (index < 0 || selectedTab.value == tab) return;
+    selectedTab.value = tab;
+    controller.jumpToPage(index);
+  }
+
+  Widget _sevenTab(SettingsTabKey tab, {bool compact = false}) {
+    return Obx(() {
+      final selected = selectedTab.value == tab;
+      return Padding(
+        padding: compact
+            ? const EdgeInsets.only(right: 8)
+            : const EdgeInsets.only(bottom: 6),
+        child: Semantics(
+          button: true,
+          selected: selected,
+          child: Material(
+            color: Colors.transparent,
+            borderRadius: BorderRadius.circular(12),
+            child: Ink(
+              decoration: BoxDecoration(
+                gradient: selected ? HomeDashboardTheme.accent : null,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: selected ? _sevenPurple : Colors.transparent),
+              ),
+              child: InkWell(
+                key: ValueKey('settings-tab-${tab.name}'),
+                borderRadius: BorderRadius.circular(12),
+                onTap: () => _selectSevenTab(tab),
+                child: Padding(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: compact ? 13 : 15,
+                    vertical: compact ? 10 : 14),
+                  child: Row(
+                    mainAxisSize: compact
+                        ? MainAxisSize.min : MainAxisSize.max,
+                    children: [
+                      Icon(_sevenIcon(tab), size: 20,
+                        color: selected ? Colors.white : _sevenMuted),
+                      const SizedBox(width: 10),
+                      if (compact)
+                        Text(_sevenTitle(tab),
+                          style: TextStyle(
+                            color: selected ? Colors.white : _sevenMuted,
+                            fontWeight: selected
+                                ? FontWeight.w700 : FontWeight.w500))
+                      else
+                        Expanded(child: Text(_sevenTitle(tab),
+                          maxLines: 1, overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            color: selected ? Colors.white : _sevenMuted,
+                            fontWeight: selected
+                                ? FontWeight.w700 : FontWeight.w500))),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+    });
+  }
+
+  Widget _sevenTabGroup(String title, List<SettingsTabKey> allTabs) {
+    final tabs = allTabs
+        .where(DesktopSettingPage.tabKeys.contains).toList();
+    if (tabs.isEmpty) return const SizedBox.shrink();
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 17),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(15, 0, 0, 9),
+            child: Text(title, style: const TextStyle(
+              color: _sevenMuted, fontSize: 10,
+              letterSpacing: 1.1, fontWeight: FontWeight.w700)),
+          ),
+          for (final tab in tabs) _sevenTab(tab),
+        ],
+      ),
+    );
+  }
+
+  Widget _sevenSidebar() => Container(
+    width: 250,
+    padding: const EdgeInsets.fromLTRB(13, 22, 13, 12),
+    decoration: const BoxDecoration(
+      gradient: LinearGradient(
+        begin: Alignment.topCenter, end: Alignment.bottomCenter,
+        colors: [Color(0xFF100E1B), Color(0xFF1F0E36)],
+      ),
+    ),
+    child: Column(
+      children: [
+        const Row(children: [
+          HomeDashboardLogo(size: 44),
+          SizedBox(width: 11),
+          Expanded(child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Seven Desk', style: TextStyle(
+                color: Colors.white, fontSize: 19,
+                fontWeight: FontWeight.w800)),
+              Text('Configurações', style: TextStyle(
+                color: _sevenMuted, fontSize: 12)),
+            ],
+          )),
+        ]),
+        const SizedBox(height: 25),
+        Expanded(child: ListView(
+          primary: false,
+          padding: EdgeInsets.zero,
+          children: [
+            _sevenTabGroup('PREFERÊNCIAS', [
+              SettingsTabKey.general, SettingsTabKey.display]),
+            _sevenTabGroup('ACESSO E CONEXÃO', [
+              SettingsTabKey.safety, SettingsTabKey.network]),
+            _sevenTabGroup('CONTA E SISTEMA', [
+              SettingsTabKey.account, SettingsTabKey.printer,
+              SettingsTabKey.about]),
+          ],
+        )),
+      ],
+    ),
+  );
+
+  Widget _sevenCompactTabs() => Container(
+    padding: const EdgeInsets.fromLTRB(12, 11, 0, 11),
+    color: _sevenSurface,
+    child: SizedBox(
+      height: 47,
+      child: ListView(
+        scrollDirection: Axis.horizontal,
+        children: [
+          for (final tab in DesktopSettingPage.tabKeys)
+            _sevenTab(tab, compact: true),
+        ],
+      ),
+    ),
+  );
+
+  Widget _sevenWorkspace() => Column(
+    crossAxisAlignment: CrossAxisAlignment.stretch,
+    children: [
+      Padding(
+        padding: const EdgeInsets.fromLTRB(22, 22, 16, 17),
+        child: Obx(() {
+          final tab = selectedTab.value;
+          return Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                height: 44, width: 44,
+                decoration: BoxDecoration(
+                  color: const Color(0xFF352047),
+                  borderRadius: BorderRadius.circular(13),
+                  border: Border.all(color: _sevenBorder),
+                ),
+                child: Icon(_sevenIcon(tab),
+                    color: _sevenPurple, size: 24),
+              ),
+              const SizedBox(width: 13),
+              Expanded(child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(_sevenTitle(tab), style: const TextStyle(
+                    color: Colors.white, fontSize: 22,
+                    fontWeight: FontWeight.w800)),
+                  const SizedBox(height: 4),
+                  Text(_sevenDescription(tab),
+                    style: const TextStyle(
+                      color: _sevenMuted, fontSize: 12)),
+                ],
+              )),
+            ],
+          );
+        }),
+      ),
+      const Divider(height: 1, color: _sevenBorder),
+      Expanded(
+        child: DecoratedBox(
+          decoration: const BoxDecoration(
+            gradient: RadialGradient(
+              center: Alignment(0, -1), radius: 1.4,
+              colors: [Color(0xFF1D1332), _sevenBg],
+            ),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(22, 9, 14, 8),
+            child: PageView(
+              controller: controller,
+              physics: const NeverScrollableScrollPhysics(),
+              children: _children(),
+            ),
+          ),
+        ),
+      ),
+    ],
+  );
 
   Widget _header(BuildContext context) {
     final settingsText = Text(
