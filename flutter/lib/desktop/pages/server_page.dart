@@ -137,7 +137,7 @@ class ConnectionManagerState extends State<ConnectionManager>
     with WidgetsBindingObserver {
   final RxBool _controlPageBlock = false.obs;
   final RxBool _sidePageBlock = false.obs;
-  ReceiverPanelView _panelView = ReceiverPanelView.none;
+  ReceiverPanelView _panelView = ReceiverPanelView.chat;
   bool _panelMinimized = false;
   String _lastWindowLayout = '';
   int? _panelClientId;
@@ -196,14 +196,19 @@ class ConnectionManagerState extends State<ConnectionManager>
     super.dispose();
   }
 
-  void _resizeFloatingWindow({required bool floating}) {
+  void _resizeFloatingWindow({
+    required bool floating,
+    bool focusedRequest = false,
+  }) {
     final size = floating
         ? _panelMinimized
-            ? const Size(315, 130)
+            ? const Size(345, 180)
             : _panelView == ReceiverPanelView.none
-                ? const Size(430, 196)
-                : const Size(520, 520)
-        : kConnectionManagerWindowSizeClosedChat;
+                ? const Size(540, 335)
+                : const Size(560, 610)
+        : focusedRequest
+            ? const Size(840, 650)
+            : kConnectionManagerWindowSizeClosedChat;
     final signature = '${floating ? 'floating' : 'pending'}:${size.width}x${size.height}';
     if (_lastWindowLayout == signature) return;
     _lastWindowLayout = signature;
@@ -217,10 +222,13 @@ class ConnectionManagerState extends State<ConnectionManager>
           await windowManager.setAlwaysOnTop(true);
         }
         if (isWindows) {
-          await setWindowsCmWindowBounds(size, bottomRight: floating);
+          await setWindowsCmWindowBounds(size,
+              bottomRight: floating, centered: focusedRequest);
         } else {
           await windowManager.setSizeAlignment(
-            size, floating ? Alignment.bottomRight : Alignment.topRight);
+            size, floating
+                ? Alignment.bottomRight
+                : focusedRequest ? Alignment.center : Alignment.topRight);
         }
         if (floating) {
           await windowManager.show();
@@ -275,10 +283,17 @@ class ConnectionManagerState extends State<ConnectionManager>
         _panelMinimized = true;
         _panelView = ReceiverPanelView.none;
       }),
-      onRestore: () => setState(() => _panelMinimized = false),
+      onRestore: () => setState(() {
+        _panelMinimized = false;
+        _panelView = ReceiverPanelView.chat;
+      }),
       onChat: () => _changePanelView(ReceiverPanelView.chat, client),
       onTransfers: () => _changePanelView(ReceiverPanelView.transfers, client),
       onControls: () => _changePanelView(ReceiverPanelView.controls, client),
+      onToggleFullScreen: () async {
+        final fullScreen = await windowManager.isFullScreen();
+        await windowManager.setFullScreen(!fullScreen);
+      },
       onCloseDetails: () => setState(() => _panelView = ReceiverPanelView.none),
       onNextSession: active.length < 2 ? null : () {
         final current = active.indexWhere((item) => item.id == client.id);
@@ -305,6 +320,66 @@ class ConnectionManagerState extends State<ConnectionManager>
     final pending = clients.any((c) => !c.authorized && !c.disconnected);
     final floating = active.isNotEmpty && !pending;
     gFFI.chatModel.receiverPanelActive = floating;
+
+    // A single incoming request gets its own centered consent dialog.
+    // Multi-session management retains the existing tab workflow.
+    final pendingClients =
+        clients.where((c) => !c.authorized && !c.disconnected).toList();
+    if (active.isEmpty && pendingClients.length == 1) {
+      _resizeFloatingWindow(floating: false, focusedRequest: true);
+      final consentScreen = Container(
+        color: const Color(0xFF110B20),
+        child: Column(
+          children: [
+            Container(
+              height: 52,
+              padding: const EdgeInsets.symmetric(horizontal: 17),
+              color: const Color(0xFF1E1630),
+              child: Row(children: [
+                loadIcon(29),
+                const SizedBox(width: 10),
+                const Text('Seven Desk', style: TextStyle(
+                    color: Colors.white, fontSize: 19,
+                    fontWeight: FontWeight.w700)),
+                Expanded(child: GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onPanStart: (_) => windowManager.startDragging(),
+                )),
+                IconButton(
+                  tooltip: 'Minimizar janela',
+                  onPressed: () => windowManager.minimize(),
+                  icon: const Icon(Icons.remove_rounded, color: Colors.white),
+                ),
+                IconButton(
+                  tooltip: 'Fechar janela',
+                  onPressed: () => handleWindowCloseButton(),
+                  icon: const Icon(Icons.close_rounded, color: Colors.white),
+                ),
+              ]),
+            ),
+            Expanded(
+              child: Center(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 14, vertical: 6),
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 760),
+                    child: _CmControlPanel(client: pendingClients.first),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+      return allowRemoteCMModification()
+          ? consentScreen
+          : buildRemoteBlock(
+              child: _buildKeyEventBlock(consentScreen),
+              block: _controlPageBlock,
+              mask: false,
+            );
+    }
     if (floating) {
       final key = serverModel.tabController.state.value.selectedTabInfo.key;
       final selected = active.firstWhereOrNull((c) => c.id.toString() == key)
@@ -312,7 +387,7 @@ class ConnectionManagerState extends State<ConnectionManager>
       if (_panelClientId != selected.id) {
         _panelClientId = selected.id;
         _panelMinimized = false;
-        _panelView = ReceiverPanelView.none;
+        _panelView = ReceiverPanelView.chat;
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (mounted) {
             gFFI.chatModel.changeCurrentKey(
