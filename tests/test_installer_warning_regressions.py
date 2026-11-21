@@ -60,6 +60,12 @@ class InstallerWarningRegressionTests(unittest.TestCase):
                 self.assertIn("    - dash", recipe)
                 self.assertNotIn("http://archive.ubuntu.com", recipe)
                 self.assertNotIn("http://ports.ubuntu.com", recipe)
+                self.assertIn("https://keyserver.ubuntu.com", recipe)
+                self.assertIn("871920D1991BC93C", recipe)
+                self.assertEqual(
+                    recipe.count("key_url:"),
+                    8 if architecture == "x86_64" else 4,
+                )
 
 
 if __name__ == "__main__":

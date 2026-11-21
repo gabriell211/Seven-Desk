@@ -27,15 +27,23 @@ AppDir:
     allow_unauthenticated: false
     sources:
     - sourceline: deb https://archive.ubuntu.com/ubuntu/ focal main restricted
+      key_url: 'https://keyserver.ubuntu.com/pks/lookup?op=get&search=0xF6ECB3762474EDA9D21B7022871920D1991BC93C'
     - sourceline: deb https://archive.ubuntu.com/ubuntu/ focal-updates main restricted
+      key_url: 'https://keyserver.ubuntu.com/pks/lookup?op=get&search=0xF6ECB3762474EDA9D21B7022871920D1991BC93C'
     - sourceline: deb https://archive.ubuntu.com/ubuntu/ focal universe
+      key_url: 'https://keyserver.ubuntu.com/pks/lookup?op=get&search=0xF6ECB3762474EDA9D21B7022871920D1991BC93C'
     - sourceline: deb https://archive.ubuntu.com/ubuntu/ focal-updates universe
+      key_url: 'https://keyserver.ubuntu.com/pks/lookup?op=get&search=0xF6ECB3762474EDA9D21B7022871920D1991BC93C'
     - sourceline: deb https://archive.ubuntu.com/ubuntu/ focal multiverse
+      key_url: 'https://keyserver.ubuntu.com/pks/lookup?op=get&search=0xF6ECB3762474EDA9D21B7022871920D1991BC93C'
     - sourceline: deb https://archive.ubuntu.com/ubuntu/ focal-updates multiverse
+      key_url: 'https://keyserver.ubuntu.com/pks/lookup?op=get&search=0xF6ECB3762474EDA9D21B7022871920D1991BC93C'
     - sourceline: deb https://archive.ubuntu.com/ubuntu/ focal-backports main restricted
         universe multiverse
+      key_url: 'https://keyserver.ubuntu.com/pks/lookup?op=get&search=0xF6ECB3762474EDA9D21B7022871920D1991BC93C'
     - sourceline: deb https://archive.ubuntu.com/ubuntu/ focal-security main restricted
         universe multiverse
+      key_url: 'https://keyserver.ubuntu.com/pks/lookup?op=get&search=0xF6ECB3762474EDA9D21B7022871920D1991BC93C'
     include:
     # https://github.com/rustdesk/rustdesk/issues/9103
     # Because of APPDIR_LIBRARY_PATH, this libc6 is not used, use LD_PRELOAD: $APPDIR/usr/lib/x86_64-linux-gnu/libc.so.6 may help, If you have time, please have a try.
