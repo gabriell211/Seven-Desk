@@ -288,7 +288,8 @@ class ConnectionManagerState extends State<ConnectionManager>
 
   Widget _buildConnectedPanel(Client client, List<Client> active) {
     final content = switch (_panelView) {
-      ReceiverPanelView.chat => ChatPage(type: ChatPageType.desktopCM),
+      ReceiverPanelView.chat => ChatPage(
+          type: ChatPageType.desktopCM, sevenBubbleStyle: true),
       ReceiverPanelView.transfers => _FileTransferLogPage(),
       ReceiverPanelView.controls => ListView(
           padding: const EdgeInsets.all(10),
