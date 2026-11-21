@@ -30,6 +30,17 @@ class InstallerWarningRegressionTests(unittest.TestCase):
         generator = (ROOT / "res/msi/preprocess.py").read_text(encoding="utf-8")
         self.assertRegex(generator, r'<File Source=.*DefaultLanguage="1033"')
 
+    def test_vcpkg_ports_match_compiler_and_runtime(self):
+        opus = (ROOT / "res/vcpkg/opus/portfile.cmake").read_text(encoding="utf-8")
+        aom = (ROOT / "res/vcpkg/aom/portfile.cmake").read_text(encoding="utf-8")
+        libyuv = (ROOT / "res/vcpkg/libyuv/portfile.cmake").read_text(encoding="utf-8")
+        self.assertIn("VCPKG_CRT_LINKAGE", opus)
+        self.assertIn("-DOPUS_STATIC_RUNTIME=ON", opus)
+        self.assertIn("-DOPUS_STATIC_RUNTIME=OFF", opus)
+        self.assertIn("string(FIND", aom)
+        self.assertIn("NOT _aom_libm_offset EQUAL -1", aom)
+        self.assertIn("AND NOT BUILD_OPTIONS", libyuv)
+
     def test_appimages_do_not_accept_unsigned_packages(self):
         for architecture in ("x86_64", "aarch64"):
             with self.subTest(architecture=architecture):
