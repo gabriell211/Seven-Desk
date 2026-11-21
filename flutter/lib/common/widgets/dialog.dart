@@ -1398,6 +1398,26 @@ const _sevenProgressBackground = Color(0xFF140E25);
 const _sevenProgressPurple = Color(0xFFAE36FA);
 const _sevenProgressMuted = Color(0xFFC9BEDD);
 
+// Exact session outcomes; the UI never infers failure types from icon colors.
+enum SevenDeskWaitingFailure { clientCancelled, timeout, network }
+
+String sevenDeskWaitingFailureTitle(SevenDeskWaitingFailure failure) =>
+    switch (failure) {
+      SevenDeskWaitingFailure.clientCancelled => 'Cancelado pelo cliente',
+      SevenDeskWaitingFailure.timeout => 'Tempo limite esgotado',
+      SevenDeskWaitingFailure.network => 'Problema de rede',
+    };
+
+String sevenDeskWaitingFailureDescription(SevenDeskWaitingFailure failure) =>
+    switch (failure) {
+      SevenDeskWaitingFailure.clientCancelled =>
+        'O cliente recusou ou cancelou a solicitação de suporte remoto.',
+      SevenDeskWaitingFailure.timeout =>
+        'O tempo para estabelecer a conexão terminou. Verifique se o cliente está disponível e tente novamente.',
+      SevenDeskWaitingFailure.network =>
+        'Não foi possível estabelecer a conexão. Verifique a internet e o servidor de conexão antes de tentar novamente.',
+    };
+
 /// Waiting states for outgoing desktop support sessions. This widget never
 /// accepts a connection remotely; only the client can approve that request.
 class SevenDeskSessionProgressCard extends StatelessWidget {
@@ -1408,6 +1428,7 @@ class SevenDeskSessionProgressCard extends StatelessWidget {
     required this.onCancel,
     this.waitingForApproval = false,
     this.cancelledByClient = false,
+    this.failure,
   });
 
   final String title;
@@ -1415,9 +1436,22 @@ class SevenDeskSessionProgressCard extends StatelessWidget {
   final VoidCallback onCancel;
   final bool waitingForApproval;
   final bool cancelledByClient;
+  final SevenDeskWaitingFailure? failure;
 
   @override
   Widget build(BuildContext context) {
+    final failureKind = cancelledByClient
+        ? SevenDeskWaitingFailure.clientCancelled
+        : failure;
+    final hasFailed = failureKind != null;
+    final failureColor = failureKind == SevenDeskWaitingFailure.timeout
+        ? const Color(0xFFF3AF52)
+        : const Color(0xFFFF6A81);
+    final failureIcon = switch (failureKind) {
+      SevenDeskWaitingFailure.timeout => Icons.access_time_rounded,
+      SevenDeskWaitingFailure.network => Icons.wifi_off_rounded,
+      _ => Icons.cancel_outlined,
+    };
     return CallbackShortcuts(
       bindings: <ShortcutActivator, VoidCallback>{
         const SingleActivator(LogicalKeyboardKey.escape): onCancel,
@@ -1490,15 +1524,15 @@ class SevenDeskSessionProgressCard extends StatelessWidget {
                         width: 76,
                         alignment: Alignment.center,
                         decoration: BoxDecoration(
-                          color: cancelledByClient
+                          color: hasFailed
                               ? const Color(0xFF3B1D34)
                               : const Color(0xFF2A1B42),
                           shape: BoxShape.circle,
                         ),
-                        child: cancelledByClient
-                            ? const Icon(
-                                Icons.cancel_outlined,
-                                color: Color(0xFFFF6A81),
+                        child: hasFailed
+                            ? Icon(
+                                failureIcon,
+                                color: failureColor,
                                 size: 43,
                               )
                             : const SizedBox(
@@ -1544,7 +1578,7 @@ class SevenDeskSessionProgressCard extends StatelessWidget {
                       child: Row(
                         children: [
                           Icon(
-                            cancelledByClient
+                            hasFailed
                                 ? Icons.info_outline_rounded
                                 : waitingForApproval
                                     ? Icons.verified_user_outlined
@@ -1555,8 +1589,8 @@ class SevenDeskSessionProgressCard extends StatelessWidget {
                           const SizedBox(width: 9),
                           Expanded(
                             child: Text(
-                              cancelledByClient
-                                  ? 'A solicitação foi encerrada sem autorizar o acesso.'
+                              hasFailed
+                                  ? 'A conexão não foi iniciada.'
                                   : waitingForApproval
                                       ? 'O acesso depende da aprovação do cliente.'
                                       : 'Estabelecendo uma conexão protegida.',
@@ -1575,7 +1609,7 @@ class SevenDeskSessionProgressCard extends StatelessWidget {
                       onPressed: onCancel,
                       icon: const Icon(Icons.close_rounded, size: 19),
                       label: Text(
-                        cancelledByClient ? 'Fechar' : 'Cancelar conexão',
+                        hasFailed ? 'Fechar' : 'Cancelar conexão',
                       ),
                       style: OutlinedButton.styleFrom(
                         foregroundColor: Colors.white,
@@ -1599,22 +1633,8 @@ class SevenDeskSessionProgressCard extends StatelessWidget {
   }
 }
 
-void showSevenDeskConnectingDialog(OverlayDialogManager dialogManager) {
-  dialogManager.show(
-    (_, close, __) => SevenDeskSessionProgressCard(
-      title: 'Conectando ao cliente',
-      description: 'Preparando a solicitação de suporte remoto.',
-      onCancel: () {
-        dialogManager.dismissAll();
-        closeConnection();
-      },
-    ),
-  );
-}
-
-// Preserve the same overlay and card when the remote client refuses approval.
-// Each session owns its own dialog manager; no global status can leak to
-// another open remote connection.
+// The progress entry belongs to a single outgoing session, not a global
+// banner. Update the StatefulBuilder of the existing overlay on failure.
 final Expando<_SevenDeskPendingApproval> _sevenDeskPendingApprovals =
     Expando<_SevenDeskPendingApproval>();
 
@@ -1623,80 +1643,55 @@ class _SevenDeskPendingApproval {
 
   final String tag;
   StateSetter? refresh;
-  bool cancelledByClient = false;
+  SevenDeskWaitingFailure? failure;
   VoidCallback? onClosed;
 }
 
-void showSevenDeskClientCancelledDialog(
-  OverlayDialogManager dialogManager,
-  SessionID sessionId,
-  VoidCallback onClose,
-) {
+bool hasSevenDeskSessionProgress(
+    OverlayDialogManager dialogManager, SessionID sessionId) {
   final pending = _sevenDeskPendingApprovals[dialogManager];
-  if (pending != null &&
-      pending.tag == '$sessionId-seven-desk-approval' &&
-      dialogManager.existing(pending.tag) &&
-      pending.refresh != null) {
-    // Only the content of the existing "Aguardando o cliente" card changes;
-    // no new route, modal or overlay is opened.
-    pending.refresh!(() {
-      pending.cancelledByClient = true;
-      pending.onClosed = onClose;
-    });
-    return;
-  }
-
-  // A refusal may arrive before the waiting overlay is mounted. Keep the
-  // correct outcome visible rather than resurrecting a loading indicator.
-  dialogManager.dismissAll();
-  dialogManager.show(
-    (_, close, __) => SevenDeskSessionProgressCard(
-      title: 'Cancelado pelo cliente',
-      description:
-          'O cliente recusou ou cancelou a solicitação de suporte remoto.',
-      cancelledByClient: true,
-      onCancel: onClose,
-    ),
-  );
+  return pending != null &&
+      (pending.tag == '$sessionId-seven-desk-approval' ||
+          pending.tag == '$sessionId-seven-desk-connecting') &&
+      pending.refresh != null &&
+      dialogManager.existing(pending.tag);
 }
 
-void showWaitAcceptDialog(SessionID sessionId, String type, String title,
-    String text, OverlayDialogManager dialogManager) {
+void _showSevenDeskSessionProgress({
+  required OverlayDialogManager dialogManager,
+  required SessionID sessionId,
+  required String tagSuffix,
+  required String title,
+  required String description,
+  required bool waitingForApproval,
+  required VoidCallback onCancel,
+}) {
   dialogManager.dismissAll();
-  final pending = _SevenDeskPendingApproval('$sessionId-seven-desk-approval');
+  final pending = _SevenDeskPendingApproval(
+      '$sessionId-seven-desk-$tagSuffix');
   _sevenDeskPendingApprovals[dialogManager] = pending;
   dialogManager.show((setState, close, context) {
     pending.refresh = setState;
-
-    onCancel() {
-      if (pending.cancelledByClient) {
+    void closeProgress() {
+      if (pending.failure != null) {
         dialogManager.dismissAll();
         pending.onClosed?.call();
       } else {
-        closeConnection();
+        onCancel();
       }
     }
 
-    if (isDesktop && !isWeb) {
-      return SevenDeskSessionProgressCard(
-        title: pending.cancelledByClient
-            ? 'Cancelado pelo cliente'
-            : 'Aguardando o cliente',
-        description: pending.cancelledByClient
-            ? 'O cliente recusou ou cancelou a solicitação de suporte remoto.'
-            : 'Solicitação enviada. O cliente precisa aceitar o acesso no próprio computador.',
-        onCancel: onCancel,
-        waitingForApproval: !pending.cancelledByClient,
-        cancelledByClient: pending.cancelledByClient,
-      );
-    }
-    return CustomAlertDialog(
-      title: null,
-      content: msgboxContent(type, title, text),
-      actions: [
-        dialogButton('Cancel', onPressed: onCancel, isOutline: true),
-      ],
-      onCancel: onCancel,
+    final failure = pending.failure;
+    return SevenDeskSessionProgressCard(
+      title: failure == null
+          ? title
+          : sevenDeskWaitingFailureTitle(failure),
+      description: failure == null
+          ? description
+          : sevenDeskWaitingFailureDescription(failure),
+      failure: failure,
+      onCancel: closeProgress,
+      waitingForApproval: waitingForApproval && failure == null,
     );
   }, tag: pending.tag).whenComplete(() {
     pending.refresh = null;
@@ -1704,6 +1699,91 @@ void showWaitAcceptDialog(SessionID sessionId, String type, String title,
       _sevenDeskPendingApprovals[dialogManager] = null;
     }
   });
+}
+
+void showSevenDeskConnectingDialog(
+  OverlayDialogManager dialogManager,
+  SessionID sessionId,
+) {
+  _showSevenDeskSessionProgress(
+    dialogManager: dialogManager,
+    sessionId: sessionId,
+    tagSuffix: 'connecting',
+    title: 'Conectando ao cliente',
+    description: 'Preparando a solicitação de suporte remoto.',
+    waitingForApproval: false,
+    onCancel: () {
+      dialogManager.dismissAll();
+      closeConnection();
+    },
+  );
+}
+
+void showSevenDeskWaitingFailureDialog(
+  OverlayDialogManager dialogManager,
+  SessionID sessionId,
+  SevenDeskWaitingFailure failure,
+  VoidCallback onClose,
+) {
+  final pending = _sevenDeskPendingApprovals[dialogManager];
+  if (hasSevenDeskSessionProgress(dialogManager, sessionId)) {
+    pending!.refresh!(() {
+      pending.failure = failure;
+      pending.onClosed = onClose;
+    });
+    return;
+  }
+
+  // If the event raced the loading overlay's first frame, retain the same
+  // Seven Desk card layout rather than displaying a legacy alert.
+  dialogManager.dismissAll();
+  dialogManager.show(
+    (_, close, __) => SevenDeskSessionProgressCard(
+      title: sevenDeskWaitingFailureTitle(failure),
+      description: sevenDeskWaitingFailureDescription(failure),
+      failure: failure,
+      onCancel: onClose,
+    ),
+  );
+}
+
+void showSevenDeskClientCancelledDialog(
+  OverlayDialogManager dialogManager,
+  SessionID sessionId,
+  VoidCallback onClose,
+) =>
+    showSevenDeskWaitingFailureDialog(
+      dialogManager,
+      sessionId,
+      SevenDeskWaitingFailure.clientCancelled,
+      onClose,
+    );
+
+void showWaitAcceptDialog(SessionID sessionId, String type, String title,
+    String text, OverlayDialogManager dialogManager) {
+  if (isDesktop && !isWeb) {
+    _showSevenDeskSessionProgress(
+      dialogManager: dialogManager,
+      sessionId: sessionId,
+      tagSuffix: 'approval',
+      title: 'Aguardando o cliente',
+      description:
+          'Solicitação enviada. O cliente precisa aceitar o acesso no próprio computador.',
+      waitingForApproval: true,
+      onCancel: closeConnection,
+    );
+    return;
+  }
+  dialogManager.dismissAll();
+  dialogManager.show((setState, close, context) => CustomAlertDialog(
+    title: null,
+    content: msgboxContent(type, title, text),
+    actions: [
+      dialogButton('Cancel',
+          onPressed: closeConnection, isOutline: true),
+    ],
+    onCancel: closeConnection,
+  ));
 }
 
 void showRestartRemoteDevice(PeerInfo pi, String id, SessionID sessionId,
