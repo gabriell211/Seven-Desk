@@ -1727,7 +1727,10 @@ void showSevenDeskWaitingFailureDialog(
 ) {
   final pending = _sevenDeskPendingApprovals[dialogManager];
   if (hasSevenDeskSessionProgress(dialogManager, sessionId)) {
-    pending!.refresh!(() {
+    // The first terminal result wins. A socket reset following a deliberate
+    // refusal must not replace "Cancelado pelo cliente" with a network error.
+    if (pending!.failure != null) return;
+    pending.refresh!(() {
       pending.failure = failure;
       pending.onClosed = onClose;
     });
@@ -1762,6 +1765,12 @@ void showSevenDeskClientCancelledDialog(
 void showWaitAcceptDialog(SessionID sessionId, String type, String title,
     String text, OverlayDialogManager dialogManager) {
   if (isDesktop && !isWeb) {
+    final pending = _sevenDeskPendingApprovals[dialogManager];
+    if (hasSevenDeskSessionProgress(dialogManager, sessionId) &&
+        pending?.failure != null) {
+      // Do not resurrect the spinner after a terminal failure.
+      return;
+    }
     _showSevenDeskSessionProgress(
       dialogManager: dialogManager,
       sessionId: sessionId,
