@@ -15,8 +15,9 @@ enum ChatPageType {
 class ChatPage extends StatelessWidget implements PageShape {
   late final ChatModel chatModel;
   final ChatPageType? type;
+  final bool sevenBubbleStyle;
 
-  ChatPage({ChatModel? chatModel, this.type}) {
+  ChatPage({ChatModel? chatModel, this.type, this.sevenBubbleStyle = false}) {
     this.chatModel = chatModel ?? gFFI.chatModel;
   }
 
@@ -108,17 +109,26 @@ class ChatPage extends StatelessWidget implements PageShape {
                       textController: chatModel.textController,
                       inputTextStyle: TextStyle(
                           fontSize: 14,
-                          color: Theme.of(context).textTheme.titleLarge?.color),
+                          color: sevenBubbleStyle
+                              ? Colors.white
+                              : Theme.of(context).textTheme.titleLarge?.color),
                       inputDecoration: InputDecoration(
                         isDense: true,
-                        hintText: translate('Write a message'),
+                        hintText: sevenBubbleStyle
+                            ? 'Digite uma mensagem...'
+                            : translate('Write a message'),
                         filled: true,
-                        fillColor: Theme.of(context).colorScheme.background,
+                        fillColor: sevenBubbleStyle
+                            ? const Color(0xFF302642)
+                            : Theme.of(context).colorScheme.background,
                         contentPadding: EdgeInsets.all(10),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(10.0),
-                          borderSide: const BorderSide(
+                          borderSide: BorderSide(
                             width: 1,
+                            color: sevenBubbleStyle
+                                ? const Color(0xFF5C4772)
+                                : Theme.of(context).dividerColor,
                             style: BorderStyle.solid,
                           ),
                         ),
@@ -126,7 +136,9 @@ class ChatPage extends StatelessWidget implements PageShape {
                       sendButtonBuilder: defaultSendButton(
                         padding:
                             EdgeInsets.symmetric(horizontal: 6, vertical: 0),
-                        color: MyTheme.accent,
+                        color: sevenBubbleStyle
+                            ? const Color(0xFFA51CFA)
+                            : MyTheme.accent,
                         icon: Icons.send_rounded,
                       ),
                     ),
@@ -159,7 +171,13 @@ class ChatPage extends StatelessWidget implements PageShape {
                         final isOwnMessage = message.user.id.isBlank!;
                         return defaultMessageDecoration(
                           color:
-                              isOwnMessage ? MyTheme.accent : Colors.blueGrey,
+                              isOwnMessage
+                                  ? (sevenBubbleStyle
+                                      ? const Color(0xFF9C1DDB)
+                                      : MyTheme.accent)
+                                  : (sevenBubbleStyle
+                                      ? const Color(0xFF403652)
+                                      : Colors.blueGrey),
                           borderTopLeft: 8,
                           borderTopRight: 8,
                           borderBottomRight: isOwnMessage ? 2 : 8,
