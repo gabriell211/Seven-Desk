@@ -2,7 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:window_manager/window_manager.dart';
 import 'package:window_size/window_size.dart' as window_size;
 
-Future<void> setWindowsCmWindowBounds(Size size, {bool bottomRight = false}) async {
+Future<void> setWindowsCmWindowBounds(Size size, {
+  bool bottomRight = false,
+  bool centered = false,
+}) async {
   window_size.PlatformWindow? window;
   try {
     window = await window_size.getWindowInfo();
@@ -12,21 +15,31 @@ Future<void> setWindowsCmWindowBounds(Size size, {bool bottomRight = false}) asy
   final screen = window?.screen;
   if (window == null || screen == null) {
     await windowManager.setSizeAlignment(
-        size, bottomRight ? Alignment.bottomRight : Alignment.topRight);
+      size,
+      centered
+          ? Alignment.center
+          : bottomRight
+              ? Alignment.bottomRight
+              : Alignment.topRight,
+    );
     return;
   }
 
-  // Keep monitor coordinates and window dimensions in physical pixels.
+  // Window bounds and screen frame use physical pixels on Windows.
   final scaledSize = size * window.scaleFactor;
+  final width = scaledSize.width.clamp(1.0, screen.visibleFrame.width);
+  final height = scaledSize.height.clamp(1.0, screen.visibleFrame.height);
+  final x = centered
+      ? screen.visibleFrame.left + (screen.visibleFrame.width - width) / 2
+      : screen.visibleFrame.right - width;
+  final y = centered
+      ? screen.visibleFrame.top + (screen.visibleFrame.height - height) / 2
+      : bottomRight
+          ? screen.visibleFrame.bottom - height - 12
+          : screen.visibleFrame.top;
+
   await windowManager.setBounds(
-    Rect.fromLTWH(
-      screen.visibleFrame.right - scaledSize.width,
-      bottomRight
-          ? screen.visibleFrame.bottom - scaledSize.height - 12
-          : screen.visibleFrame.top,
-      scaledSize.width,
-      scaledSize.height,
-    ),
+    Rect.fromLTWH(x, y, width, height),
     ignoreDevicePixelRatio: true,
   );
 }
