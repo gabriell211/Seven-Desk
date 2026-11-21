@@ -396,7 +396,9 @@ class _ReceiverSessionPanelState extends State<ReceiverSessionPanel> {
     );
   }
 
-  Widget _disconnect({bool compact = false}) => SizedBox(
+  Widget _disconnect({bool compact = false}) => Tooltip(
+    message: 'Desconectar sessão',
+    child: SizedBox(
     height: compact ? 34 : 51,
     width: double.infinity,
     child: FilledButton.icon(
@@ -411,6 +413,7 @@ class _ReceiverSessionPanelState extends State<ReceiverSessionPanel> {
       label: Text('Desconectar',
           style: TextStyle(
               fontSize: compact ? 13 : 17, fontWeight: FontWeight.w700)),
+    ),
     ),
   );
 }
