@@ -1550,11 +1550,21 @@ void showWaitAcceptDialog(SessionID sessionId, String type, String title,
       closeConnection();
     }
 
-    return SevenDeskSessionProgressCard(
-      title: 'Aguardando o cliente',
-      description: 'Solicitação enviada. O cliente precisa aceitar o acesso no próprio computador.',
+    if (isDesktop && !isWeb) {
+      return SevenDeskSessionProgressCard(
+        title: 'Aguardando o cliente',
+        description: 'Solicitação enviada. O cliente precisa aceitar o acesso no próprio computador.',
+        onCancel: onCancel,
+        waitingForApproval: true,
+      );
+    }
+    return CustomAlertDialog(
+      title: null,
+      content: msgboxContent(type, title, text),
+      actions: [
+        dialogButton('Cancel', onPressed: onCancel, isOutline: true),
+      ],
       onCancel: onCancel,
-      waitingForApproval: true,
     );
   });
 }
