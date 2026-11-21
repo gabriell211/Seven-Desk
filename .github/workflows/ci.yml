@@ -7,16 +7,6 @@ concurrency:
 
 
 env:
-  # Self-hosted, read-only snapshots of upstream Git dependencies (not authorship changes).
-  GIT_CONFIG_COUNT: "4"
-  GIT_CONFIG_KEY_0: "url.https://downloads.sevendesk.tech/deps/hwcodec.git.insteadOf"
-  GIT_CONFIG_VALUE_0: "https://github.com/rustdesk-org/hwcodec"
-  GIT_CONFIG_KEY_1: "url.https://downloads.sevendesk.tech/deps/hwcodec.git.insteadOf"
-  GIT_CONFIG_VALUE_1: "https://github.com/rustdesk-org/hwcodec.git"
-  GIT_CONFIG_KEY_2: "url.https://downloads.sevendesk.tech/deps/externals.git.insteadOf"
-  GIT_CONFIG_VALUE_2: "https://github.com/rustdesk-org/externals.git"
-  GIT_CONFIG_KEY_3: "url.https://downloads.sevendesk.tech/deps/externals.git.insteadOf"
-  GIT_CONFIG_VALUE_3: "https://github.com/rustdesk-org/externals"
 #   MIN_SUPPORTED_RUST_VERSION: "1.46.0"
 #   CICD_INTERMEDIATES_DIR: "_cicd-intermediates"
   VCPKG_BINARY_SOURCES: "clear;x-gha,readwrite"

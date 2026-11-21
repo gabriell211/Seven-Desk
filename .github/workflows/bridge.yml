@@ -6,16 +6,6 @@ on:
   workflow_call:
 
 env:
-  # Self-hosted, read-only snapshots of upstream Git dependencies (not authorship changes).
-  GIT_CONFIG_COUNT: "4"
-  GIT_CONFIG_KEY_0: "url.https://downloads.sevendesk.tech/deps/hwcodec.git.insteadOf"
-  GIT_CONFIG_VALUE_0: "https://github.com/rustdesk-org/hwcodec"
-  GIT_CONFIG_KEY_1: "url.https://downloads.sevendesk.tech/deps/hwcodec.git.insteadOf"
-  GIT_CONFIG_VALUE_1: "https://github.com/rustdesk-org/hwcodec.git"
-  GIT_CONFIG_KEY_2: "url.https://downloads.sevendesk.tech/deps/externals.git.insteadOf"
-  GIT_CONFIG_VALUE_2: "https://github.com/rustdesk-org/externals.git"
-  GIT_CONFIG_KEY_3: "url.https://downloads.sevendesk.tech/deps/externals.git.insteadOf"
-  GIT_CONFIG_VALUE_3: "https://github.com/rustdesk-org/externals"
   CARGO_EXPAND_VERSION: "1.0.95"
   FLUTTER_RUST_BRIDGE_VERSION: "1.80.1"
   RUST_VERSION: "1.75" # https://github.com/rustdesk/rustdesk/discussions/7503
