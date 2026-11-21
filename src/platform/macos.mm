@@ -29,11 +29,15 @@ extern "C" bool IsCanScreenRecording(bool prompt) {
     #ifdef NO_InputMonitoringAuthStatus
     return false;
     #else
-    bool res = CGPreflightScreenCaptureAccess();
-    if (!res && prompt) {
-        CGRequestScreenCaptureAccess();
+    if (@available(macOS 10.15, *)) {
+        bool res = CGPreflightScreenCaptureAccess();
+        if (!res && prompt) {
+            CGRequestScreenCaptureAccess();
+        }
+        return res;
     }
-    return res;
+    // Screen recording privacy APIs are unavailable before macOS Catalina.
+    return false;
     #endif
 }
 
@@ -44,7 +48,7 @@ extern "C" bool InputMonitoringAuthStatus(bool prompt) {
     #ifdef NO_InputMonitoringAuthStatus
     return true;
     #else
-    if (floor(NSAppKitVersionNumber) >= NSAppKitVersionNumber10_15) {
+    if (@available(macOS 10.15, *)) {
         IOHIDAccessType theType = IOHIDCheckAccess(kIOHIDRequestTypeListenEvent);
         NSLog(@"IOHIDCheckAccess = %d, kIOHIDAccessTypeGranted = %d", theType, kIOHIDAccessTypeGranted);
         switch (theType) {
