@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter_hbb/common.dart' show OverlayDialogManager, OverlayKeyState;
+import 'package:uuid/uuid.dart';
 import 'package:flutter_hbb/common/widgets/dialog.dart';
 import 'package:flutter_hbb/models/model.dart'
     show isSevenDeskClientCancellationMessage;
@@ -66,6 +68,53 @@ void main() {
         'success', 'Connection Error', 'Cancelled by the client'), isFalse);
     expect(isSevenDeskClientCancellationMessage(
         null, null, null), isFalse);
+  });
+
+  testWidgets('client refusal changes the current waiting card in place',
+      (tester) async {
+    final manager = OverlayDialogManager();
+    final overlayKey = OverlayKeyState();
+    manager.setOverlayState(overlayKey);
+    final sessionId = const Uuid().v4obj();
+    var closed = 0;
+
+    await tester.pumpWidget(MaterialApp(
+      home: Scaffold(
+        body: Overlay(
+          key: overlayKey.key,
+          initialEntries: [
+            OverlayEntry(builder: (_) => const SizedBox.shrink()),
+          ],
+        ),
+      ),
+    ));
+    showWaitAcceptDialog(
+      sessionId,
+      'wait-remote-accept-nook',
+      'Prompt',
+      'Waiting for approval',
+      manager,
+    );
+    await tester.pump();
+
+    final waiting = find.byType(SevenDeskSessionProgressCard);
+    expect(waiting, findsOneWidget);
+    expect(find.text('Aguardando o cliente'), findsOneWidget);
+    final originalElement = tester.element(waiting);
+
+    showSevenDeskClientCancelledDialog(manager, sessionId, () => closed++);
+    await tester.pump();
+
+    expect(identical(tester.element(waiting), originalElement), isTrue);
+    expect(find.text('Cancelado pelo cliente'), findsOneWidget);
+    expect(find.text('Aguardando o cliente'), findsNothing);
+    expect(find.byType(CircularProgressIndicator), findsNothing);
+    expect(find.text('Fechar'), findsOneWidget);
+
+    await tester.tap(find.byKey(const ValueKey('seven-progress-cancel')));
+    await tester.pump();
+    expect(closed, 1);
+    expect(manager.existing('$sessionId-seven-desk-approval'), isFalse);
   });
 
   testWidgets('client cancellation is not shown as a loading state',
