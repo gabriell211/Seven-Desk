@@ -126,6 +126,8 @@ void main() {
     ));
     expect(find.text('Conectado'),findsOneWidget);
     expect(find.text('Empresa Modelo'),findsNothing);
+    // Minimized sessions expose a single restore action in the header.
+    expect(find.byTooltip('Restaurar painel'), findsOneWidget);
     await tester.tap(find.byTooltip('Restaurar painel'));
     await tester.tap(find.text('Desconectar'));
     expect(restore,1);
