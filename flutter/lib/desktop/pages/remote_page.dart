@@ -220,7 +220,7 @@ class _RemotePageState extends State<RemotePage>
     WidgetsBinding.instance.addPostFrameCallback((_) {
       SystemChrome.setEnabledSystemUIMode(SystemUiMode.manual, overlays: []);
       if (isDesktop && !isWeb) {
-        showSevenDeskConnectingDialog(_ffi.dialogManager);
+        showSevenDeskConnectingDialog(_ffi.dialogManager, _ffi.sessionId);
       } else {
         _ffi.dialogManager.showLoading(
             translate('Connecting...'), onCancel: closeConnection);
