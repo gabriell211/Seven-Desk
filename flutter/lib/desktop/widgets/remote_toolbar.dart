@@ -7,6 +7,7 @@ import 'package:flutter_hbb/common/widgets/audio_input.dart';
 import 'package:flutter_hbb/common/widgets/dialog.dart';
 import 'package:flutter_hbb/common/widgets/keyboard_shortcuts/display.dart';
 import 'package:flutter_hbb/common/widgets/toolbar.dart';
+import 'package:flutter_hbb/common/widgets/chat_page.dart';
 import 'package:flutter_hbb/models/chat_model.dart';
 import 'package:flutter_hbb/models/state_model.dart';
 import 'package:flutter_hbb/consts.dart';
@@ -439,6 +440,8 @@ class RemoteMenuEntry {
   }
 }
 
+enum _SevenBubbleView { closed, chat, settings }
+
 class RemoteToolbar extends StatefulWidget {
   final String id;
   final FFI ffi;
@@ -462,6 +465,7 @@ class RemoteToolbar extends StatefulWidget {
 }
 
 class _RemoteToolbarState extends State<RemoteToolbar> {
+  _SevenBubbleView _sevenBubbleView = _SevenBubbleView.closed;
   late Debouncer<int> _debouncerHide;
   bool _isCursorOverImage = false;
   final _fraction = 0.5.obs;
@@ -692,6 +696,11 @@ class _RemoteToolbarState extends State<RemoteToolbar> {
           !_dockingOptionsInitialized.value) {
         return const SizedBox.shrink();
       }
+      // Native desktop keeps these controls inside the session balloon.
+      // Web retains the previous toolbar because its chat bridge differs.
+      if (isDesktop && !isWeb) {
+        return _buildSevenBubble(context);
+      }
       // If toolbar is hidden, return empty widget
       if (hide.value) {
         return const SizedBox.shrink();
@@ -740,6 +749,196 @@ class _RemoteToolbarState extends State<RemoteToolbar> {
         ],
       );
     });
+  }
+
+
+  void _openSevenBubble(_SevenBubbleView next) {
+    if (next == _SevenBubbleView.chat) {
+      widget.ffi.chatModel.changeCurrentKey(
+          MessageKey(widget.ffi.id, ChatModel.clientModeID));
+    }
+    setState(() {
+      _sevenBubbleView = _sevenBubbleView == next
+          ? _SevenBubbleView.closed
+          : next;
+    });
+  }
+
+  Widget _buildSevenBubble(BuildContext context) {
+    const purple = Color(0xFFA51CFA);
+    const muted = Color(0xFFC8BDDC);
+    const surface = Color(0xFF171026);
+    final viewport = MediaQuery.sizeOf(context);
+    final expanded = _sevenBubbleView != _SevenBubbleView.closed;
+    final width = (expanded ? 365.0 : 282.0)
+        .clamp(100.0, viewport.width > 24 ? viewport.width - 24 : 100.0)
+        .toDouble();
+    return Align(
+      alignment: Alignment.bottomRight,
+      child: Padding(
+        padding: const EdgeInsets.only(bottom: 12, right: 12, left: 12),
+        child: Material(
+          color: Colors.transparent,
+          child: Container(
+            width: width,
+            constraints: BoxConstraints(
+              maxHeight: viewport.height > 24 ? viewport.height - 24 : 100),
+            decoration: BoxDecoration(
+              color: surface,
+              borderRadius: BorderRadius.circular(19),
+              border: Border.all(color: purple, width: 1.5),
+              boxShadow: const [
+                BoxShadow(color: Color(0x66000000), blurRadius: 18),
+              ],
+            ),
+            child: Theme(
+              data: ThemeData.dark().copyWith(
+                colorScheme: const ColorScheme.dark(
+                    primary: purple, surface: surface,
+                    onSurface: Colors.white),
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 9),
+                    child: Row(children: [
+                      const Icon(Icons.shield_outlined, color: purple),
+                      const SizedBox(width: 7),
+                      const Expanded(child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Seven Desk',
+                            style: TextStyle(color: Colors.white,
+                              fontWeight: FontWeight.w700)),
+                          Text('Sessão remota',
+                            style: TextStyle(color: muted, fontSize: 11)),
+                        ],
+                      )),
+                      IconButton(
+                        tooltip: 'Chat',
+                        onPressed: () => _openSevenBubble(
+                            _SevenBubbleView.chat),
+                        icon: Icon(Icons.chat_bubble_outline_rounded,
+                          color: _sevenBubbleView == _SevenBubbleView.chat
+                              ? purple : Colors.white)),
+                      IconButton(
+                        tooltip: 'Opções',
+                        onPressed: () => _openSevenBubble(
+                            _SevenBubbleView.settings),
+                        icon: Icon(Icons.settings_outlined,
+                          color: _sevenBubbleView == _SevenBubbleView.settings
+                              ? purple : Colors.white)),
+                      if (expanded)
+                        IconButton(
+                          tooltip: 'Recolher balão',
+                          onPressed: () => setState(() {
+                            _sevenBubbleView = _SevenBubbleView.closed;
+                          }),
+                          icon: const Icon(Icons.remove_rounded,
+                              color: muted)),
+                    ]),
+                  ),
+                  if (expanded)
+                    const Divider(height: 1, color: Color(0xFF4B3A66)),
+                  if (_sevenBubbleView == _SevenBubbleView.chat)
+                    SizedBox(
+                      height: (viewport.height - 160)
+                          .clamp(90.0, 370.0).toDouble(),
+                      child: ChatPage(chatModel: widget.ffi.chatModel),
+                    ),
+                  if (_sevenBubbleView == _SevenBubbleView.settings)
+                    Flexible(
+                      child: SingleChildScrollView(
+                        padding: const EdgeInsets.all(12),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            _bubbleSection('Tela e monitores', [
+                              _bubbleControl('Monitores', _MonitorMenu(
+                                id: widget.id, ffi: widget.ffi,
+                                edge: _ToolbarEdge.top,
+                                setRemoteState: widget.setRemoteState)),
+                              _bubbleControl('Exibição', _DisplayMenu(
+                                id: widget.id, ffi: widget.ffi,
+                                state: widget.state,
+                                setFullscreen: _setFullscreen)),
+                              _bubbleControl('Tela cheia', IconButton(
+                                tooltip: 'Alternar tela cheia',
+                                onPressed: () => _setFullscreen(
+                                    !stateGlobal.fullscreen.value),
+                                icon: const Icon(Icons.fullscreen_rounded))),
+                            ]),
+                            _bubbleSection('Controle e teclado', [
+                              _bubbleControl('Controles', _ControlMenu(
+                                id: widget.id, ffi: widget.ffi,
+                                state: widget.state)),
+                              if (widget.ffi.connType == ConnType.defaultConn)
+                                _bubbleControl('Teclado', _KeyboardMenu(
+                                  id: widget.id, ffi: widget.ffi)),
+                              if (widget.ffi.ffiModel.isPeerAndroid)
+                                _bubbleControl('Android', _MobileActionMenu(
+                                  ffi: widget.ffi)),
+                            ]),
+                            _bubbleSection('Comunicação', [
+                              _bubbleControl('Chat', _ChatMenu(
+                                id: widget.id, ffi: widget.ffi)),
+                              _bubbleControl('Chamada', _VoiceCallMenu(
+                                id: widget.id, ffi: widget.ffi)),
+                            ]),
+                            _bubbleSection('Registro e sessão', [
+                              _bubbleControl('Gravação', const _RecordMenu()),
+                              _bubbleControl('Encerrar', _CloseMenu(
+                                id: widget.id, ffi: widget.ffi)),
+                            ]),
+                          ],
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _bubbleSection(String title, List<Widget> controls) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(title, style: const TextStyle(
+            color: Color(0xFFE5D9F0), fontWeight: FontWeight.w700,
+            fontSize: 13)),
+          const SizedBox(height: 6),
+          Wrap(spacing: 6, runSpacing: 6, children: controls),
+        ],
+      ),
+    );
+  }
+
+  Widget _bubbleControl(String name, Widget control) {
+    return Container(
+      width: 102,
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      decoration: BoxDecoration(
+        color: const Color(0xFF2A203D),
+        borderRadius: BorderRadius.circular(11),
+        border: Border.all(color: const Color(0xFF59456F)),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SizedBox(height: 38, child: Center(child: control)),
+          Text(name, maxLines: 1, overflow: TextOverflow.ellipsis,
+            style: const TextStyle(fontSize: 11, color: Colors.white)),
+        ],
+      ),
+    );
   }
 
   Widget _buildDragPreview(BuildContext context, _ToolbarEdge edge,
