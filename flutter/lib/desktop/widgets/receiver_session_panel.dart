@@ -62,13 +62,16 @@ class _ReceiverSessionPanelState extends State<ReceiverSessionPanel> {
   static const _muted = Color(0xFFC8C0D7);
   static const _green = Color(0xFF25DB6D);
   DateTime _visibleSince = DateTime.now();
+  final ValueNotifier<Duration> _elapsed = ValueNotifier(Duration.zero);
   Timer? _clock;
 
   @override
   void initState() {
     super.initState();
     _clock = Timer.periodic(const Duration(seconds: 1), (_) {
-      if (mounted && !widget.minimized) setState(() {});
+      if (mounted && !widget.minimized) {
+        _elapsed.value = DateTime.now().difference(_visibleSince);
+      }
     });
   }
 
@@ -83,11 +86,12 @@ class _ReceiverSessionPanelState extends State<ReceiverSessionPanel> {
   @override
   void dispose() {
     _clock?.cancel();
+    _elapsed.dispose();
     super.dispose();
   }
 
-  String get _timeLabel {
-    final seconds = DateTime.now().difference(_visibleSince).inSeconds;
+  String _timeLabel(Duration elapsed) {
+    final seconds = elapsed.inSeconds;
     final hours = seconds ~/ 3600;
     final minutes = (seconds % 3600) ~/ 60;
     final remainder = seconds % 60;
@@ -193,9 +197,14 @@ class _ReceiverSessionPanelState extends State<ReceiverSessionPanel> {
                         const Icon(Icons.schedule_rounded,
                             color: Colors.white, size: 17),
                         const SizedBox(width: 5),
-                        Text(_timeLabel,
-                          style: const TextStyle(color: Colors.white,
-                              fontSize: 11)),
+                        ValueListenableBuilder<Duration>(
+                          valueListenable: _elapsed,
+                          builder: (context, elapsed, _) => Text(
+                            _timeLabel(elapsed),
+                            style: const TextStyle(
+                                color: Colors.white, fontSize: 11),
+                          ),
+                        ),
                       ]),
                     ),
                   ),
