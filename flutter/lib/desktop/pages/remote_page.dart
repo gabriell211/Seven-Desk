@@ -115,6 +115,7 @@ class _RemotePageState extends State<RemotePage>
   late RxBool _remoteCursorMoved;
   late RxBool _keyboardEnabled;
   final _uniqueKey = UniqueKey();
+  bool _enteredSevenDeskFullscreen = false;
 
   var _blockableOverlayState = BlockableOverlayState();
 
@@ -176,6 +177,17 @@ class _RemotePageState extends State<RemotePage>
             tabController: widget.tabController,
             toolbarState: widget.toolbarState);
         registerToolbarShortcuts(context, widget.id, _ffi);
+
+        // The client has approved the session and the first usable frame
+        // arrived. Do not enter fullscreen while still awaiting approval.
+        if (isDesktop && !isWeb && !_enteredSevenDeskFullscreen) {
+          _enteredSevenDeskFullscreen = true;
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted && stateGlobal.fullscreen.isFalse) {
+              stateGlobal.setFullscreen(true);
+            }
+          });
+        }
       }
     });
     _ffi.canvasModel.initializeEdgeScrollFallback(this);
@@ -192,8 +204,12 @@ class _RemotePageState extends State<RemotePage>
     );
     WidgetsBinding.instance.addPostFrameCallback((_) {
       SystemChrome.setEnabledSystemUIMode(SystemUiMode.manual, overlays: []);
-      _ffi.dialogManager
-          .showLoading(translate('Connecting...'), onCancel: closeConnection);
+      if (isDesktop && !isWeb) {
+        showSevenDeskConnectingDialog(_ffi.dialogManager);
+      } else {
+        _ffi.dialogManager.showLoading(
+            translate('Connecting...'), onCancel: closeConnection);
+      }
     });
     WakelockManager.enable(_uniqueKey);
 
