@@ -1210,13 +1210,19 @@ class FfiModel with ChangeNotifier {
 
     if (waitForFirstImage.isFalse) return;
     dialogManager.show(
-      (setState, close, context) => CustomAlertDialog(
-          title: null,
-          content: SelectionArea(child: msgboxContent(type, title, text)),
-          actions: [
-            dialogButton("Cancel", onPressed: onClose, isOutline: true)
-          ],
-          onCancel: onClose),
+      (setState, close, context) => isDesktop && !isWeb
+          ? SevenDeskSessionProgressCard(
+              title: 'Cliente conectado',
+              description: 'Autorização concluída. Preparando a transmissão da tela remota.',
+              onCancel: onClose,
+            )
+          : CustomAlertDialog(
+              title: null,
+              content: SelectionArea(child: msgboxContent(type, title, text)),
+              actions: [
+                dialogButton("Cancel", onPressed: onClose, isOutline: true)
+              ],
+              onCancel: onClose),
       tag: '$sessionId-waiting-for-image',
     );
     waitForImageDialogShow.value = true;
