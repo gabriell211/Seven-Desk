@@ -953,7 +953,7 @@ class FfiModel with ChangeNotifier {
       _offlineReconnectStartTime = null;
       resetRestartReconnectState();
       if (isDesktop && !isWeb) {
-        showSevenDeskClientCancelledDialog(dialogManager, () {
+        showSevenDeskClientCancelledDialog(dialogManager, sessionId, () {
           dialogManager.dismissAll();
           closeConnection(id: peerId);
         });
