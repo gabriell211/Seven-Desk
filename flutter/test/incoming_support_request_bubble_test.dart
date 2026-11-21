@@ -74,14 +74,17 @@ void main() {
     ));
     expect([admins, accepted, rejected], [0, 0, 0]);
 
+    await tester.ensureVisible(find.text('Aceitar como administrador'));
     await tester.tap(find.text('Aceitar como administrador'));
     await tester.pump();
     expect([admins, accepted, rejected], [1, 0, 0]);
 
+    await tester.ensureVisible(find.text('Aceitar'));
     await tester.tap(find.text('Aceitar'));
     await tester.pump();
     expect([admins, accepted, rejected], [1, 1, 0]);
 
+    await tester.ensureVisible(find.text('Recusar'));
     await tester.tap(find.text('Recusar'));
     await tester.pump();
     expect([admins, accepted, rejected], [1, 1, 1]);
@@ -104,6 +107,7 @@ void main() {
     expect(buttons, hasLength(2));
     expect(buttons.every((button) => button.onPressed == null), isTrue);
     expect(find.text('Somente autenticação por senha.'), findsOneWidget);
+    await tester.ensureVisible(find.text('Recusar'));
     await tester.tap(find.text('Recusar'));
     expect(rejected, 1);
   });
