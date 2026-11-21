@@ -41,6 +41,15 @@ class InstallerWarningRegressionTests(unittest.TestCase):
         self.assertIn("NOT _aom_libm_offset EQUAL -1", aom)
         self.assertIn("AND NOT BUILD_OPTIONS", libyuv)
 
+    def test_rpm_files_are_not_double_listed(self):
+        for name in ("rpm-flutter.spec", "rpm-flutter-suse.spec"):
+            with self.subTest(name=name):
+                spec = (ROOT / "res" / name).read_text(encoding="utf-8")
+                files = spec.split("%files", 1)[1].split("%changelog", 1)[0]
+                self.assertIn("/usr/share/rustdesk/*", files)
+                self.assertNotIn("/usr/share/rustdesk/files/rustdesk.service", files)
+                self.assertNotIn("/usr/share/rustdesk/files/rustdesk.desktop", files)
+
     def test_appimages_do_not_accept_unsigned_packages(self):
         for architecture in ("x86_64", "aarch64"):
             with self.subTest(architecture=architecture):

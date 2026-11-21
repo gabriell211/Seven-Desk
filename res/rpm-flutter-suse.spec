@@ -34,10 +34,7 @@ install -Dm 644 $HBB/res/128x128@2x.png "%{buildroot}/usr/share/icons/hicolor/25
 
 %files
 /usr/share/rustdesk/*
-/usr/share/rustdesk/files/rustdesk.service
 /usr/share/icons/hicolor/256x256/apps/sevendesk.png
-/usr/share/rustdesk/files/rustdesk.desktop
-/usr/share/rustdesk/files/rustdesk-link.desktop
 
 %changelog
 # let's skip this for now
