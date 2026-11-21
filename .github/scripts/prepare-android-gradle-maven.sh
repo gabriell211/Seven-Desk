@@ -3,7 +3,7 @@ set -euo pipefail
 
 # Flutter 3.24.5 builds its own included Gradle plugin (:gradle) with AGP 7.3.0.
 # Its separate settings.gradle.kts ignores repositories in flutter/android.
-if [[ -n "\${FLUTTER_SDK_ROOT:-}" ]]; then
+if [[ -n "${FLUTTER_SDK_ROOT:-}" ]]; then
   flutter_root="$FLUTTER_SDK_ROOT"
 else
   flutter_executable="$(command -v flutter)"
