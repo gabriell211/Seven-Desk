@@ -29,6 +29,25 @@ class AndroidGradleMavenTests(unittest.TestCase):
         self.assertIn("https://maven-central.storage-download.googleapis.com/maven2", source)
         self.assertIn("https://repo1.maven.org/maven2", source)
 
+    def test_main_gradle_plugin_repositories_prefer_maven_mirror(self):
+        settings = (ROOT / "flutter/android/settings.gradle").read_text()
+        repos = settings.split("pluginManagement {", 1)[1].split("\nplugins {", 1)[0]
+        mirror = "https://maven-central.storage-download.googleapis.com/maven2/"
+        self.assertIn(mirror, repos)
+        self.assertLess(repos.index(mirror), repos.index("mavenCentral()"))
+        self.assertLess(repos.index("mavenCentral()"), repos.index("gradlePluginPortal()"))
+        self.assertIn("google()", repos)
+
+    def test_project_repositories_prefer_maven_mirror_before_legacy(self):
+        build = (ROOT / "flutter/android/build.gradle").read_text()
+        repos = build.split("allprojects {", 1)[1].split("rootProject.buildDir", 1)[0]
+        mirror = "https://maven-central.storage-download.googleapis.com/maven2/"
+        self.assertIn(mirror, repos)
+        self.assertLess(repos.index(mirror), repos.index("mavenCentral()"))
+        self.assertLess(repos.index("mavenCentral()"), repos.index("jcenter()"))
+        self.assertIn("google()", repos)
+        self.assertIn("jitpack.io", repos)
+
     def test_only_flutter_included_build_is_patched(self):
         source = SCRIPT.read_text()
         self.assertIn("packages/flutter_tools/gradle", source)
