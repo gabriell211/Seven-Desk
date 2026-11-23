@@ -695,7 +695,9 @@ class _GeneralState extends State<_General> {
     return ListView(
       controller: scrollController,
       children: [
-        if (!isWeb) service(),
+        // The portable app already runs its receiver while open. A Windows
+        // service exists only for an explicit, installed configuration.
+        if (!isWeb && bind.mainIsInstalled()) service(),
         if (!isWeb &&
             (isWindows || isMacOS || isLinux) &&
             !bind.mainIsInstalled())
