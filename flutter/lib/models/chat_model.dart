@@ -73,6 +73,11 @@ class ChatModel with ChangeNotifier {
   // When active, the CM owns its compact floating chat and window bounds.
   bool receiverPanelActive = false;
 
+  /// A native remote-session shortcut requests the inline Seven Desk chat.
+  /// The remote toolbar consumes this counter via ChangeNotifier instead of
+  /// launching a second draggable chat window.
+  int inlineChatToggleSerial = 0;
+
   RxBool isWindowFocus = true.obs;
   BlockableOverlayState _blockableOverlayState = BlockableOverlayState();
   final Rx<VoiceCallStatus> _voiceCallStatus = Rx(VoiceCallStatus.notStarted);
@@ -270,6 +275,15 @@ class ChatModel with ChangeNotifier {
           chatWindowOverlayEntry == null);
 
   toggleChatOverlay({Offset? chatInitPos, bool requestSoftKeyboard = true}) {
+    if (useInlineSevenDeskRemoteChat(
+      desktop: isDesktop,
+      web: isWeb,
+      connectionManager: isConnManager,
+    )) {
+      inlineChatToggleSerial += 1;
+      notifyListeners();
+      return;
+    }
     if (_isChatOverlayHide()) {
       if (!isMobile) gFFI.invokeMethod("enable_soft_keyboard", true);
       if (!(isDesktop || isWebDesktop)) {
