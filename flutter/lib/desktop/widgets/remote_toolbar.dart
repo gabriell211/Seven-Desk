@@ -475,6 +475,7 @@ class RemoteToolbar extends StatefulWidget {
 class _RemoteToolbarState extends State<RemoteToolbar> {
   _SevenBubbleView _sevenBubbleView = _SevenBubbleView.closed;
   MessageKey? _lastNativeChatMessage;
+  int _lastInlineChatToggleSerial = 0;
   int _nativeChatUnread = 0;
 
   void _onNativeChatUpdated() {
@@ -483,13 +484,19 @@ class _RemoteToolbarState extends State<RemoteToolbar> {
           nativeDesktop: isDesktop,
           web: isWeb,
         )) return;
-    final latest = widget.ffi.chatModel.latestReceivedKey;
+    final chatModel = widget.ffi.chatModel;
+    if (chatModel.inlineChatToggleSerial != _lastInlineChatToggleSerial) {
+      _lastInlineChatToggleSerial = chatModel.inlineChatToggleSerial;
+      _openSevenBubble(_SevenBubbleView.chat);
+      return;
+    }
+    final latest = chatModel.latestReceivedKey;
     if (latest == null || identical(latest, _lastNativeChatMessage)) return;
     _lastNativeChatMessage = latest;
     if (!latest.isOut || latest.peerId != widget.ffi.id ||
         _sevenBubbleView == _SevenBubbleView.chat) return;
     setState(() {
-      _nativeChatUnread = (_nativeChatUnread + 1).clamp(0, 99);
+      _nativeChatUnread = (_nativeChatUnread + 1).clamp(0, 99).toInt();
     });
   }
   late Debouncer<int> _debouncerHide;
@@ -659,6 +666,7 @@ class _RemoteToolbarState extends State<RemoteToolbar> {
   initState() {
     super.initState();
     _lastNativeChatMessage = widget.ffi.chatModel.latestReceivedKey;
+    _lastInlineChatToggleSerial = widget.ffi.chatModel.inlineChatToggleSerial;
     widget.ffi.chatModel.addListener(_onNativeChatUpdated);
 
     final cached = _cachedToolbarDockingOptions(widget.ffi.sessionId);
@@ -701,6 +709,7 @@ class _RemoteToolbarState extends State<RemoteToolbar> {
     if (!identical(oldWidget.ffi.chatModel, widget.ffi.chatModel)) {
       oldWidget.ffi.chatModel.removeListener(_onNativeChatUpdated);
       _lastNativeChatMessage = widget.ffi.chatModel.latestReceivedKey;
+      _lastInlineChatToggleSerial = widget.ffi.chatModel.inlineChatToggleSerial;
       _nativeChatUnread = 0;
       widget.ffi.chatModel.addListener(_onNativeChatUpdated);
     }
