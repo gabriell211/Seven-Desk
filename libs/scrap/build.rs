@@ -227,8 +227,29 @@ fn ffmpeg() {
 */
 
 fn main() {
-    // in this crate, these are also valid configurations
-    println!("cargo:rustc-check-cfg=cfg(dxgi,quartz,x11)");
+    // Rust 1.75 is still used for the Sciter legacy job and does not
+    // recognize Cargo's stable check-cfg instruction. Emit only when the
+    // actual rustc version supports it, so supported cfgs remain validated.
+    let supports_check_cfg = std::env::var_os("RUSTC")
+        .and_then(|rustc| std::process::Command::new(rustc)
+            .arg("--version")
+            .output()
+            .ok())
+        .filter(|output| output.status.success())
+        .and_then(|output| String::from_utf8(output.stdout).ok())
+        .and_then(|version| version.split_whitespace().nth(1)
+            .map(str::to_owned))
+        .and_then(|version| {
+            let mut digits = version.split('.');
+            Some((
+                digits.next()?.parse::<u32>().ok()?,
+                digits.next()?.parse::<u32>().ok()?,
+            ))
+        })
+        .is_some_and(|(major, minor)| major > 1 || (major == 1 && minor >= 80));
+    if supports_check_cfg {
+        println!("cargo:rustc-check-cfg=cfg(dxgi,quartz,x11)");
+    }
 
     // there is problem with cfg(target_os) in build.rs, so use our workaround
     let target_os = std::env::var("CARGO_CFG_TARGET_OS").unwrap();

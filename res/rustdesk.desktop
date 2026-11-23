@@ -2,8 +2,8 @@
 Name=Seven Desk
 GenericName=Remote Desktop
 Comment=Remote Desktop
-Exec=rustdesk %u
-Icon=rustdesk
+Exec=sevendesk %u
+Icon=sevendesk
 Terminal=false
 Type=Application
 StartupNotify=true
@@ -16,4 +16,4 @@ X-Desktop-File-Install-Version=0.23
 
 [Desktop Action new-window]
 Name=Open a New Window
-Exec=rustdesk %u
+Exec=sevendesk %u

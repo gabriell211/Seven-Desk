@@ -105,3 +105,114 @@ test('macOS download stays a DMG application and does not select PKG installers'
   assert.equal(findPackage(mix, 'macos', 'x64').filename,
     'sevendesk-1.5.3-x86_64.dmg');
 });
+
+
+function testResponse() {
+  return {
+    headers: {},
+    statusCode: 200,
+    body: null,
+    setHeader(name, value) { this.headers[name] = value; return this; },
+    status(code) { this.statusCode = code; return this; },
+    json(body) { this.body = body; return this; },
+    send(body) { this.body = body; return this; },
+    end() { return this; },
+  };
+}
+
+function freshHandler() {
+  const key = require.resolve('../api/download.js');
+  delete require.cache[key];
+  return require(key);
+}
+
+const windowsRelease = {
+  version: 'v1.5.4',
+  scope: 'windows',
+  status: 'windows_released',
+  source_commit: '8cf8dafb97973f15a1401d375d640edaddef7f23',
+  build_run_id: 44547031234,
+  files: ['x86_64', 'aarch64'].flatMap(arch => ['exe', 'msi'].map(ext => ({
+    name: 'sevendesk-1.5.4-' + arch + '.' + ext,
+    size: 25000000,
+    sha256: 'a'.repeat(64),
+  }))),
+};
+
+test('homepage download API accepts independently published Windows manifest', async () => {
+  const previousFetch = global.fetch;
+  const requested = [];
+  global.fetch = async url => {
+    requested.push(url);
+    if (url.endsWith('/manifest.json') && !url.endsWith('/windows/manifest.json')) {
+      return {ok: false, status: 404};
+    }
+    return {ok: true, status: 200, json: async () => windowsRelease};
+  };
+  try {
+    const handler = freshHandler();
+    const json = testResponse();
+    await handler({method: 'GET', query: {format: 'manifest'}}, json);
+    assert.equal(json.statusCode, 200);
+    assert.equal(json.body.latestRelease, 'v1.5.4');
+    assert.equal(json.body.devices.windows.x64.filename, 'sevendesk-1.5.4-x86_64.exe');
+    assert.equal(json.body.devices.windows.arm64.filename, 'sevendesk-1.5.4-aarch64.exe');
+    assert.equal(json.body.devices.linux.x64, null);
+    assert.equal(json.body.devices.macos.arm64, null);
+    assert.equal(json.body.devices.android.universal, null);
+    const windows = testResponse();
+    await handler({method: 'GET', query: {platform: 'windows', arch: 'x64'}}, windows);
+    assert.equal(windows.statusCode, 302);
+    assert.equal(windows.headers.Location,
+      'https://downloads.sevendesk.tech/windows/v1.5.4/sevendesk-1.5.4-x86_64.exe');
+    const arm = testResponse();
+    await handler({method: 'GET', query: {platform: 'windows', arch: 'arm64'}}, arm);
+    assert.equal(arm.statusCode, 302);
+    assert.match(arm.headers.Location, /aarch64\.exe$/);
+    const linux = testResponse();
+    await handler({method: 'GET', query: {platform: 'linux', arch: 'x64'}}, linux);
+    assert.equal(linux.statusCode, 404);
+    assert.deepEqual(requested, [
+      'https://downloads.sevendesk.tech/manifest.json',
+      'https://downloads.sevendesk.tech/windows/manifest.json',
+    ]);
+  } finally {
+    global.fetch = previousFetch;
+  }
+});
+
+test('invalid Windows-only manifest does not enable homepage buttons', async () => {
+  const previousFetch = global.fetch;
+  global.fetch = async url => url.endsWith('/windows/manifest.json')
+    ? {ok: true, json: async () => ({...windowsRelease, status: 'QA_NOT_HOMOLOGATED'})}
+    : {ok: false, status: 404};
+  try {
+    const handler = freshHandler();
+    const response = testResponse();
+    await handler({method: 'GET', query: {format: 'manifest'}}, response);
+    assert.equal(response.statusCode, 503);
+    assert.equal(response.headers['Cache-Control'], 'no-store');
+  } finally {
+    global.fetch = previousFetch;
+  }
+});
+
+test('complete multi-platform release takes priority over Windows fallback', async () => {
+  const previousFetch = global.fetch;
+  const calls = [];
+  global.fetch = async url => {
+    calls.push(url);
+    return {ok: true, json: async () => manifest};
+  };
+  try {
+    const handler = freshHandler();
+    const json = testResponse();
+    await handler({method: 'GET', query: {format: 'manifest'}}, json);
+    assert.equal(json.statusCode, 200);
+    assert.equal(json.body.latestRelease, 'v1.5.3-5');
+    assert.equal(json.body.devices.linux.x64.filename, 'sevendesk-1.5.3-x86_64.AppImage');
+    assert.deepEqual(calls, ['https://downloads.sevendesk.tech/manifest.json']);
+  } finally {
+    global.fetch = previousFetch;
+  }
+});

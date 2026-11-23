@@ -27,6 +27,17 @@ else()
     set(STACK_PROTECTOR ON)
 endif()
 
+# Opus 1.5.2 defaults to /MD even for x64-windows-static. Its
+# OPUS_STATIC_RUNTIME option maps to CMAKE_MSVC_RUNTIME_LIBRARY and must
+# follow the selected vcpkg triplet to prevent mixing /MT with /MD.
+if(VCPKG_TARGET_IS_WINDOWS AND NOT VCPKG_TARGET_IS_MINGW)
+    if(VCPKG_CRT_LINKAGE STREQUAL "static")
+        list(APPEND ADDITIONAL_OPUS_OPTIONS -DOPUS_STATIC_RUNTIME=ON)
+    else()
+        list(APPEND ADDITIONAL_OPUS_OPTIONS -DOPUS_STATIC_RUNTIME=OFF)
+    endif()
+endif()
+
 if((VCPKG_TARGET_IS_LINUX AND VCPKG_TARGET_ARCHITECTURE STREQUAL "arm") OR
    (VCPKG_TARGET_IS_ANDROID AND VCPKG_TARGET_ARCHITECTURE STREQUAL "arm" AND VCPKG_CMAKE_CONFIGURE_OPTIONS MATCHES "ANDROID_ARM_NEON"))
     message(STATUS "Disabling ARM NEON and intrinsics on ${TARGET_TRIPLET}")

@@ -36,14 +36,22 @@
 			<Custom Action="BlockSelfInstalledApp" After="AppSearch" Condition="NOT Installed AND (APP_WINDOWS_INSTALLER=&quot;#0&quot; OR APP_WINDOWS_INSTALLER32=&quot;#0&quot;)" />
 			<InstallExecute After="RemoveExistingProducts" />
 
-			<!--Only do InstallValidate if is not Uninstall-->
-			<!--<InstallValidate Condition="NOT (Installed AND REMOVE AND NOT UPGRADINGPRODUCTCODE )" />-->
-			<!--Only do InstallValidate if is Install-->
-			<InstallValidate Condition="NOT Installed" />
+			<!-- The MSI standard InstallValidate action must remain unconditional. -->
 
 		</InstallExecuteSequence>
 
-		<MajorUpgrade DowngradeErrorMessage="!(loc.DowngradeError)" Schedule="afterInstallInitialize" AllowSameVersionUpgrades="yes" />
+		<MajorUpgrade DowngradeErrorMessage="!(loc.DowngradeError)" Schedule="afterInstallInitialize" AllowSameVersionUpgrades="no" />
+
+		<!-- A different ProductCode with the same MSI three-part version must
+		     not install alongside this product. Increment one of the first
+		     three version fields for each distributable upgrade. -->
+		<Upgrade Id="$(var.UpgradeCode)">
+			<UpgradeVersion Minimum="$(var.Version)" IncludeMinimum="yes"
+				OnlyDetect="yes" Property="SEVENDESK_SAME_OR_NEWER_INSTALLED" />
+		</Upgrade>
+		<Launch Condition="Installed OR NOT SEVENDESK_SAME_OR_NEWER_INSTALLED"
+			Message="The same or a newer version of Seven Desk is already installed. Use a newer release or repair the existing installation." />
+
 
 		<Feature Id="App" Level="1" AllowAdvertise="no" Display="expand" Title="!(loc.F_App)" Description="!(loc.F_App_Desc)" AllowAbsent="no">
 			<ComponentGroupRef Id="Components" />

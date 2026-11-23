@@ -6,6 +6,7 @@ case $1 in
     remove|upgrade)
 		INITSYS=$(ls -al /proc/1/exe | awk -F' ' '{print $NF}' | awk -F'/' '{print $NF}')
 		rm -f /usr/bin/rustdesk
+		rm -f /usr/bin/sevendesk
 		
 		if [ "systemd" == "${INITSYS}" ]; then
 

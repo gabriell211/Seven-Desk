@@ -2,6 +2,7 @@
   "id": "tech.sevendesk.app",
   "runtime": "org.freedesktop.Platform",
   "runtime-version": "24.08",
+  "appstream-compose": false,
   "sdk": "org.freedesktop.Sdk",
   "command": "rustdesk",
   "cleanup": ["/include", "/lib/pkgconfig", "/share/gtk-doc"],

@@ -37,19 +37,32 @@ jobs:
     strategy:
         fail-fast: false
     env:
-      build_output_dir: RustDeskTempTopMostWindow/WindowInjection/${{ inputs.platform }}/${{ inputs.configuration }}
+      build_output_dir: SevenDeskWindowHelper/WindowInjection/${{ inputs.platform }}/${{ inputs.configuration }}
     steps:
+      - name: Checkout Seven Desk helper build controls
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+
       - name: Add MSBuild to PATH
         uses: microsoft/setup-msbuild@6fb02220983dee41ce7ae257b6f4d8f9bf5ed4ce # v2
 
-      - name: Download the source code
+      - name: Fetch pinned Seven Desk window helper sources
+        shell: pwsh
         run: |
-          git clone https://github.com/rustdesk-org/RustDeskTempTopMostWindow RustDeskTempTopMostWindow
+          git clone https://downloads.sevendesk.tech/deps/window-helper.git SevenDeskWindowHelper
+          if ($LASTEXITCODE -ne 0) { throw 'Seven Desk helper mirror is unavailable' }
+          git -C SevenDeskWindowHelper checkout --detach ecd8d6a139eee76845ea66423fb739af450fda90
+          if ($LASTEXITCODE -ne 0) { throw 'Failed to check out the pinned helper revision' }
+          $actual = git -C SevenDeskWindowHelper rev-parse HEAD
+          if ($actual -ne 'ecd8d6a139eee76845ea66423fb739af450fda90') { throw 'Window helper source SHA mismatch' }
 
       - name: Build the project
+        shell: pwsh
         run: |
-          cd RustDeskTempTopMostWindow && git checkout ecd8d6a139eee76845ea66423fb739af450fda90
-          msbuild ${{ env.project_path }} -p:Configuration=${{ inputs.configuration }} -p:Platform=${{ inputs.platform }} /p:TargetVersion=${{ inputs.target_version }}
+          & ./scripts/ci/patch-window-helper-pch.ps1 -ProjectFile 'SevenDeskWindowHelper/WindowInjection/WindowInjection.vcxproj' -Platform '${{ inputs.platform }}'
+          msbuild 'SevenDeskWindowHelper/${{ env.project_path }}' /m:1 /nodeReuse:false -p:Configuration=${{ inputs.configuration }} -p:Platform=${{ inputs.platform }} /p:TargetVersion=${{ inputs.target_version }} /p:CL_MPCount=1 /p:UseMultiToolTask=false
+          if ($LASTEXITCODE -ne 0) { throw 'Windows helper MSBuild failed' }
 
       - name: Archive build artifacts
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1

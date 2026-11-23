@@ -2476,7 +2476,7 @@ mod desktop {
                 // left in place: a non-empty display here suppresses every fallback below, both
                 // `get_display_by_user` and the `:0` default, so anything not local must not pass.
                 let display = Self::get_display_from_session(&self.sid)
-                    .replace(&hbb_common::whoami::hostname(), "");
+                    .replace(&crate::whoami_hostname(), "");
                 if display.strip_prefix(':').map_or(false, |number| {
                     number.starts_with(|c: char| c.is_ascii_digit())
                 }) {
@@ -2491,7 +2491,7 @@ mod desktop {
             }
             self.display = self
                 .display
-                .replace(&hbb_common::whoami::hostname(), "")
+                .replace(&crate::whoami_hostname(), "")
                 .replace("localhost", "");
         }
 
