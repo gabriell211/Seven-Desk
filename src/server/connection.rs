@@ -1015,8 +1015,19 @@ impl Connection {
                         }
                         #[cfg(windows)]
                         ipc::Data::DataPortableService(ipc::DataPortableService::RequestStart) => {
-                            if let Err(e) = portable_client::start_portable_service(portable_client::StartPara::Direct) {
+                            if !conn.authorized && !conn.keyboard {
+                                // Local consent cannot grant administrative control
+                                // when the session has no keyboard permission.
+                                conn.send_to_cm(ipc::Data::DataPortableService(
+                                    ipc::DataPortableService::CmShowElevation(true),
+                                ));
+                            } else if let Err(e) = portable_client::start_portable_service(portable_client::StartPara::Direct) {
                                 log::error!("Failed to start portable service from cm: {:?}", e);
+                                // Keep the elevation action available for a local retry.
+                                // A failed UAC/service startup is not an elevated session.
+                                conn.send_to_cm(ipc::Data::DataPortableService(
+                                    ipc::DataPortableService::CmShowElevation(true),
+                                ));
                             }
                         }
                         #[cfg(feature = "flutter")]
