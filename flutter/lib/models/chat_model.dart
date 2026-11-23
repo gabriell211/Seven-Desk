@@ -54,6 +54,15 @@ class MessageBody {
   }
 }
 
+/// A native desktop remote session uses the inline Seven Desk chat balloon.
+/// The connection manager has its own receiver balloon and continues to own
+/// its distinct chat layout.
+bool useInlineSevenDeskRemoteChat({
+  required bool desktop,
+  required bool web,
+  required bool connectionManager,
+}) => desktop && !web && !connectionManager;
+
 class ChatModel with ChangeNotifier {
   static final clientModeID = -1;
 
@@ -282,6 +291,19 @@ class ChatModel with ChangeNotifier {
   }
 
   showChatPage(MessageKey key) async {
+    // Incoming native-session messages belong in RemoteToolbar's embedded
+    // ChatPage. The legacy draggable chat window would duplicate the UI.
+    // Keep the same ChatModel, message key and transport in use.
+    if (useInlineSevenDeskRemoteChat(
+      desktop: isDesktop,
+      web: isWeb,
+      connectionManager: isConnManager,
+    )) {
+      if (_currentKey != key) {
+        changeCurrentKey(key);
+      }
+      return;
+    }
     if (isDesktop) {
       if (isConnManager) {
         if (!_isShowCMSidePage) {
