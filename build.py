@@ -997,9 +997,11 @@ def build_flutter_windows(version, features, skip_portable_pack):
                   './rustdesk_portable.exe')
     print(
         f'output location: {os.path.abspath(os.curdir)}/rustdesk_portable.exe')
-    os.rename('./rustdesk_portable.exe', f'./rustdesk-{version}-install.exe')
+    # This is the standalone support executable, not the elevated installer.
+    # Use a portable filename to avoid the historical "*-install.exe" UX.
+    os.rename('./rustdesk_portable.exe', f'./sevendesk-{version}-portable.exe')
     print(
-        f'output location: {os.path.abspath(os.curdir)}/rustdesk-{version}-install.exe')
+        f'output location: {os.path.abspath(os.curdir)}/sevendesk-{version}-portable.exe')
 
 
 def main():
