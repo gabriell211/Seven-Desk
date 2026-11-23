@@ -12,6 +12,11 @@ enum ChatPageType {
   desktopCM,
 }
 
+/// A message belongs to the local user only when the sender id matches
+/// ChatModel.me. Nonblank remote ids must never be mistaken for local ones.
+bool isOwnSevenDeskChatMessage(ChatMessage message, ChatUser me) =>
+    message.user.id == me.id;
+
 class ChatPage extends StatelessWidget implements PageShape {
   late final ChatModel chatModel;
   final ChatPageType? type;
@@ -148,7 +153,8 @@ class ChatPage extends StatelessWidget implements PageShape {
                       textColor: Colors.white,
                       maxWidth: constraints.maxWidth * 0.7,
                       messageTextBuilder: (message, _, __) {
-                        final isOwnMessage = message.user.id.isBlank!;
+                        final isOwnMessage =
+                            isOwnSevenDeskChatMessage(message, chatModel.me);
                         return Column(
                           crossAxisAlignment: isOwnMessage
                               ? CrossAxisAlignment.end
@@ -168,7 +174,8 @@ class ChatPage extends StatelessWidget implements PageShape {
                       },
                       messageDecorationBuilder:
                           (message, previousMessage, nextMessage) {
-                        final isOwnMessage = message.user.id.isBlank!;
+                        final isOwnMessage =
+                            isOwnSevenDeskChatMessage(message, chatModel.me);
                         return defaultMessageDecoration(
                           color:
                               isOwnMessage
