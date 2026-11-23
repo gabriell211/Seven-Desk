@@ -332,6 +332,12 @@ class ChatModel with ChangeNotifier {
     }
     if (isDesktop) {
       if (isConnManager) {
+        if (receiverPanelActive) {
+          // The receiver balloon owns its selected client. An incoming
+          // message from another peer must not replace the visible chat.
+          // The arrival is recorded below and counted as unread instead.
+          return;
+        }
         if (!_isShowCMSidePage) {
           await toggleCMChatPage(key);
         }
