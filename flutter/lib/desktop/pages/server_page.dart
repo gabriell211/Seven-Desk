@@ -1361,6 +1361,7 @@ class _CmControlPanel extends StatelessWidget {
       canElevate: bind.cmCanElevate(),
       showElevation: model.showElevation,
       isRemoteDesktop: client.type_() == ClientType.remote,
+      keyboardAllowed: client.keyboard,
       policyAllowsElevation: bind.mainGetBuildinOption(
             key: kOptionHideElevateButtonInAcceptWindow,
           ) !=
