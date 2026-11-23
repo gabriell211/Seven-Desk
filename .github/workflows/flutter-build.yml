@@ -936,6 +936,11 @@ jobs:
     name: ${{ matrix.job.target }}
     runs-on: ${{ matrix.job.os }}
     needs: [generate-bridge]
+    # Pin codec dependencies to the same minimum as Flutter and Rust.
+    env:
+      VCPKG_DEFAULT_TRIPLET: ${{ matrix.job.vcpkg-triplet }}
+      MACOSX_DEPLOYMENT_TARGET: ${{ matrix.job.arch == 'aarch64' && '12.3' || '10.15' }}
+    # Use the same pinned Git sources as the other platforms.
     strategy:
       fail-fast: false
       matrix:
@@ -969,6 +974,27 @@ jobs:
         uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
         with:
           submodules: recursive
+
+      - name: Verify pinned upstream Git dependencies (macOS)
+        shell: bash
+        run: |
+          set -euo pipefail
+          probe_dir="$(mktemp -d)"
+          trap 'rm -rf -- "$probe_dir"' EXIT
+          for record in \
+            "hwcodec ec38ebaf2454269d4c5668a57e3813c6e5541be7" \
+            "externals 8903740a1f47884906a6e347ad3d8d56304d9771"; do
+            name="${record%% *}"
+            sha="${record#* }"
+            git init -q "$probe_dir/$name"
+            GIT_TERMINAL_PROMPT=0 git -C "$probe_dir/$name" \
+              -c http.lowSpeedLimit=1024 -c http.lowSpeedTime=15 \
+              fetch --quiet "https://github.com/rustdesk-org/$name.git" \
+              "+$sha:refs/commit/$sha"
+            test "$(git -C "$probe_dir/$name" rev-parse "refs/commit/$sha")" = "$sha"
+            git -C "$probe_dir/$name" cat-file -e "$sha^{commit}"
+            echo "Verified pinned upstream Git commit: $name $sha"
+          done
 
       - name: Import the codesign cert
         if: env.MACOS_P12_BASE64 != null
@@ -1014,15 +1040,47 @@ jobs:
           fi
 
       - name: Install NASM
+        shell: bash
         run: |
-          # Install NASM 2.16.x from official release.
-          # Do NOT use `brew install nasm` which installs NASM 3.x.
-          # NASM 3.x is a complete rewrite with incompatible CLI options and removed features.
-          # aom and other multimedia libraries require NASM 2.x for x86/x86_64 assembly.
-          wget https://www.nasm.us/pub/nasm/releasebuilds/2.16.03/macosx/nasm-2.16.03-macosx.zip
-          unzip nasm-2.16.03-macosx.zip
-          sudo cp nasm-2.16.03/nasm /usr/local/bin/nasm
-          nasm --version
+          set -euo pipefail
+          # FFmpeg/AOM require NASM 2.x; do not use Homebrew's newer NASM 3.x.
+          version=2.16.03
+          expected_sha256=0d29bcd8a5fc617333f4549c7c1f93d1866a4a0915c40359e0a8585bb1a5aa75
+          archive="nasm-${version}-macosx.zip"
+          scratch="$(mktemp -d)"
+          trap 'rm -rf -- "$scratch"' EXIT
+          # The upstream DNS can fail on GitHub macOS runners. Both mirrors
+          # serve byte-identical archives verified against the upstream hash.
+          sources=(
+            "https://www.nasm.us/pub/nasm/releasebuilds/${version}/macosx/${archive}"
+            "https://linux.cs.nctu.edu.tw/kde/files/craft/3rdparty/nasm/${version}/${archive}"
+            "https://files.kde.org/craft/3rdparty/nasm/${version}/${archive}"
+          )
+          downloaded=false
+          for url in "${sources[@]}"; do
+            if curl --fail --location --silent --show-error --retry 2 --retry-delay 1 \
+                --connect-timeout 8 --max-time 45 --output "$scratch/$archive" "$url"; then
+              actual_sha256="$(shasum -a 256 "$scratch/$archive" | awk '{print $1}')"
+              if [[ "$actual_sha256" == "$expected_sha256" ]]; then
+                downloaded=true
+                break
+              fi
+              echo "::warning::NASM archive checksum mismatch from $url"
+            fi
+          done
+          if [[ "$downloaded" != true ]]; then
+            echo "::error::Unable to obtain a verified NASM ${version} archive" >&2
+            exit 1
+          fi
+          unzip -q "$scratch/$archive" -d "$scratch"
+          test -f "$scratch/nasm-${version}/nasm"
+          sudo install -m 0755 "$scratch/nasm-${version}/nasm" /usr/local/bin/nasm
+          installed_version="$(/usr/local/bin/nasm --version)"
+          echo "$installed_version"
+          [[ "$installed_version" == *"NASM version ${version}"* ]] || {
+            echo "::error::Incorrect installed NASM version: $installed_version" >&2
+            exit 1
+          }
 
       - name: Install flutter
         uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
@@ -1120,9 +1178,15 @@ jobs:
 
       - name: Build Seven Desk
         run: |
-          if [ "${{ matrix.job.target }}" = "aarch64-apple-darwin" ]; then
+          # FFmpeg VideoToolbox objects reference ___isPlatformVersionAtLeast; align
+          # the Rust, Flutter and native vcpkg minimum with macOS 11 on Intel.
+          # Keep the existing Apple Silicon minimum unchanged.
+          if [ "${{ matrix.job.target }}" = "x86_64-apple-darwin" ]; then
+            MIN_MACOS_VERSION="11.0"
+          elif [ "${{ matrix.job.target }}" = "aarch64-apple-darwin" ]; then
             MIN_MACOS_VERSION="12.3"
-            sed -i -e "s/MACOSX_DEPLOYMENT_TARGET\=[0-9]*.[0-9]*/MACOSX_DEPLOYMENT_TARGET=${MIN_MACOS_VERSION}/" build.py
+          fi
+          if [ -n "${MIN_MACOS_VERSION:-}" ]; then
             sed -i -e "s/platform :osx, '.*'/platform :osx, '${MIN_MACOS_VERSION}'/" flutter/macos/Podfile
             sed -i -e "s/osx_minimum_system_version = \"[0-9]*.[0-9]*\"/osx_minimum_system_version = \"${MIN_MACOS_VERSION}\"/" Cargo.toml
             sed -i -e "s/MACOSX_DEPLOYMENT_TARGET = [0-9]*.[0-9]*;/MACOSX_DEPLOYMENT_TARGET = ${MIN_MACOS_VERSION};/" flutter/macos/Runner.xcodeproj/project.pbxproj
@@ -1546,8 +1610,33 @@ jobs:
 
       - name: Install dependencies
         run: |
-          sudo apt-get update
-          sudo apt-get install -y \
+          # GitHub-hosted Ubuntu package mirrors occasionally return 503 or timeout.
+          # Keep APT signature verification enabled; use official HTTPS sources.
+          for apt_sources in /etc/apt/sources.list.d/ubuntu.sources /etc/apt/sources.list; do
+            if [ -f "$apt_sources" ]; then
+              sudo sed -i \
+                -e 's#mirror+file:/etc/apt/apt-mirrors.txt#https://archive.ubuntu.com/ubuntu/#g' \
+                -e 's#http://azure.archive.ubuntu.com/ubuntu/#https://archive.ubuntu.com/ubuntu/#g' \
+                -e 's#http://archive.ubuntu.com/ubuntu/#https://archive.ubuntu.com/ubuntu/#g' \
+                -e 's#http://security.ubuntu.com/ubuntu/#https://security.ubuntu.com/ubuntu/#g' \
+                "$apt_sources"
+            fi
+          done
+          apt_retry() {
+            local attempt
+            for attempt in 1 2 3; do
+              if sudo apt-get -o Acquire::Retries=3 -o Acquire::http::Timeout=45 -o Acquire::https::Timeout=45 "$@"; then
+                return 0
+              fi
+              if [ "$attempt" -ge 3 ]; then
+                echo "APT dependencies remain unavailable after three attempts" >&2
+                return 1
+              fi
+              sleep $((attempt * 20))
+            done
+          }
+          apt_retry update
+          apt_retry install -y \
                clang \
                cmake \
                curl \
@@ -1696,7 +1785,7 @@ jobs:
           JAVA_HOME: /usr/lib/jvm/java-17-openjdk-amd64
         run: |
           export PATH=/usr/lib/jvm/java-17-openjdk-amd64/bin:$PATH
-          # Seed verified Maven artifacts for Flutter's included Gradle build.
+          # Seed checksummed dependencies for Flutter's independent Gradle included build.
           bash .github/scripts/prepare-android-gradle-maven.sh
           # Increase Gradle JVM memory for CI builds
           sed -i "s/org.gradle.jvmargs=-Xmx1024M/org.gradle.jvmargs=-Xmx2g/g" ./flutter/android/gradle.properties
@@ -1849,8 +1938,33 @@ jobs:
 
       - name: Install dependencies
         run: |
-          sudo apt-get update
-          sudo apt-get install -y \
+          # GitHub-hosted Ubuntu package mirrors occasionally return 503 or timeout.
+          # Keep APT signature verification enabled; use official HTTPS sources.
+          for apt_sources in /etc/apt/sources.list.d/ubuntu.sources /etc/apt/sources.list; do
+            if [ -f "$apt_sources" ]; then
+              sudo sed -i \
+                -e 's#mirror+file:/etc/apt/apt-mirrors.txt#https://archive.ubuntu.com/ubuntu/#g' \
+                -e 's#http://azure.archive.ubuntu.com/ubuntu/#https://archive.ubuntu.com/ubuntu/#g' \
+                -e 's#http://archive.ubuntu.com/ubuntu/#https://archive.ubuntu.com/ubuntu/#g' \
+                -e 's#http://security.ubuntu.com/ubuntu/#https://security.ubuntu.com/ubuntu/#g' \
+                "$apt_sources"
+            fi
+          done
+          apt_retry() {
+            local attempt
+            for attempt in 1 2 3; do
+              if sudo apt-get -o Acquire::Retries=3 -o Acquire::http::Timeout=45 -o Acquire::https::Timeout=45 "$@"; then
+                return 0
+              fi
+              if [ "$attempt" -ge 3 ]; then
+                echo "APT dependencies remain unavailable after three attempts" >&2
+                return 1
+              fi
+              sleep $((attempt * 20))
+            done
+          }
+          apt_retry update
+          apt_retry install -y \
                clang \
                cmake \
                curl \
@@ -1936,7 +2050,7 @@ jobs:
           JAVA_HOME: /usr/lib/jvm/java-17-openjdk-amd64
         run: |
           export PATH=/usr/lib/jvm/java-17-openjdk-amd64/bin:$PATH
-          # Seed verified Maven artifacts for Flutter's included Gradle build.
+          # Seed checksummed dependencies for Flutter's independent Gradle included build.
           bash .github/scripts/prepare-android-gradle-maven.sh
           # Increase Gradle JVM memory for CI builds
           sed -i "s/org.gradle.jvmargs=-Xmx1024M/org.gradle.jvmargs=-Xmx2g/g" ./flutter/android/gradle.properties
@@ -2178,9 +2292,41 @@ jobs:
             --volume "/opt/artifacts:/opt/artifacts"
           shell: /bin/bash
           install: |
-            apt-get update -y
+            # Use official Ubuntu HTTPS sources for the container's configured distro.
+            # APT release signature verification remains enabled.
+            if [ -f /etc/apt/sources.list ]; then
+              sed -i \
+                -e 's#http://archive.ubuntu.com/ubuntu#https://archive.ubuntu.com/ubuntu#g' \
+                -e 's#http://security.ubuntu.com/ubuntu#https://security.ubuntu.com/ubuntu#g' \
+                /etc/apt/sources.list
+            fi
+            apt_retry() {
+              local attempt
+              for attempt in 1 2 3; do
+                if apt-get -o Acquire::Retries=3 -o Acquire::http::Timeout=45 -o Acquire::https::Timeout=45 "$@"; then
+                  return 0
+                fi
+                if [ "$attempt" -eq 3 ]; then
+                  echo 'Ubuntu package repositories unavailable after retries' >&2
+                  return 1
+                fi
+                sleep $((attempt * 15))
+              done
+            }
+            # Stock Ubuntu 18.04 container images have no CA trust store.
+            # Bootstrap CA certificates using signed Ubuntu APT metadata only.
+            # TLS verification is relaxed for these two commands, never persisted.
+            if ! dpkg-query -W -f='${Status}' ca-certificates 2>/dev/null | grep -q '^install ok installed$'; then
+              echo 'Bootstrapping CA certificates from GPG-signed Ubuntu packages'
+              apt_retry -o Acquire::https::Verify-Peer=false -o Acquire::https::Verify-Host=false update
+              apt_retry -o Acquire::https::Verify-Peer=false -o Acquire::https::Verify-Host=false install -y --no-install-recommends ca-certificates
+              test -s /etc/ssl/certs/ca-certificates.crt
+              update-ca-certificates
+            fi
+            # All remaining repositories and package downloads require valid TLS.
+            apt_retry update -y
             echo -e "installing deps"
-            apt-get install -y \
+            apt_retry install -y \
                build-essential \
                clang \
                cmake \
@@ -2359,7 +2505,16 @@ jobs:
         if: env.UPLOAD_ARTIFACT == 'true'
         with:
           name: sevendesk-${{ env.VERSION }}-${{ matrix.job.arch }}.deb
-          path: rustdesk-${{ env.VERSION }}-${{ matrix.job.arch }}.deb
+          path: sevendesk-${{ env.VERSION }}-${{ matrix.job.arch }}.deb
+          if-no-files-found: error
+
+      - name: Upload Linux RPM packages
+        if: env.UPLOAD_ARTIFACT == 'true'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: sevendesk-${{ env.VERSION }}-${{ matrix.job.arch }}-rpm
+          path: sevendesk-${{ env.VERSION }}*.rpm
+          if-no-files-found: error
 
       # only x86_64 for arch since we can not find newest arm64 docker image to build
       # old arch image does not make sense for arch since it is "arch" which always update to date
@@ -2511,9 +2666,41 @@ jobs:
             --volume "/opt/artifacts:/opt/artifacts"
           shell: /bin/bash
           install: |
-            apt-get update -y
+            # Use official Ubuntu HTTPS sources for the container's configured distro.
+            # APT release signature verification remains enabled.
+            if [ -f /etc/apt/sources.list ]; then
+              sed -i \
+                -e 's#http://archive.ubuntu.com/ubuntu#https://archive.ubuntu.com/ubuntu#g' \
+                -e 's#http://security.ubuntu.com/ubuntu#https://security.ubuntu.com/ubuntu#g' \
+                /etc/apt/sources.list
+            fi
+            apt_retry() {
+              local attempt
+              for attempt in 1 2 3; do
+                if apt-get -o Acquire::Retries=3 -o Acquire::http::Timeout=45 -o Acquire::https::Timeout=45 "$@"; then
+                  return 0
+                fi
+                if [ "$attempt" -eq 3 ]; then
+                  echo 'Ubuntu package repositories unavailable after retries' >&2
+                  return 1
+                fi
+                sleep $((attempt * 15))
+              done
+            }
+            # Stock Ubuntu 18.04 container images have no CA trust store.
+            # Bootstrap CA certificates using signed Ubuntu APT metadata only.
+            # TLS verification is relaxed for these two commands, never persisted.
+            if ! dpkg-query -W -f='${Status}' ca-certificates 2>/dev/null | grep -q '^install ok installed$'; then
+              echo 'Bootstrapping CA certificates from GPG-signed Ubuntu packages'
+              apt_retry -o Acquire::https::Verify-Peer=false -o Acquire::https::Verify-Host=false update
+              apt_retry -o Acquire::https::Verify-Peer=false -o Acquire::https::Verify-Host=false install -y --no-install-recommends ca-certificates
+              test -s /etc/ssl/certs/ca-certificates.crt
+              update-ca-certificates
+            fi
+            # All remaining repositories and package downloads require valid TLS.
+            apt_retry update -y
             echo -e "installing deps"
-            apt-get install -y \
+            apt_retry install -y \
                build-essential \
                clang \
                cmake \
@@ -2803,8 +2990,40 @@ jobs:
             --volume "${PWD}:/workspace"
           shell: /bin/bash
           install: |
-            apt-get update
-            apt-get install -y \
+            # Use official Ubuntu HTTPS sources for the container's configured distro.
+            # APT release signature verification remains enabled.
+            if [ -f /etc/apt/sources.list ]; then
+              sed -i \
+                -e 's#http://archive.ubuntu.com/ubuntu#https://archive.ubuntu.com/ubuntu#g' \
+                -e 's#http://security.ubuntu.com/ubuntu#https://security.ubuntu.com/ubuntu#g' \
+                /etc/apt/sources.list
+            fi
+            apt_retry() {
+              local attempt
+              for attempt in 1 2 3; do
+                if apt-get -o Acquire::Retries=3 -o Acquire::http::Timeout=45 -o Acquire::https::Timeout=45 "$@"; then
+                  return 0
+                fi
+                if [ "$attempt" -eq 3 ]; then
+                  echo 'Ubuntu package repositories unavailable after retries' >&2
+                  return 1
+                fi
+                sleep $((attempt * 15))
+              done
+            }
+            # Stock Ubuntu 18.04 container images have no CA trust store.
+            # Bootstrap CA certificates using signed Ubuntu APT metadata only.
+            # TLS verification is relaxed for these two commands, never persisted.
+            if ! dpkg-query -W -f='${Status}' ca-certificates 2>/dev/null | grep -q '^install ok installed$'; then
+              echo 'Bootstrapping CA certificates from GPG-signed Ubuntu packages'
+              apt_retry -o Acquire::https::Verify-Peer=false -o Acquire::https::Verify-Host=false update
+              apt_retry -o Acquire::https::Verify-Peer=false -o Acquire::https::Verify-Host=false install -y --no-install-recommends ca-certificates
+              test -s /etc/ssl/certs/ca-certificates.crt
+              update-ca-certificates
+            fi
+            # All remaining repositories and package downloads require valid TLS.
+            apt_retry update
+            apt_retry install -y \
                build-essential \
                clang \
                curl \
@@ -2989,9 +3208,11 @@ jobs:
           name: sevendesk-${{ env.VERSION }}-${{ matrix.job.arch }}.deb
           path: .
 
-      - name: Rename Binary
+      - name: Validate Debian package for AppImage
+        shell: bash
         run: |
-          mv rustdesk-${{ env.VERSION }}-${{ matrix.job.arch }}.deb appimage/rustdesk.deb
+          bash .github/scripts/prepare-linux-deb-for-packaging.sh \
+            "${{ env.VERSION }}" "${{ matrix.job.arch }}" "appimage/rustdesk.deb"
 
       - name: Build appimage package
         shell: bash
@@ -3098,9 +3319,11 @@ jobs:
           name: sevendesk-${{ env.VERSION }}-${{ matrix.job.arch }}${{ matrix.job.suffix }}.deb
           path: .
 
-      - name: Rename Binary
+      - name: Validate Debian package for Flatpak
+        shell: bash
         run: |
-          mv rustdesk-${{ env.VERSION }}-${{ matrix.job.arch }}${{ matrix.job.suffix }}.deb flatpak/rustdesk.deb
+          bash .github/scripts/prepare-linux-deb-for-packaging.sh \
+            "${{ env.VERSION }}" "${{ matrix.job.arch }}" "flatpak/rustdesk.deb" "${{ matrix.job.suffix }}"
 
       - uses: rustdesk-org/run-on-arch-action@d3fcfbb632b84cf7f6bc772bfaaa2c2f4f8789a8 # no release tag; commit 2026-05-26
         name: Build Seven Desk flatpak package for ${{ matrix.job.arch }}
@@ -3115,8 +3338,40 @@ jobs:
             --volume "${PWD}:/workspace"
           shell: /bin/bash
           install: |
-            apt-get update -y
-            apt-get install -y git flatpak flatpak-builder
+            # Use official Ubuntu HTTPS sources for the container's configured distro.
+            # APT release signature verification remains enabled.
+            if [ -f /etc/apt/sources.list ]; then
+              sed -i \
+                -e 's#http://archive.ubuntu.com/ubuntu#https://archive.ubuntu.com/ubuntu#g' \
+                -e 's#http://security.ubuntu.com/ubuntu#https://security.ubuntu.com/ubuntu#g' \
+                /etc/apt/sources.list
+            fi
+            apt_retry() {
+              local attempt
+              for attempt in 1 2 3; do
+                if apt-get -o Acquire::Retries=3 -o Acquire::http::Timeout=45 -o Acquire::https::Timeout=45 "$@"; then
+                  return 0
+                fi
+                if [ "$attempt" -eq 3 ]; then
+                  echo 'Ubuntu package repositories unavailable after retries' >&2
+                  return 1
+                fi
+                sleep $((attempt * 15))
+              done
+            }
+            # Stock Ubuntu 18.04 container images have no CA trust store.
+            # Bootstrap CA certificates using signed Ubuntu APT metadata only.
+            # TLS verification is relaxed for these two commands, never persisted.
+            if ! dpkg-query -W -f='${Status}' ca-certificates 2>/dev/null | grep -q '^install ok installed$'; then
+              echo 'Bootstrapping CA certificates from GPG-signed Ubuntu packages'
+              apt_retry -o Acquire::https::Verify-Peer=false -o Acquire::https::Verify-Host=false update
+              apt_retry -o Acquire::https::Verify-Peer=false -o Acquire::https::Verify-Host=false install -y --no-install-recommends ca-certificates
+              test -s /etc/ssl/certs/ca-certificates.crt
+              update-ca-certificates
+            fi
+            # All remaining repositories and package downloads require valid TLS.
+            apt_retry update -y
+            apt_retry install -y git flatpak flatpak-builder
             flatpak-builder --version
           run: |
             # disable git safe.directory
