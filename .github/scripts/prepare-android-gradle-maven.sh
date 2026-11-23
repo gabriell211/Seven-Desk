@@ -31,7 +31,7 @@ while read -r relative sha256; do
   fi
 
   valid=false
-  for origin in https://repo.maven.apache.org/maven2 https://repo1.maven.org/maven2; do
+  for origin in https://maven-central.storage-download.googleapis.com/maven2 https://repo.maven.apache.org/maven2 https://repo1.maven.org/maven2; do
     candidate="$temp_dir/$(basename "$relative")"
     if curl --fail --location --silent --show-error --retry 3 \
         --retry-connrefused --connect-timeout 10 --max-time 45 \
@@ -69,6 +69,7 @@ new = (
     "        // Seven Desk CI: verified local Maven seed for Flutter's included build.\n"
     "        maven { url = uri(file(\".sevendesk-maven-seed\")) }\n"
     "        google()\n"
+    "        maven { url = uri(\"https://maven-central.storage-download.googleapis.com/maven2/\") }\n"
     "        mavenCentral()\n"
     "        maven { url = uri(\"https://repo1.maven.org/maven2/\") }\n"
 )
