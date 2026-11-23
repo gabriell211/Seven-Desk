@@ -440,6 +440,14 @@ class RemoteMenuEntry {
   }
 }
 
+/// The Seven Desk bubble does not rely on legacy toolbar docking/visibility.
+/// On the web, keep the browser toolbar until its native controls are ported.
+bool shouldRenderSevenDeskSessionBubble({
+  required bool nativeDesktop,
+  required bool web,
+}) =>
+    nativeDesktop && !web;
+
 enum _SevenBubbleView { closed, chat, settings }
 
 class RemoteToolbar extends StatefulWidget {
@@ -690,16 +698,18 @@ class _RemoteToolbarState extends State<RemoteToolbar> {
 
   @override
   Widget build(BuildContext context) {
+    // The native session bubble must be available as soon as the first frame
+    // arrives. It must not be blocked by legacy docking/pin/hide initialization.
+    if (shouldRenderSevenDeskSessionBubble(
+        nativeDesktop: isDesktop, web: isWeb)) {
+      return _buildSevenBubble(context);
+    }
+
     return Obx(() {
-      // Wait for initialization to complete to prevent flickering
+      // Legacy toolbar initialization is relevant only to web sessions.
       if (!widget.state.initialized.value ||
           !_dockingOptionsInitialized.value) {
         return const SizedBox.shrink();
-      }
-      // Native desktop keeps these controls inside the session balloon.
-      // Web retains the previous toolbar because its chat bridge differs.
-      if (isDesktop && !isWeb) {
-        return _buildSevenBubble(context);
       }
       // If toolbar is hidden, return empty widget
       if (hide.value) {
@@ -806,14 +816,20 @@ class _RemoteToolbarState extends State<RemoteToolbar> {
                     child: Row(children: [
                       const Icon(Icons.shield_outlined, color: purple),
                       const SizedBox(width: 7),
-                      const Expanded(child: Column(
+                      Expanded(child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('Seven Desk',
+                          const Text('Seven Desk',
                             style: TextStyle(color: Colors.white,
                               fontWeight: FontWeight.w700)),
-                          Text('Sessão remota',
-                            style: TextStyle(color: muted, fontSize: 11)),
+                          Tooltip(
+                            message: 'ID da sessão: ${widget.id}',
+                            child: Text('ID: ${widget.id}',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                  color: muted, fontSize: 11)),
+                          ),
                         ],
                       )),
                       IconButton(
