@@ -72,6 +72,10 @@ class ChatModel with ChangeNotifier {
   bool isConnManager = false;
   // When active, the CM owns its compact floating chat and window bounds.
   bool receiverPanelActive = false;
+  // Whether the connected client's chat panel is visible and selected.
+  // Messages arriving while it is minimized or showing options stay unread.
+  bool receiverChatVisible = false;
+  int? receiverVisibleClientId;
 
   /// A native remote-session shortcut requests the inline Seven Desk chat.
   /// The remote toolbar consumes this counter via ChangeNotifier instead of
@@ -423,7 +427,7 @@ class ChatModel with ChangeNotifier {
       return;
     }
     if (text.isEmpty) return;
-    if (desktopType == DesktopType.cm) {
+    if (desktopType == DesktopType.cm && !receiverPanelActive) {
       await showCmWindow();
     }
     String? peerId;
@@ -484,14 +488,21 @@ class ChatModel with ChangeNotifier {
         return;
       }
       if (isDesktop) {
-        windowOnTop(null);
-        // disable auto jumpTo other tab when hasFocus, and mark unread message
-        final currentSelectedTab =
-            session.serverModel.tabController.state.value.selectedTabInfo;
-        if (currentSelectedTab.key != id.toString() && inputNode.hasFocus) {
-          client.unreadChatMessageCount.value += 1;
+        // The connected receiver already has a floating Seven Desk panel.
+        // Do not activate or redock a legacy window on incoming messages.
+        if (receiverPanelActive) {
+          if (!receiverChatVisible || receiverVisibleClientId != id) {
+            client.unreadChatMessageCount.value += 1;
+          }
         } else {
-          parent.target?.serverModel.jumpTo(id);
+          windowOnTop(null);
+          final currentSelectedTab =
+              session.serverModel.tabController.state.value.selectedTabInfo;
+          if (currentSelectedTab.key != id.toString() && inputNode.hasFocus) {
+            client.unreadChatMessageCount.value += 1;
+          } else {
+            parent.target?.serverModel.jumpTo(id);
+          }
         }
       } else {
         if (HomePage.homeKey.currentState?.isChatPageCurrentTab != true ||
