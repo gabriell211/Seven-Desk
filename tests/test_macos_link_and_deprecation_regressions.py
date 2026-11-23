@@ -29,12 +29,12 @@ class MacOSLinkTests(unittest.TestCase):
         x64 = (ROOT / "res/vcpkg-triplets/x64-osx.cmake").read_text(encoding="utf-8")
         arm = (ROOT / "res/vcpkg-triplets/arm64-osx.cmake").read_text(encoding="utf-8")
         workflow = (ROOT / ".github/workflows/flutter-build.yml").read_text(encoding="utf-8")
-        self.assertIn('VCPKG_OSX_DEPLOYMENT_TARGET "10.14"', x64)
+        self.assertIn('VCPKG_OSX_DEPLOYMENT_TARGET "10.15"', x64)
         self.assertIn('VCPKG_OSX_DEPLOYMENT_TARGET "12.3"', arm)
         self.assertIn("VCPKG_OSX_ARCHITECTURES x86_64", x64)
         self.assertIn("VCPKG_OSX_ARCHITECTURES arm64", arm)
         self.assertIn("VCPKG_DEFAULT_TRIPLET: ${{ matrix.job.vcpkg-triplet }}", workflow)
-        self.assertIn("MACOSX_DEPLOYMENT_TARGET: ${{ matrix.job.arch == 'aarch64' && '12.3' || '10.14' }}", workflow)
+        self.assertIn("MACOSX_DEPLOYMENT_TARGET: ${{ matrix.job.arch == 'aarch64' && '12.3' || '10.15' }}", workflow)
 
 
 if __name__ == "__main__":
