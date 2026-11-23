@@ -1015,7 +1015,7 @@ impl Connection {
                         }
                         #[cfg(windows)]
                         ipc::Data::DataPortableService(ipc::DataPortableService::RequestStart) => {
-                            if !conn.authorized && !conn.keyboard {
+                            if !conn.keyboard {
                                 // Local consent cannot grant administrative control
                                 // when the session has no keyboard permission.
                                 conn.send_to_cm(ipc::Data::DataPortableService(
