@@ -250,6 +250,27 @@ void main() {
     expect(chat.chatWindowOverlayEntry, isNull);
   });
 
+  test('background sender cannot hijack the receiver balloon chat', () async {
+    if (!isDesktop || isWeb) return;
+    final chat = ChatModel(WeakReference(session));
+    addTearDown(() {
+      chat.dispose();
+      chat.inputNode.dispose();
+      session.ffiModel.dispose();
+    });
+    chat.isConnManager = true;
+    chat.receiverPanelActive = true;
+    chat.receiverChatVisible = true;
+    chat.receiverVisibleClientId = 17;
+    final before = chat.currentKey;
+
+    await chat.showChatPage(MessageKey('different-peer', 42));
+
+    expect(chat.currentKey, before);
+    expect(chat.chatWindowOverlayEntry, isNull);
+    expect(chat.receiverVisibleClientId, 17);
+  });
+
   test('a removed menu action cannot run its cached callback', () async {
     var calls = 0;
     model.register('mute', () => calls++);
