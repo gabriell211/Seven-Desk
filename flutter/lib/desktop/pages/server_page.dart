@@ -12,6 +12,7 @@ import 'package:flutter_hbb/desktop/widgets/tabbar_widget.dart';
 import 'package:flutter_hbb/models/chat_model.dart';
 import 'package:flutter_hbb/models/cm_file_model.dart';
 import 'package:flutter_hbb/desktop/widgets/receiver_session_panel.dart';
+import 'package:flutter_hbb/desktop/services/administrator_approval.dart';
 import 'package:flutter_hbb/desktop/widgets/windows_cm_window_position.dart';
 import 'package:flutter_hbb/utils/platform_channel.dart';
 import 'package:get/get.dart';
@@ -1374,10 +1375,13 @@ class _CmControlPanel extends StatelessWidget {
       requesterId: client.peerId,
       onAcceptAsAdministrator: canAcceptAsAdmin
           ? () => checkClickTime(client.id, () {
-                // Uses the existing portable Windows service/UAC request.
-                // Does not bypass local Windows approval or security policy.
-                handleAccept(context);
-                handleElevate(context);
+                // Match the native Windows consent flow: request the
+                // portable service/UAC before authorizing the peer.
+                // This is a request, not proof that elevation succeeded.
+                acceptRemoteSessionAsAdministrator(
+                  requestElevation: () => handleElevate(context),
+                  authorizeConnection: () => handleAccept(context),
+                );
               })
           : null,
       onAccept: canAccept
