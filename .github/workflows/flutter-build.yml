@@ -975,6 +975,14 @@ jobs:
         with:
           submodules: recursive
 
+      - name: Link Apple compiler runtime (macOS Intel)
+        if: matrix.job.arch == 'x86_64'
+        shell: bash
+        run: |
+          runtime="$(xcrun clang -print-resource-dir)/lib/darwin/libclang_rt.osx.a"
+          test -f "$runtime"
+          echo "CARGO_TARGET_X86_64_APPLE_DARWIN_RUSTFLAGS=-C link-arg=$runtime" >> "$GITHUB_ENV"
+
       - name: Verify pinned upstream Git dependencies (macOS)
         shell: bash
         run: |
