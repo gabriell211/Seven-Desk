@@ -844,10 +844,15 @@ class _RemotePageState extends State<RemotePage>
                             ));
                       }
                     }(),
-              // Use Overlay to enable rebuild every time on menu button click.
-              // Hide toolbar when relative mouse mode is active to prevent
-              // cursor from escaping to toolbar area.
-              Obx(() => _ffi.inputModel.relativeMouseMode.value ||
+              // Keep the native Seven Desk chat balloon available even
+              // while relative mouse mode is active: clicking the balloon
+              // safely releases pointer capture before entering chat.
+              // Only the legacy browser toolbar is hidden while captured.
+              Obx(() => (_ffi.inputModel.relativeMouseMode.value &&
+                          !shouldRenderSevenDeskSessionBubble(
+                            nativeDesktop: isDesktop,
+                            web: isWeb,
+                          )) ||
                       _ffi.ffiModel.pi.isSet.isFalse ||
                       _ffi.ffiModel.waitForFirstImage.isTrue
                   ? const Offstage()
