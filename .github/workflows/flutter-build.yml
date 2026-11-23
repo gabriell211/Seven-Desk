@@ -1178,8 +1178,14 @@ jobs:
 
       - name: Build Seven Desk
         run: |
-          if [ "${{ matrix.job.target }}" = "aarch64-apple-darwin" ]; then
+          # VideoToolbox hwcodec objects need macOS 10.15+ on Intel.
+          # Keep the existing Apple Silicon minimum unchanged.
+          if [ "${{ matrix.job.target }}" = "x86_64-apple-darwin" ]; then
+            MIN_MACOS_VERSION="10.15"
+          elif [ "${{ matrix.job.target }}" = "aarch64-apple-darwin" ]; then
             MIN_MACOS_VERSION="12.3"
+          fi
+          if [ -n "${MIN_MACOS_VERSION:-}" ]; then
             sed -i -e "s/MACOSX_DEPLOYMENT_TARGET\=[0-9]*.[0-9]*/MACOSX_DEPLOYMENT_TARGET=${MIN_MACOS_VERSION}/" build.py
             sed -i -e "s/platform :osx, '.*'/platform :osx, '${MIN_MACOS_VERSION}'/" flutter/macos/Podfile
             sed -i -e "s/osx_minimum_system_version = \"[0-9]*.[0-9]*\"/osx_minimum_system_version = \"${MIN_MACOS_VERSION}\"/" Cargo.toml
