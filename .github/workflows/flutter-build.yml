@@ -939,7 +939,7 @@ jobs:
     # Pin codec dependencies to the same minimum as Flutter and Rust.
     env:
       VCPKG_DEFAULT_TRIPLET: ${{ matrix.job.vcpkg-triplet }}
-      MACOSX_DEPLOYMENT_TARGET: ${{ matrix.job.arch == 'aarch64' && '12.3' || '10.14' }}
+      MACOSX_DEPLOYMENT_TARGET: ${{ matrix.job.arch == 'aarch64' && '12.3' || '10.15' }}
     # Use the same pinned Git sources as the other platforms.
     strategy:
       fail-fast: false
@@ -1186,7 +1186,6 @@ jobs:
             MIN_MACOS_VERSION="12.3"
           fi
           if [ -n "${MIN_MACOS_VERSION:-}" ]; then
-            sed -i -e "s/MACOSX_DEPLOYMENT_TARGET\=[0-9]*.[0-9]*/MACOSX_DEPLOYMENT_TARGET=${MIN_MACOS_VERSION}/" build.py
             sed -i -e "s/platform :osx, '.*'/platform :osx, '${MIN_MACOS_VERSION}'/" flutter/macos/Podfile
             sed -i -e "s/osx_minimum_system_version = \"[0-9]*.[0-9]*\"/osx_minimum_system_version = \"${MIN_MACOS_VERSION}\"/" Cargo.toml
             sed -i -e "s/MACOSX_DEPLOYMENT_TARGET = [0-9]*.[0-9]*;/MACOSX_DEPLOYMENT_TARGET = ${MIN_MACOS_VERSION};/" flutter/macos/Runner.xcodeproj/project.pbxproj
