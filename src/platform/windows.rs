@@ -1247,8 +1247,10 @@ pub fn portable_service_logon_helper_paths() -> Option<(PathBuf, PathBuf)> {
         .home_dir()
         .join("AppData")
         .join("Local")
-        .join("rustdesk-sciter");
-    let dst = dir.join("rustdesk.exe");
+        .join("sevendesk-sciter");
+    // The non-Flutter portable logon helper must retain the Seven Desk
+    // executable identity when Windows prompts for administrative rights.
+    let dst = dir.join("SevenDesk.exe");
     Some((dir, dst))
 }
 
