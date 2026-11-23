@@ -40,17 +40,22 @@ class SevenDeskProfile {
       final displayName = profile['name'];
       final company = profile['companyName'];
       final imageUrl = profile['image'];
-      if (displayName is! String || displayName.trim().length < 2 ||
+      if (displayName is! String ||
+          displayName.trim().length < 2 ||
           displayName.trim().length > 100) return false;
       var verifiedImage = '';
       if (imageUrl is String && imageUrl.isNotEmpty) {
         final uri = Uri.tryParse(imageUrl);
         final path = uri?.path ?? '';
-        if (uri == null || uri.scheme != 'https' ||
+        if (uri == null ||
+            uri.scheme != 'https' ||
             uri.host != 'www.sevendesk.tech' ||
-            uri.userInfo.isNotEmpty || uri.hasPort ||
-            uri.hasQuery || uri.hasFragment ||
-            !RegExp(r'^/avatars/[0-9a-f-]{36}/(?:profile|technician-[1-9][0-9]{0,4})\.(?:jpg|png|webp)$').hasMatch(path)) {
+            uri.userInfo.isNotEmpty ||
+            uri.hasPort ||
+            uri.hasQuery ||
+            uri.hasFragment ||
+            !RegExp(r'^/avatars/[0-9a-f-]{36}/(?:profile|technician-[1-9][0-9]{0,4})\.(?:jpg|png|webp)$')
+                .hasMatch(path)) {
           return false;
         }
         verifiedImage = imageUrl;
@@ -79,7 +84,6 @@ class SevenDeskProfile {
     }
   }
 }
-
 
 Future<bool> ensureSevenDeskAuthenticated(BuildContext context) async {
   if (await sevenDeskProfile.refresh()) return true;
@@ -138,6 +142,25 @@ class _SevenDeskActivationDialogState
     super.dispose();
   }
 
+  void _fail(String message) {
+    if (mounted) {
+      setState(() {
+        _saving = false;
+        _error = message;
+      });
+    }
+  }
+
+  String _serviceError(SevenDeskValidationStatus status) => switch (status) {
+        SevenDeskValidationStatus.serverUnavailable =>
+          'Serviço de ativação indisponível. Tente novamente mais tarde.',
+        SevenDeskValidationStatus.networkFailure =>
+          'Sem conexão com o servidor. Verifique a internet e tente novamente.',
+        SevenDeskValidationStatus.unexpectedResponse =>
+          'O servidor retornou uma resposta inesperada. Tente novamente.',
+        _ => 'Não foi possível validar o código de ativação.',
+      };
+
   Future<void> _save(String token) async {
     if (token.isNotEmpty && !isSevenDeskActivationCode(token)) {
       setState(() => _error = 'Código inválido. Copie o código da sua conta.');
@@ -148,16 +171,37 @@ class _SevenDeskActivationDialogState
       _error = '';
     });
     try {
-      if (token.isNotEmpty && !await sevenDeskHasValidAccount(token) &&
-          (!await claimSevenDeskTechnician(token, _technicianController.text.trim()) ||
-              !await sevenDeskHasValidAccount(token))) {
-        if (mounted) {
-          setState(() {
-            _saving = false;
-            _error = 'Código não autorizado ou servidor indisponível.';
-          });
+      if (token.isNotEmpty) {
+        var profileStatus = await checkSevenDeskAccount(token);
+        if (profileStatus == SevenDeskValidationStatus.rejected) {
+          final technicianCode = _technicianController.text.trim();
+          if (!isSevenDeskTechnicianCode(technicianCode)) {
+            _fail('Copie o código do técnico da mesma vaga na sua conta.');
+            return;
+          }
+          final claimStatus =
+              await checkSevenDeskTechnicianClaim(token, technicianCode);
+          if (claimStatus != SevenDeskValidationStatus.verified) {
+            _fail(switch (claimStatus) {
+              SevenDeskValidationStatus.invalidCode =>
+                'Código de ativação não aceito. Gere um novo código na sua conta.',
+              SevenDeskValidationStatus.rejected =>
+                'Os códigos não correspondem à mesma vaga ou o e-mail da conta não foi confirmado.',
+              _ => _serviceError(claimStatus),
+            });
+            return;
+          }
+          profileStatus = await checkSevenDeskAccount(token);
+          if (profileStatus == SevenDeskValidationStatus.rejected) {
+            _fail(
+                'O vínculo não foi confirmado. Confira os códigos da mesma vaga na sua conta.');
+            return;
+          }
         }
-        return;
+        if (profileStatus != SevenDeskValidationStatus.verified) {
+          _fail(_serviceError(profileStatus));
+          return;
+        }
       }
       final previousToken = bind.mainGetLocalOption(key: _optionKey);
       await bind.mainSetLocalOption(key: _optionKey, value: token);
@@ -195,9 +239,10 @@ class _SevenDeskActivationDialogState
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Na sua conta Seven Desk, copie o código de ativação sd2_ '
-                'do computador e o código tec_ do técnico. Ambos são necessários '
-                'no primeiro vínculo. Quem recebe suporte não precisa entrar.'),
+            const Text('Na sua conta Seven Desk, copie o código de ativação do '
+                'computador e o código do técnico da mesma vaga. Ambos são '
+                'necessários no primeiro vínculo. Quem recebe suporte não '
+                'precisa entrar.'),
             const SizedBox(height: 14),
             TextField(
               controller: _controller,
@@ -206,11 +251,12 @@ class _SevenDeskActivationDialogState
               autocorrect: false,
               enableSuggestions: false,
               decoration: InputDecoration(
-                labelText: 'Código de ativação',
+                labelText: 'Código de ativação do sistema',
                 suffixIcon: IconButton(
                   tooltip: _showToken ? 'Ocultar código' : 'Mostrar código',
                   onPressed: () => setState(() => _showToken = !_showToken),
-                  icon: Icon(_showToken ? Icons.visibility_off : Icons.visibility),
+                  icon: Icon(
+                      _showToken ? Icons.visibility_off : Icons.visibility),
                 ),
               ),
             ),
@@ -222,8 +268,9 @@ class _SevenDeskActivationDialogState
               autocorrect: false,
               enableSuggestions: false,
               decoration: const InputDecoration(
-                labelText: 'Código do técnico (tec_)',
-                helperText: 'Usado uma vez para vincular o técnico. Não fica salvo.',
+                labelText: 'Código do técnico',
+                helperText:
+                    'Usado uma vez para vincular o técnico. Não fica salvo.',
               ),
             ),
             TextButton(
@@ -234,7 +281,8 @@ class _SevenDeskActivationDialogState
               child: const Text('Abrir minha conta'),
             ),
             if (_error.isNotEmpty)
-              Text(_error, style: TextStyle(color: Theme.of(context).colorScheme.error)),
+              Text(_error,
+                  style: TextStyle(color: Theme.of(context).colorScheme.error)),
           ],
         ),
       ),

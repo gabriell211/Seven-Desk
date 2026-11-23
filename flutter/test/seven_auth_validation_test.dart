@@ -15,7 +15,8 @@ void main() {
     });
     expect(isSevenDeskActivationCode(newToken), isTrue);
     expect(await sevenDeskHasValidAccount(newToken, client: client), isTrue);
-    expect(isSevenDeskActivationCode('sd3_${List.filled(43, 'c').join()}'), isFalse);
+    expect(isSevenDeskActivationCode('sd3_${List.filled(43, 'c').join()}'),
+        isFalse);
     client.close();
   });
 
@@ -26,15 +27,15 @@ void main() {
     expect(await sevenDeskHasValidAccount('', client: client), isFalse);
     expect(await sevenDeskHasValidAccount('legacy-token', client: client),
         isFalse);
-    expect(await sevenDeskHasValidAccount('sd_invalid', client: client),
-        isFalse);
+    expect(
+        await sevenDeskHasValidAccount('sd_invalid', client: client), isFalse);
     client.close();
   });
 
   test('accepts a verified activation returned by the VPS', () async {
     final client = MockClient((request) async {
-      expect(request.url.toString(),
-          'https://www.sevendesk.tech/api/app-profile');
+      expect(
+          request.url.toString(), 'https://www.sevendesk.tech/api/app-profile');
       expect(request.headers['Authorization'], 'Bearer $token');
       return http.Response('{"name":"Example","image":""}', 200);
     });
@@ -52,8 +53,26 @@ void main() {
     malformed.close();
   });
 
+  test('distinguishes unpaired account, unavailable service and bad profile',
+      () async {
+    final unpaired = MockClient((_) async => http.Response('{}', 401));
+    final unavailable = MockClient((_) async => http.Response('{}', 503));
+    final badProfile = MockClient((_) async => http.Response('not json', 200));
+    expect(await checkSevenDeskAccount(token, client: unpaired),
+        SevenDeskValidationStatus.rejected);
+    expect(await checkSevenDeskAccount(token, client: unavailable),
+        SevenDeskValidationStatus.serverUnavailable);
+    expect(await checkSevenDeskAccount(token, client: badProfile),
+        SevenDeskValidationStatus.unexpectedResponse);
+    unpaired.close();
+    unavailable.close();
+    badProfile.close();
+  });
+
   test('fails closed when the VPS cannot be reached', () async {
     final offline = MockClient((_) async => throw Exception('offline'));
+    expect(await checkSevenDeskAccount(token, client: offline),
+        SevenDeskValidationStatus.networkFailure);
     expect(await sevenDeskHasValidAccount(token, client: offline), isFalse);
     offline.close();
   });
@@ -69,7 +88,8 @@ void main() {
       expect(body['technicianCode'], technicianCode);
       return http.Response('{"verified":true}', 200);
     });
-    expect(await claimSevenDeskTechnician(token, technicianCode, client: client),
+    expect(
+        await claimSevenDeskTechnician(token, technicianCode, client: client),
         isTrue);
     client.close();
   });
@@ -77,13 +97,44 @@ void main() {
       () async {
     final technicianCode = 'tec_${List.filled(32, 'b').join()}';
     final client = MockClient((_) async => http.Response('{}', 401));
-    expect(await claimSevenDeskTechnician(token, technicianCode, client: client),
+    expect(
+        await claimSevenDeskTechnician(token, technicianCode, client: client),
         isFalse);
-    expect(await claimSevenDeskTechnician('invalid', technicianCode, client: client),
+    expect(
+        await claimSevenDeskTechnician('invalid', technicianCode,
+            client: client),
         isFalse);
-    expect(await claimSevenDeskTechnician(token, token, client: client),
-        isFalse);
+    expect(
+        await claimSevenDeskTechnician(token, token, client: client), isFalse);
     client.close();
   });
 
+  test('distinguishes rejected, mismatched and unreachable technician claim',
+      () async {
+    final technicianCode = 'tec_${List.filled(32, 'b').join()}';
+    final invalid = MockClient((_) async => http.Response('{}', 400));
+    final mismatch = MockClient((_) async => http.Response('{}', 401));
+    final server = MockClient((_) async => http.Response('{}', 503));
+    final offline = MockClient((_) async => throw Exception('offline'));
+    expect(
+        await checkSevenDeskTechnicianClaim(token, technicianCode,
+            client: invalid),
+        SevenDeskValidationStatus.invalidCode);
+    expect(
+        await checkSevenDeskTechnicianClaim(token, technicianCode,
+            client: mismatch),
+        SevenDeskValidationStatus.rejected);
+    expect(
+        await checkSevenDeskTechnicianClaim(token, technicianCode,
+            client: server),
+        SevenDeskValidationStatus.serverUnavailable);
+    expect(
+        await checkSevenDeskTechnicianClaim(token, technicianCode,
+            client: offline),
+        SevenDeskValidationStatus.networkFailure);
+    invalid.close();
+    mismatch.close();
+    server.close();
+    offline.close();
+  });
 }
