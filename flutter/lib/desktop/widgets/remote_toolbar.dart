@@ -474,6 +474,24 @@ class RemoteToolbar extends StatefulWidget {
 
 class _RemoteToolbarState extends State<RemoteToolbar> {
   _SevenBubbleView _sevenBubbleView = _SevenBubbleView.closed;
+  MessageKey? _lastNativeChatMessage;
+  int _nativeChatUnread = 0;
+
+  void _onNativeChatUpdated() {
+    if (!mounted ||
+        !shouldRenderSevenDeskSessionBubble(
+          nativeDesktop: isDesktop,
+          web: isWeb,
+        )) return;
+    final latest = widget.ffi.chatModel.latestReceivedKey;
+    if (latest == null || identical(latest, _lastNativeChatMessage)) return;
+    _lastNativeChatMessage = latest;
+    if (!latest.isOut || latest.peerId != widget.ffi.id ||
+        _sevenBubbleView == _SevenBubbleView.chat) return;
+    setState(() {
+      _nativeChatUnread = (_nativeChatUnread + 1).clamp(0, 99);
+    });
+  }
   late Debouncer<int> _debouncerHide;
   bool _isCursorOverImage = false;
   final _fraction = 0.5.obs;
@@ -640,6 +658,8 @@ class _RemoteToolbarState extends State<RemoteToolbar> {
   @override
   initState() {
     super.initState();
+    _lastNativeChatMessage = widget.ffi.chatModel.latestReceivedKey;
+    widget.ffi.chatModel.addListener(_onNativeChatUpdated);
 
     final cached = _cachedToolbarDockingOptions(widget.ffi.sessionId);
     final multiEdgeEnabled =
@@ -678,6 +698,12 @@ class _RemoteToolbarState extends State<RemoteToolbar> {
   @override
   void didUpdateWidget(covariant RemoteToolbar oldWidget) {
     super.didUpdateWidget(oldWidget);
+    if (!identical(oldWidget.ffi.chatModel, widget.ffi.chatModel)) {
+      oldWidget.ffi.chatModel.removeListener(_onNativeChatUpdated);
+      _lastNativeChatMessage = widget.ffi.chatModel.latestReceivedKey;
+      _nativeChatUnread = 0;
+      widget.ffi.chatModel.addListener(_onNativeChatUpdated);
+    }
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       await _syncDockingOptions(force: false);
     });
@@ -692,6 +718,7 @@ class _RemoteToolbarState extends State<RemoteToolbar> {
   @override
   dispose() {
     ++_dockingOptionSyncSerial;
+    widget.ffi.chatModel.removeListener(_onNativeChatUpdated);
     widget.onEnterOrLeaveImageCleaner(identityHashCode(this));
     super.dispose();
   }
@@ -771,6 +798,9 @@ class _RemoteToolbarState extends State<RemoteToolbar> {
       _sevenBubbleView = _sevenBubbleView == next
           ? _SevenBubbleView.closed
           : next;
+      if (_sevenBubbleView == _SevenBubbleView.chat) {
+        _nativeChatUnread = 0;
+      }
     });
   }
 
@@ -832,13 +862,19 @@ class _RemoteToolbarState extends State<RemoteToolbar> {
                           ),
                         ],
                       )),
-                      IconButton(
-                        tooltip: 'Chat',
-                        onPressed: () => _openSevenBubble(
-                            _SevenBubbleView.chat),
-                        icon: Icon(Icons.chat_bubble_outline_rounded,
-                          color: _sevenBubbleView == _SevenBubbleView.chat
-                              ? purple : Colors.white)),
+                      Badge(
+                        isLabelVisible: _nativeChatUnread > 0,
+                        label: Text(_nativeChatUnread >= 99
+                            ? '99+' : '$_nativeChatUnread'),
+                        child: IconButton(
+                          tooltip: 'Chat',
+                          onPressed: () => _openSevenBubble(
+                              _SevenBubbleView.chat),
+                          icon: Icon(Icons.chat_bubble_outline_rounded,
+                            color: _sevenBubbleView == _SevenBubbleView.chat
+                                ? purple : Colors.white),
+                        ),
+                      ),
                       IconButton(
                         tooltip: 'Opções',
                         onPressed: () => _openSevenBubble(
