@@ -799,16 +799,23 @@ class _RemoteToolbarState extends State<RemoteToolbar> {
 
 
   void _openSevenBubble(_SevenBubbleView next) {
-    if (next == _SevenBubbleView.chat) {
+    final opening = _sevenBubbleView != next;
+    if (opening && widget.ffi.inputModel.relativeMouseMode.value) {
+      // Restore local pointer/keyboard control before showing interactive
+      // chat or settings. Do not leave remote modifier keys held down.
+      widget.ffi.inputModel.exitRelativeMouseModeWithKeyRelease();
+    }
+    if (opening && next == _SevenBubbleView.chat) {
       widget.ffi.chatModel.changeCurrentKey(
           MessageKey(widget.ffi.id, ChatModel.clientModeID));
     }
     setState(() {
-      _sevenBubbleView = _sevenBubbleView == next
-          ? _SevenBubbleView.closed
-          : next;
+      _sevenBubbleView = opening ? next : _SevenBubbleView.closed;
       if (_sevenBubbleView == _SevenBubbleView.chat) {
         _nativeChatUnread = 0;
+        // ChatPage is added in this frame; the delayed focus request runs
+        // after its text input has mounted.
+        widget.ffi.chatModel.requestChatInputFocus();
       }
     });
   }
