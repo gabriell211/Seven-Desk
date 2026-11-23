@@ -215,6 +215,41 @@ void main() {
         chat.messages.keys, [MessageKey(session.id, ChatModel.clientModeID)]);
   });
 
+  test('native bubble receives and sends chat without legacy popup', () async {
+    if (!isDesktop || isWeb) return;
+    final binding = _ChatBinding();
+    platformFFI.setBindingForTesting(binding);
+    final chat = ChatModel(WeakReference(session));
+    addTearDown(() {
+      chat.dispose();
+      chat.inputNode.dispose();
+      session.ffiModel.dispose();
+    });
+
+    chat.toggleChatOverlay();
+    expect(chat.inlineChatToggleSerial, 1);
+    expect(chat.chatWindowOverlayEntry, isNull);
+    await chat.receive(ChatModel.clientModeID, 'Olá do cliente');
+    final key = MessageKey(session.id, ChatModel.clientModeID);
+    expect(chat.currentKey, key);
+    expect(chat.messages[key]?.chatMessages.first.text, 'Olá do cliente');
+    expect(chat.chatWindowOverlayEntry, isNull);
+
+    chat.send(ChatMessage(
+      text: 'Resposta do técnico',
+      user: chat.me,
+      createdAt: DateTime.now(),
+    ));
+    await pumpEventQueue();
+    expect(binding.sent, [(session.sessionId, 'Resposta do técnico')]);
+    expect(binding.cmSent, isEmpty);
+    expect(chat.messages[key]?.chatMessages.length, 2);
+
+    chat.toggleChatOverlay();
+    expect(chat.inlineChatToggleSerial, 2);
+    expect(chat.chatWindowOverlayEntry, isNull);
+  });
+
   test('a removed menu action cannot run its cached callback', () async {
     var calls = 0;
     model.register('mute', () => calls++);
