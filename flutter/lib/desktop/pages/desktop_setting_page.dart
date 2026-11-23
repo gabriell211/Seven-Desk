@@ -683,6 +683,13 @@ class _General extends StatefulWidget {
   State<_General> createState() => _GeneralState();
 }
 
+/// Portable support already starts its receiver in-process. Manual Windows
+/// service controls are meaningful only for a deliberately installed service.
+bool shouldShowSevenDeskManualServiceControls({
+  required bool web,
+  required bool installed,
+}) => !web && installed;
+
 class _GeneralState extends State<_General> {
   final RxBool serviceStop =
       isWeb ? RxBool(false) : Get.find<RxBool>(tag: 'stop-service');
@@ -697,7 +704,10 @@ class _GeneralState extends State<_General> {
       children: [
         // The portable app already runs its receiver while open. A Windows
         // service exists only for an explicit, installed configuration.
-        if (!isWeb && bind.mainIsInstalled()) service(),
+        if (shouldShowSevenDeskManualServiceControls(
+          web: isWeb,
+          installed: bind.mainIsInstalled(),
+        )) service(),
         if (!isWeb &&
             (isWindows || isMacOS || isLinux) &&
             !bind.mainIsInstalled())
