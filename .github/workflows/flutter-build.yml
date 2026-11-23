@@ -343,6 +343,12 @@ jobs:
           mv ./flutter/build/windows/${{ matrix.job.flutter-arch }}/runner/Release ./rustdesk
           # Only the distributable EXE is renamed; the Rust bridge DLL keeps its ABI name.
           Rename-Item -LiteralPath ./rustdesk/rustdesk.exe -NewName SevenDesk.exe
+          # A stale RustDesk.exe inside the payload would surface as that name
+          # in the Windows UAC prompt during portable administration.
+          if (!(Test-Path -LiteralPath ./rustdesk/SevenDesk.exe) -or
+              (Test-Path -LiteralPath ./rustdesk/rustdesk.exe)) {
+            throw "Invalid Seven Desk Windows payload: expected SevenDesk.exe only."
+          }
 
           # Download usbmmidd_v2.zip and extract it to ./rustdesk
           Invoke-WebRequest -Uri https://github.com/rustdesk-org/rdev/releases/download/usbmmidd_v2/usbmmidd_v2.zip -OutFile usbmmidd_v2.zip
