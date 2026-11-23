@@ -271,6 +271,10 @@ fn execute(path: PathBuf, args: Vec<String>, _ui: bool) {
     }
 }
 
+fn should_install_portable_wrapper(args: &[String]) -> bool {
+    args.first().is_some_and(|arg| arg == "--install")
+}
+
 fn main() -> Result<(), String> {
     let mut args = Vec::new();
     let mut arg_exe = Default::default();
@@ -283,7 +287,11 @@ fn main() -> Result<(), String> {
         }
         i += 1;
     }
-    let click_setup = args.is_empty() && arg_exe.to_lowercase().ends_with("install.exe");
+    // The Seven Desk portable executable must not implicitly become an
+    // installer just because someone renamed it to *-install.exe. That path
+    // launches the elevated installer (cmd.exe) instead of opening support.
+    // Installation remains an explicit user action via --install or the app.
+    let click_setup = should_install_portable_wrapper(&args);
     #[cfg(windows)]
     let quick_support = args.is_empty() && win::is_quick_support_exe(&arg_exe);
     #[cfg(not(windows))]
@@ -381,6 +389,15 @@ mod win {
 
 #[cfg(test)]
 mod meta_tests {
+    #[test]
+    fn portable_starts_support_without_implicit_installation() {
+        use super::should_install_portable_wrapper;
+        assert!(!should_install_portable_wrapper(&[]));
+        assert!(!should_install_portable_wrapper(&["--quick_support".into()]));
+        assert!(!should_install_portable_wrapper(&["--version".into()]));
+        assert!(should_install_portable_wrapper(&["--install".into()]));
+    }
+
     use super::*;
 
     #[test]
