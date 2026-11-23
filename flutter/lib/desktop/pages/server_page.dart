@@ -194,6 +194,9 @@ class ConnectionManagerState extends State<ConnectionManager>
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    gFFI.chatModel.receiverPanelActive = false;
+    gFFI.chatModel.receiverChatVisible = false;
+    gFFI.chatModel.receiverVisibleClientId = null;
     super.dispose();
   }
 
@@ -366,6 +369,8 @@ class ConnectionManagerState extends State<ConnectionManager>
     final pending = clients.any((c) => !c.authorized && !c.disconnected);
     final floating = active.isNotEmpty && !pending;
     gFFI.chatModel.receiverPanelActive = floating;
+    gFFI.chatModel.receiverChatVisible = false;
+    gFFI.chatModel.receiverVisibleClientId = null;
 
     // A single incoming request gets its own centered consent dialog.
     // Multi-session management retains the existing tab workflow.
@@ -442,6 +447,9 @@ class ConnectionManagerState extends State<ConnectionManager>
           }
         });
       }
+      gFFI.chatModel.receiverVisibleClientId = selected.id;
+      gFFI.chatModel.receiverChatVisible =
+          !_panelMinimized && _panelView == ReceiverPanelView.chat;
       _resizeFloatingWindow(floating: true);
       final panel = _buildConnectedPanel(selected, active);
       // Retain the existing protection against remote-injected clicks/keys
