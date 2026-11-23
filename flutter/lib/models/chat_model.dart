@@ -63,6 +63,14 @@ bool useInlineSevenDeskRemoteChat({
   required bool connectionManager,
 }) => desktop && !web && !connectionManager;
 
+/// Count unread messages only when the intended receiver chat is not on
+/// screen. The connection manager must not switch peers just for a message.
+bool shouldCountSevenDeskReceiverUnread({
+  required bool panelVisible,
+  required int? visibleClientId,
+  required int incomingClientId,
+}) => !panelVisible || visibleClientId != incomingClientId;
+
 class ChatModel with ChangeNotifier {
   static final clientModeID = -1;
 
@@ -491,7 +499,11 @@ class ChatModel with ChangeNotifier {
         // The connected receiver already has a floating Seven Desk panel.
         // Do not activate or redock a legacy window on incoming messages.
         if (receiverPanelActive) {
-          if (!receiverChatVisible || receiverVisibleClientId != id) {
+          if (shouldCountSevenDeskReceiverUnread(
+            panelVisible: receiverChatVisible,
+            visibleClientId: receiverVisibleClientId,
+            incomingClientId: id,
+          )) {
             client.unreadChatMessageCount.value += 1;
           }
         } else {
