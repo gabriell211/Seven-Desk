@@ -939,7 +939,7 @@ jobs:
     # Pin codec dependencies to the same minimum as Flutter and Rust.
     env:
       VCPKG_DEFAULT_TRIPLET: ${{ matrix.job.vcpkg-triplet }}
-      MACOSX_DEPLOYMENT_TARGET: ${{ matrix.job.arch == 'aarch64' && '12.3' || '10.15' }}
+      MACOSX_DEPLOYMENT_TARGET: ${{ matrix.job.arch == 'aarch64' && '12.3' || '11.0' }}
     # Use the same pinned Git sources as the other platforms.
     strategy:
       fail-fast: false
@@ -1178,10 +1178,11 @@ jobs:
 
       - name: Build Seven Desk
         run: |
-          # VideoToolbox hwcodec objects need macOS 10.15+ on Intel.
+          # FFmpeg VideoToolbox objects reference ___isPlatformVersionAtLeast; align
+          # the Rust, Flutter and native vcpkg minimum with macOS 11 on Intel.
           # Keep the existing Apple Silicon minimum unchanged.
           if [ "${{ matrix.job.target }}" = "x86_64-apple-darwin" ]; then
-            MIN_MACOS_VERSION="10.15"
+            MIN_MACOS_VERSION="11.0"
           elif [ "${{ matrix.job.target }}" = "aarch64-apple-darwin" ]; then
             MIN_MACOS_VERSION="12.3"
           fi
