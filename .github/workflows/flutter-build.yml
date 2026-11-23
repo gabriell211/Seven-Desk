@@ -1178,9 +1178,7 @@ jobs:
 
       - name: Build Seven Desk
         run: |
-          # FFmpeg VideoToolbox objects reference ___isPlatformVersionAtLeast; align
-          # the Rust, Flutter and native vcpkg minimum with macOS 11 on Intel.
-          # Keep the existing Apple Silicon minimum unchanged.
+          # Keep Rust and Flutter aligned with the vcpkg deployment targets.
           if [ "${{ matrix.job.target }}" = "x86_64-apple-darwin" ]; then
             MIN_MACOS_VERSION="11.0"
           elif [ "${{ matrix.job.target }}" = "aarch64-apple-darwin" ]; then

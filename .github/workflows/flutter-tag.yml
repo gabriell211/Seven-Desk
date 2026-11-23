@@ -3,10 +3,10 @@ name: Seven Desk Release Build
 on:
   push:
     tags:
-      - 'v[0-9]+.[0-9]+.[0-9]+'
-      - '[0-9]+.[0-9]+.[0-9]+'
-      - 'v[0-9]+.[0-9]+.[0-9]+-[0-9]+'
-      - '[0-9]+.[0-9]+.[0-9]+-[0-9]+'
+      # GitHub Actions tag filters are glob patterns, not regex.
+      # Strict tag/version consistency is enforced by preflight tests.
+      - 'v[0-9]*.[0-9]*.[0-9]*'
+      - '[0-9]*.[0-9]*.[0-9]*'
 
 # The release publishing steps require access to create a tag and upload assets.
 permissions:
@@ -27,12 +27,17 @@ jobs:
         run: |
           python3 -m py_compile build.py
           python3 -m py_compile scripts/publish_vps_release.py
+          python3 -m py_compile scripts/sync_public_release.py
           python3 -m unittest discover -s tests -p 'test_debian_maintainer_script_permissions.py' -v
           python3 -m unittest discover -s tests -p 'test_mfx_dispatch_patch.py' -v
           python3 -m unittest discover -s tests -p 'test_windows_sevendesk_branding.py' -v
           python3 -m unittest discover -s tests -p 'test_appimage_identity.py' -v
+          python3 -m unittest discover -s tests -p 'test_linux_package_branding.py' -v
           python3 -m unittest discover -s tests -p 'test_android_release_signing_workflow.py' -v
           python3 -m unittest discover -s tests -p 'test_release_version_consistency.py' -v
+          python3 -m unittest discover -s tests -p 'test_vps_release_gate.py' -v
+          python3 -m unittest discover -s tests -p 'test_dependency_mirrors.py' -v
+          python3 -m unittest discover -s tests -p 'test_windows_helper_pch.py' -v
 
   run-flutter-tag-build:
     needs: preflight-release
@@ -71,8 +76,7 @@ jobs:
           assets = select_assets(release, run["run_started_at"])
           print(f"Verified {len(assets)} installers for {tag}")
           PY
-      - name: Publish final release
-        uses: softprops/action-gh-release@de2c0eb89ae2a093876385947365aca7b0e5f844 # v1
-        with:
-          tag_name: ${{ github.ref_name }}
-          prerelease: false
+      # Physical QA and Android distribution signing need evidence outside CI.
+      # Leave builds as prereleases; a human can promote only after those checks.
+      - name: Hold production promotion pending physical QA
+        run: echo 'CI assets verified; await two-machine and UAC QA before promotion.'

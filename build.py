@@ -759,7 +759,7 @@ def build_flutter_deb(version, features):
     system2(
         'cp ../res/rustdesk.service tmpdeb/usr/share/rustdesk/files/systemd/')
     system2(
-        'cp ../res/128x128@2x.png tmpdeb/usr/share/icons/hicolor/256x256/apps/rustdesk.png')
+        'cp ../res/128x128@2x.png tmpdeb/usr/share/icons/hicolor/256x256/apps/sevendesk.png')
     system2(
         'cp ../res/rustdesk.desktop tmpdeb/usr/share/applications/rustdesk.desktop')
     system2(
@@ -866,7 +866,7 @@ def build_deb_from_folder(version, binary_folder, want_drm=False):
     system2(
         'cp ../res/rustdesk.service tmpdeb/usr/share/rustdesk/files/systemd/')
     system2(
-        'cp ../res/128x128@2x.png tmpdeb/usr/share/icons/hicolor/256x256/apps/rustdesk.png')
+        'cp ../res/128x128@2x.png tmpdeb/usr/share/icons/hicolor/256x256/apps/sevendesk.png')
     system2(
         'cp ../res/rustdesk.desktop tmpdeb/usr/share/applications/rustdesk.desktop')
     system2(
@@ -938,8 +938,9 @@ def build_deb_from_folder(version, binary_folder, want_drm=False):
 def build_flutter_dmg(version, features):
     if not skip_cargo:
         # Honor the macOS deployment target selected by the CI and Flutter project.
+        default_target = '12.3' if platform.machine().lower() in ('arm64', 'aarch64') else '11.0'
         system2(
-            f'MACOSX_DEPLOYMENT_TARGET={os.environ.get("MACOSX_DEPLOYMENT_TARGET", "10.15")} cargo build --locked --features {features} --release')
+            f'MACOSX_DEPLOYMENT_TARGET={os.environ.get("MACOSX_DEPLOYMENT_TARGET", default_target)} cargo build --locked --features {features} --release')
     # copy dylib
     system2(
         "cp target/release/liblibrustdesk.dylib target/release/librustdesk.dylib")
@@ -1161,7 +1162,7 @@ def main():
                 system2(
                     'cp res/rustdesk.service tmpdeb/usr/share/rustdesk/files/systemd/')
                 system2(
-                    'cp res/128x128@2x.png tmpdeb/usr/share/icons/hicolor/256x256/apps/rustdesk.png')
+                    'cp res/128x128@2x.png tmpdeb/usr/share/icons/hicolor/256x256/apps/sevendesk.png')
                 system2(
                     'cp res/rustdesk.desktop tmpdeb/usr/share/applications/rustdesk.desktop')
                 system2(

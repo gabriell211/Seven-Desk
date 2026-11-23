@@ -2,6 +2,7 @@
 
 const DOWNLOADS_ROOT = 'https://downloads.sevendesk.tech/';
 const MANIFEST_URL = DOWNLOADS_ROOT + 'manifest.json';
+const WINDOWS_MANIFEST_URL = DOWNLOADS_ROOT + 'windows/manifest.json';
 const PLATFORMS = Object.freeze({
   windows: ['x64', 'arm64', 'x86'],
   macos: ['x64', 'arm64'],
@@ -61,6 +62,7 @@ function assetScore(file, platform, arch) {
 
 function findPackage(manifest, platform, arch) {
   if (!manifest || !/^v?[0-9][A-Za-z0-9._-]{0,63}$/.test(manifest.version) || !Array.isArray(manifest.files)) return null;
+  if (manifest.scope === 'windows' && platform !== 'windows') return null;
   const compatible = manifest.files
     .filter(file => (
       file &&
@@ -75,9 +77,33 @@ function findPackage(manifest, platform, arch) {
   return {
     version: manifest.version,
     filename: file.name,
-    url: DOWNLOADS_ROOT + encodeURIComponent(manifest.version) + '/' + encodeURIComponent(file.name),
+    url: DOWNLOADS_ROOT + (manifest.scope === 'windows' ? 'windows/' : '')
+      + encodeURIComponent(manifest.version) + '/' + encodeURIComponent(file.name),
     size: file.size,
   };
+}
+
+function validateWindowsManifest(manifest) {
+  if (!manifest || manifest.scope !== 'windows' || manifest.status !== 'windows_released'
+      || !/^v[0-9]+\.[0-9]+\.[0-9]+$/.test(manifest.version)
+      || !/^[a-f0-9]{40}$/.test(manifest.source_commit)
+      || !Number.isSafeInteger(manifest.build_run_id)
+      || !Array.isArray(manifest.files) || manifest.files.length !== 4) {
+    return false;
+  }
+  const version = manifest.version.slice(1);
+  const allowed = new Set(
+    ['x86_64', 'aarch64'].flatMap(arch =>
+      ['exe', 'msi'].map(ext => 'sevendesk-' + version + '-' + arch + '.' + ext))
+  );
+  for (const file of manifest.files) {
+    if (!file || !allowed.delete(file.name)
+        || !Number.isSafeInteger(file.size) || file.size < 4096
+        || typeof file.sha256 !== 'string' || !/^[a-f0-9]{64}$/.test(file.sha256)) {
+      return false;
+    }
+  }
+  return allowed.size === 0;
 }
 
 async function fetchManifest() {
@@ -85,10 +111,19 @@ async function fetchManifest() {
   const controller = new AbortController();
   const stop = setTimeout(() => controller.abort(), 8000);
   try {
-    const response = await fetch(MANIFEST_URL, { signal: controller.signal });
+    // A complete multi-platform release takes priority. Windows may publish
+    // independently while other operating systems remain in QA.
+    let response = await fetch(MANIFEST_URL, { signal: controller.signal });
+    let windowsOnly = false;
+    if (!response.ok) {
+      response = await fetch(WINDOWS_MANIFEST_URL, { signal: controller.signal });
+      windowsOnly = true;
+    }
     if (!response.ok) throw new Error('VPS manifest unavailable (' + response.status + ')');
     const manifest = await response.json();
-    if (!manifest || !/^v?[0-9][A-Za-z0-9._-]{0,63}$/.test(manifest.version) || !Array.isArray(manifest.files)) {
+    if (!manifest || !/^v?[0-9][A-Za-z0-9._-]{0,63}$/.test(manifest.version)
+        || !Array.isArray(manifest.files)
+        || (windowsOnly && !validateWindowsManifest(manifest))) {
       throw new Error('Invalid VPS manifest');
     }
     memoryCache = { expires: Date.now() + 120_000, manifest };

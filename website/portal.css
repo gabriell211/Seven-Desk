@@ -198,12 +198,21 @@ html[data-theme] body.account-page.account-authenticated .activation-secret labe
   border-color:var(--portal-border);color:#ce5b65;background:transparent;
 }
 .account-authenticated .activation-card button:disabled{opacity:.6;cursor:wait}
-.account-authenticated .activation-secret:not([hidden]){
-  display:grid;gap:10px;margin-top:16px;padding:16px;
+.account-authenticated .activation-secret{
+  display:grid;gap:12px;padding:14px;min-width:0;
   border:1px solid var(--portal-border);border-radius:12px;
   background:var(--portal-accent-soft);
 }
-.account-authenticated .activation-secret[hidden]{display:none!important}
+.account-authenticated .activation-card .activation-technician{
+  margin:0;color:var(--portal-muted);font-size:13px;overflow-wrap:anywhere;
+}
+.account-authenticated .activation-secret .activation-code-row{
+  display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:end;
+}
+.account-authenticated .activation-secret .activation-code-row button{min-height:38px}
+@media(max-width:420px){
+  .account-authenticated .activation-secret .activation-code-row{grid-template-columns:1fr}
+}
 .account-authenticated .activation-secret input{font-family:ui-monospace,monospace;font-size:12px}
 .account-authenticated .activation-secret small{font-size:11px;color:var(--portal-muted);line-height:1.6}
 .account-authenticated .activation-card input:focus-visible,
@@ -290,7 +299,6 @@ html[data-theme] body.account-page.account-authenticated #account-app-access {
 .account-authenticated .technician-card-photo {position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 .account-authenticated .technician-card-photo[hidden],
 .account-authenticated .technician-card-initials[hidden],
-.account-authenticated .technician-card-credential[hidden],
 .account-authenticated .technician-card-actions button[hidden] {display:none!important}
 .account-authenticated .technician-card-identity {flex:1;min-width:0}
 .account-authenticated .technician-card-kicker {
@@ -318,8 +326,7 @@ html[data-theme] body.account-page.account-authenticated #account-app-access {
 html[data-theme] body.account-page.account-authenticated .technician-card-fields label {
   display:grid;gap:7px;margin:0;color:var(--portal-ink);font-size:12px;font-weight:750;
 }
-.account-authenticated .technician-card-fields input,
-.account-authenticated .technician-card-credential input {
+.account-authenticated .technician-card-fields input {
   width:100%;max-width:100%;min-width:0;box-sizing:border-box;
   border:1px solid var(--portal-border);border-radius:9px;background:var(--portal-panel);
   color:var(--portal-ink);padding:11px 12px;font:inherit;font-size:12px;
@@ -339,38 +346,24 @@ html[data-theme] body.account-page.account-authenticated .technician-card-fields
   display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;
   margin-top:auto;padding:15px 20px 20px;
 }
-.account-authenticated .technician-card-actions button,
-.account-authenticated .technician-card-credential button {
+.account-authenticated .technician-card-actions button {
   width:100%;min-width:0;min-height:42px;box-sizing:border-box;
   padding:10px 8px;border-radius:9px;border:1px solid var(--portal-border);
   background:var(--portal-hover);color:var(--portal-ink);cursor:pointer;
   font:inherit;font-weight:750;font-size:11px;line-height:1.3;
 }
-.account-authenticated .technician-card-actions .technician-card-primary,
-.account-authenticated .technician-card-credential button {
+.account-authenticated .technician-card-actions .technician-card-primary {
   background:var(--portal-accent);border-color:var(--portal-accent);color:#fff;
 }
 .account-authenticated .technician-card-actions button[data-card-revoke] {
   background:transparent;color:#ce5b65;border-color:var(--portal-border);
 }
-.account-authenticated .technician-card-actions button:hover,
-.account-authenticated .technician-card-credential button:hover {filter:brightness(.96)}
+.account-authenticated .technician-card-actions button:hover {filter:brightness(.96)}
 .account-authenticated .technician-card-actions button:disabled {opacity:.55;cursor:wait}
 .account-authenticated .technician-card-fields input:focus-visible,
-.account-authenticated .technician-card-credential input:focus-visible,
-.account-authenticated .technician-card-actions button:focus-visible,
-.account-authenticated .technician-card-credential button:focus-visible {
+.account-authenticated .technician-card-actions button:focus-visible {
   outline:2px solid var(--portal-accent);outline-offset:2px;
 }
-.account-authenticated .technician-card-credential {
-  display:grid;gap:9px;padding:15px 20px 20px;
-  background:var(--portal-accent-soft);border-top:1px solid var(--portal-border);
-}
-html[data-theme] body.account-page.account-authenticated .technician-card-credential label {
-  min-width:0;display:grid;gap:7px;color:var(--portal-ink);font-size:11px;font-weight:750;
-}
-.account-authenticated .technician-card-credential input {font-family:ui-monospace,monospace;font-size:11px}
-.account-authenticated .technician-card-credential small {font-size:10px;color:var(--portal-muted)}
 html[data-theme] body.account-page.account-authenticated .account-plan-actions input:not([type=file]){
   background:var(--portal-panel);color:var(--portal-ink);border-color:var(--portal-border);
 }

@@ -1,0 +1,20 @@
+[Unit]
+Description=Seven Desk PostgreSQL backups (local, root-only)
+Wants=docker.service
+After=docker.service
+
+[Service]
+Type=oneshot
+User=root
+Group=root
+UMask=0077
+ExecStart=/usr/local/sbin/sevendesk-postgres-backup.sh
+TimeoutStartSec=20min
+NoNewPrivileges=true
+ProtectSystem=strict
+ReadWritePaths=/var/backups/sevendesk-postgres
+PrivateTmp=true
+ProtectHome=true
+ProtectKernelTunables=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true

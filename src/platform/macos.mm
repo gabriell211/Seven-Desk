@@ -5,6 +5,7 @@
 #include <Security/AuthorizationTags.h>
 
 #include <CoreGraphics/CoreGraphics.h>
+#include <dlfcn.h>
 #include <vector>
 #include <map>
 #include <set>
@@ -25,95 +26,94 @@ extern "C" uint32_t majorVersion() {
     return version.majorVersion;
 }
 
+// Dynamically resolve APIs added after macOS 10.14; @available generates
+// __isPlatformVersionAtLeast and causes unresolved symbols in the old target.
 extern "C" bool IsCanScreenRecording(bool prompt) {
-    #ifdef NO_InputMonitoringAuthStatus
+#ifdef NO_InputMonitoringAuthStatus
     return false;
-    #else
-    bool res = CGPreflightScreenCaptureAccess();
-    if (!res && prompt) {
-        CGRequestScreenCaptureAccess();
+#else
+    using Check = bool (*)();
+    using Request = bool (*)();
+    const auto check = reinterpret_cast<Check>(
+        dlsym(RTLD_DEFAULT, "CGPreflightScreenCaptureAccess"));
+    if (check == nullptr) {
+        return false;
     }
-    return res;
-    #endif
+    const bool allowed = check();
+    if (!allowed && prompt) {
+        const auto request = reinterpret_cast<Request>(
+            dlsym(RTLD_DEFAULT, "CGRequestScreenCaptureAccess"));
+        if (request != nullptr) {
+            (void)request();
+        }
+    }
+    return allowed;
+#endif
 }
-
 
 // https://github.com/codebytere/node-mac-permissions/blob/main/permissions.mm
 
 extern "C" bool InputMonitoringAuthStatus(bool prompt) {
-    #ifdef NO_InputMonitoringAuthStatus
+#ifdef NO_InputMonitoringAuthStatus
     return true;
-    #else
-    if (floor(NSAppKitVersionNumber) >= NSAppKitVersionNumber10_15) {
-        IOHIDAccessType theType = IOHIDCheckAccess(kIOHIDRequestTypeListenEvent);
-        NSLog(@"IOHIDCheckAccess = %d, kIOHIDAccessTypeGranted = %d", theType, kIOHIDAccessTypeGranted);
-        switch (theType) {
-            case kIOHIDAccessTypeGranted:
-                return true;
-                break;
-            case kIOHIDAccessTypeDenied: {
-                if (prompt) {
-                    NSString *urlString = @"x-apple.systempreferences:com.apple.preference.security?Privacy_ListenEvent";
-                    [[NSWorkspace sharedWorkspace] openURL:[NSURL URLWithString:urlString]];
-                }
-                break;
+#else
+    const NSOperatingSystemVersion version = [[NSProcessInfo processInfo] operatingSystemVersion];
+    if (version.majorVersion < 10 ||
+        (version.majorVersion == 10 && version.minorVersion < 15)) {
+        return true; // Input-monitoring access control starts with Catalina.
+    }
+
+    using Check = IOHIDAccessType (*)(IOHIDRequestType);
+    using Request = bool (*)(IOHIDRequestType);
+    const auto check = reinterpret_cast<Check>(
+        dlsym(RTLD_DEFAULT, "IOHIDCheckAccess"));
+    if (check == nullptr) {
+        return false;
+    }
+    switch (check(kIOHIDRequestTypeListenEvent)) {
+        case kIOHIDAccessTypeGranted:
+            return true;
+        case kIOHIDAccessTypeDenied:
+            if (prompt) {
+                NSString *urlString = @"x-apple.systempreferences:com.apple.preference.security?Privacy_ListenEvent";
+                [[NSWorkspace sharedWorkspace] openURL:[NSURL URLWithString:urlString]];
             }
-            case kIOHIDAccessTypeUnknown: {
-                if (prompt) {
-                    bool result = IOHIDRequestAccess(kIOHIDRequestTypeListenEvent);
-                    NSLog(@"IOHIDRequestAccess result = %d", result);
+            break;
+        case kIOHIDAccessTypeUnknown:
+            if (prompt) {
+                const auto request = reinterpret_cast<Request>(
+                    dlsym(RTLD_DEFAULT, "IOHIDRequestAccess"));
+                if (request != nullptr) {
+                    (void)request(kIOHIDRequestTypeListenEvent);
                 }
-                break;
             }
-            default:
-                break;
-        }
-    } else {
-        return true;
+            break;
+        default:
+            break;
     }
     return false;
-    #endif
+#endif
 }
 
-extern "C" bool Elevate(char* process, char** args) {
-    AuthorizationRef authRef;
-    OSStatus status;
-
-    status = AuthorizationCreate(NULL, kAuthorizationEmptyEnvironment,
-                                kAuthorizationFlagDefaults, &authRef);
-    if (status != errAuthorizationSuccess) {
-        printf("Failed to create AuthorizationRef\n");
-        return false;
-    }
-
-    AuthorizationItem authItem = {kAuthorizationRightExecute, 0, NULL, 0};
-    AuthorizationRights authRights = {1, &authItem};
-    AuthorizationFlags flags = kAuthorizationFlagDefaults |
-                                kAuthorizationFlagInteractionAllowed |
-                                kAuthorizationFlagPreAuthorize |
-                                kAuthorizationFlagExtendRights;
-    status = AuthorizationCopyRights(authRef, &authRights, kAuthorizationEmptyEnvironment, flags, NULL);
-    if (status != errAuthorizationSuccess) {
-        printf("Failed to authorize\n");
-        return false;
-    }
-
-    if (process != NULL) {
-        FILE *pipe = NULL;
-        status = AuthorizationExecuteWithPrivileges(authRef, process, kAuthorizationFlagDefaults, args, &pipe);
-        if (status != errAuthorizationSuccess) {
-            printf("Failed to run as root\n");
-            AuthorizationFree(authRef, kAuthorizationFlagDefaults);
-            return false;
-        }
-    }
-
-    AuthorizationFree(authRef, kAuthorizationFlagDefaults);
-    return true;
-}
-
+// This is an authorization check, not an arbitrary privileged process launcher.
+// Privileged update execution uses the separate authenticated macos.rs path.
 extern "C" bool MacCheckAdminAuthorization() {
-    return Elevate(NULL, NULL);
+    AuthorizationRef authRef = nullptr;
+    OSStatus status = AuthorizationCreate(nullptr, kAuthorizationEmptyEnvironment,
+                                          kAuthorizationFlagDefaults, &authRef);
+    if (status != errAuthorizationSuccess) {
+        return false;
+    }
+    AuthorizationItem authItem = {kAuthorizationRightExecute, 0, nullptr, 0};
+    AuthorizationRights authRights = {1, &authItem};
+    const AuthorizationFlags flags = kAuthorizationFlagDefaults |
+                                     kAuthorizationFlagInteractionAllowed |
+                                     kAuthorizationFlagPreAuthorize |
+                                     kAuthorizationFlagExtendRights;
+    status = AuthorizationCopyRights(authRef, &authRights, kAuthorizationEmptyEnvironment,
+                                     flags, nullptr);
+    AuthorizationFree(authRef, kAuthorizationFlagDefaults);
+    return status == errAuthorizationSuccess;
 }
 
 // https://gist.github.com/briankc/025415e25900750f402235dbf1b74e42
@@ -135,33 +135,8 @@ extern "C" float BackingScaleFactor(uint32_t display) {
 // https://github.com/jhford/screenresolution/blob/master/cg_utils.c
 // https://github.com/jdoupe/screenres/blob/master/setgetscreen.m
 
-size_t bitDepth(CGDisplayModeRef mode) {
-    size_t depth = 0;
-    // Deprecated, same display same bpp? 
-    // https://stackoverflow.com/questions/8210824/how-to-avoid-cgdisplaymodecopypixelencoding-to-get-bpp
-    // https://github.com/libsdl-org/SDL/pull/6628
-	CFStringRef pixelEncoding = CGDisplayModeCopyPixelEncoding(mode);	
-    // my numerical representation for kIO16BitFloatPixels and kIO32bitFloatPixels	
-    // are made up and possibly non-sensical	
-    if (kCFCompareEqualTo == CFStringCompare(pixelEncoding, CFSTR(kIO32BitFloatPixels), kCFCompareCaseInsensitive)) {	
-        depth = 96;	
-    } else if (kCFCompareEqualTo == CFStringCompare(pixelEncoding, CFSTR(kIO64BitDirectPixels), kCFCompareCaseInsensitive)) {	
-        depth = 64;	
-    } else if (kCFCompareEqualTo == CFStringCompare(pixelEncoding, CFSTR(kIO16BitFloatPixels), kCFCompareCaseInsensitive)) {	
-        depth = 48;	
-    } else if (kCFCompareEqualTo == CFStringCompare(pixelEncoding, CFSTR(IO32BitDirectPixels), kCFCompareCaseInsensitive)) {	
-        depth = 32;	
-    } else if (kCFCompareEqualTo == CFStringCompare(pixelEncoding, CFSTR(kIO30BitDirectPixels), kCFCompareCaseInsensitive)) {	
-        depth = 30;	
-    } else if (kCFCompareEqualTo == CFStringCompare(pixelEncoding, CFSTR(IO16BitDirectPixels), kCFCompareCaseInsensitive)) {	
-        depth = 16;	
-    } else if (kCFCompareEqualTo == CFStringCompare(pixelEncoding, CFSTR(IO8BitIndexedPixels), kCFCompareCaseInsensitive)) {	
-        depth = 8;	
-    }	
-    CFRelease(pixelEncoding);	
-    return depth;	
-}
-
+// The old pixel-encoding API has no supported replacement. Keep only
+// GUI-usable modes when choosing a display resolution.
 static bool isHiDPIMode(CGDisplayModeRef mode) {
     // Check if the mode is HiDPI by comparing pixel width to width
     // If pixel width is greater than width, it's a HiDPI mode
@@ -207,7 +182,7 @@ extern "C" bool MacGetModes(CGDirectDisplayID display, uint32_t *widths, uint32_
     for (uint32_t i = 0; i < allModeCount && realNum < max; i++) {
         CGDisplayModeRef mode = (CGDisplayModeRef)CFArrayGetValueAtIndex(allModes, i);
         if (CGDisplayModeGetRefreshRate(currentMode) == CGDisplayModeGetRefreshRate(mode) &&
-            bitDepth(currentMode) == bitDepth(mode)) {
+            CGDisplayModeIsUsableForDesktopGUI(mode)) {
             widths[realNum] = (uint32_t)CGDisplayModeGetWidth(mode);
             heights[realNum] = (uint32_t)CGDisplayModeGetHeight(mode);
             hidpis[realNum] = isHiDPIMode(mode);
@@ -277,7 +252,7 @@ extern "C" bool MacSetMode(CGDirectDisplayID display, uint32_t width, uint32_t h
         if (width == CGDisplayModeGetWidth(mode) &&
             height == CGDisplayModeGetHeight(mode) && 
             CGDisplayModeGetRefreshRate(currentMode) == CGDisplayModeGetRefreshRate(mode) &&
-            bitDepth(currentMode) == bitDepth(mode)) {
+            CGDisplayModeIsUsableForDesktopGUI(mode)) {
 
             if (isHiDPIMode(mode)) {
                 preferredHiDPIMode = mode;
