@@ -108,6 +108,7 @@ const revealedCodePairs = new Map();
 let revealedOwner = null;
 let appAccessRequest = 0;
 let accountSession = 0;
+let teamRequest = 0;
 const activationUpdatesInFlight = new Set();
 
 let activeClientView = 'overview';
@@ -139,6 +140,11 @@ function displaySession(session) {
     accountSession++;
     appAccessRequest++;
     revealedCodePairs.clear();
+    teamRequest++;
+    el('account-team-workspace').hidden=true;
+    el('account-team-list').replaceChildren();
+    el('account-team-notice').textContent='';
+    el('account-team-accept').reset();
     el('account-app-notice').textContent = '';
     activationUpdatesInFlight.clear();
     el('account-activation-notice').textContent = '';
@@ -192,7 +198,7 @@ async function refresh() {
   const {data, error} = await auth.getSession();
   if (error) throw error;
   displaySession(data);
-  if (data?.user?.emailVerified === true) await Promise.all([loadSubscription(), loadCheckoutAvailability(), loadAppAccess()]);
+  if (data?.user?.emailVerified === true) await Promise.all([loadSubscription(), loadCheckoutAvailability(), loadAppAccess(), loadTeamWorkspaces()]);
 }
 async function appAuthorization() {
   const {data,error}=await auth.token();
@@ -201,6 +207,94 @@ async function appAuthorization() {
     throw new Error('Authentication required');
   return 'Bearer '+token;
 }
+
+async function teamApi(method='GET',body,session=accountSession){
+  const authorization=await appAuthorization();
+  if(session!==accountSession)throw new Error('Session changed');
+  const response=await fetch('/api/team-workspaces',{
+    method,cache:'no-store',headers:{Authorization:authorization,'Content-Type':'application/json'},
+    ...(body?{body:JSON.stringify(body)}:{}),
+  });
+  if(!response.ok)throw new Error('Team request unavailable');
+  return response.json();
+}
+function teamElement(tag,text){
+  const node=document.createElement(tag);
+  node.textContent=text;
+  return node;
+}
+async function loadTeamWorkspaces(){
+  const session=accountSession,request=++teamRequest;
+  const target=el('account-team-workspace'),list=el('account-team-list');
+  try{
+    const data=await teamApi('GET',undefined,session);
+    if(session!==accountSession||request!==teamRequest)return;
+    if(!Array.isArray(data.teams))throw new Error('Invalid teams');
+    list.replaceChildren();
+    target.hidden=false;
+    if(!data.teams.length)list.append(teamElement('p','Nenhuma equipe vinculada.'));
+    for(const team of data.teams){
+      const card=document.createElement('article');
+      card.className='client-surface';
+      card.append(teamElement('h3',team.plan==='business'?'Business':'Enterprise'),
+        teamElement('p','ID: '+team.id),
+        teamElement('p',team.isOwner?'Administrador · '+team.seatLimit+' vagas':'Técnico integrante'));
+      if(team.isOwner){
+        for(const technician of team.technicians){
+          const row=document.createElement('p');
+          row.append(teamElement('span',technician.email+' — '+(technician.accepted?'Ativo':'Convite pendente')+' '));
+          const revoke=teamElement('button','Revogar');
+          revoke.type='button';revoke.className='client-text-action';
+          revoke.addEventListener('click',async()=>{
+            if(!window.confirm('Revogar esta vaga?'))return;
+            revoke.disabled=true;
+            try{
+              await teamApi('DELETE',{teamId:team.id,seat:technician.seat},session);
+              if(session===accountSession){await loadTeamWorkspaces();el('account-team-notice').textContent='Vaga revogada.';}
+            }catch{if(session===accountSession)el('account-team-notice').textContent='Não foi possível revogar a vaga.';}
+            finally{revoke.disabled=false;}
+          });
+          row.append(revoke);card.append(row);
+        }
+        const form=document.createElement('form');
+        const label=teamElement('label','E-mail do técnico ');
+        const email=document.createElement('input');
+        email.type='email';email.required=true;email.maxLength=254;
+        label.append(email);
+        const button=teamElement('button','Gerar convite');
+        button.type='submit';button.className='account-submit';
+        form.append(label,button);
+        form.addEventListener('submit',async event=>{
+          event.preventDefault();button.disabled=true;
+          try{
+            const invitation=await teamApi('POST',{action:'invite',teamId:team.id,email:email.value},session);
+            if(session!==accountSession)return;
+            await loadTeamWorkspaces();
+            if(session===accountSession)el('account-team-notice').textContent='Compartilhe em privado com o técnico: equipe '+team.id+' · código '+invitation.token+'. O código é exibido apenas agora.';
+          }catch{if(session===accountSession)el('account-team-notice').textContent='Não foi possível gerar o convite. Confira as vagas e a validade da equipe.';}
+          finally{button.disabled=false;}
+        });
+        card.append(form);
+      }
+      list.append(card);
+    }
+  }catch{
+    if(session===accountSession&&request===teamRequest){target.hidden=true;list.replaceChildren();}
+  }
+}
+el('account-team-accept').addEventListener('submit',async event=>{
+  event.preventDefault();
+  const session=accountSession,button=event.currentTarget.querySelector('button');
+  button.disabled=true;
+  try{
+    await teamApi('POST',{action:'accept',teamId:el('account-team-id').value.trim(),token:el('account-team-code').value.trim()},session);
+    if(session!==accountSession)return;
+    el('account-team-accept').reset();
+    await loadTeamWorkspaces();
+    if(session===accountSession)el('account-team-notice').textContent='Convite aceito.';
+  }catch{if(session===accountSession)el('account-team-notice').textContent='Convite inválido, expirado ou não destinado à sua conta.';}
+  finally{button.disabled=false;}
+});
 
 function trustedTechnicianImage(value, slot) {
   if (typeof value !== 'string') return '';

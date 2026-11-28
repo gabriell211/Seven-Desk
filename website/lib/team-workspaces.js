@@ -37,7 +37,7 @@ async function transaction(pool,work){
 }
 
 // All mutations serialize on the team row. The caller obtains ownerId from
-// a verified session; never from an untrusted body. No public route yet.
+// a verified session; never from an untrusted body. The portal route is explicitly gated.
 async function inviteTechnician(pool,{teamId,ownerId,email},random=randomBytes){
   if(!validId(teamId)||!validId(ownerId))throw new Error('Invalid team identity');
   const normalized=normalizeEmail(email);
@@ -112,4 +112,23 @@ async function getTeamMembership(db,{teamId,userId}){
   return result.rows[0]||null;
 }
 
-module.exports={TEAM_PLANS,teamPlan,normalizeEmail,inviteTechnician,acceptTechnicianInvite,revokeTechnician,getTeamMembership};
+async function listWorkspaces(db,userId){
+  if(!validId(userId))return [];
+  const result=await db.query(
+    `SELECT t.id,t.plan,t.paid_through,t.owner_user_id=$1 AS is_owner,
+       CASE WHEN t.owner_user_id=$1 THEN COALESCE((
+         SELECT jsonb_agg(jsonb_build_object('seat',s.seat,'email',s.invited_email,
+           'accepted',s.accepted_at IS NOT NULL,'expiresAt',s.invite_expires_at) ORDER BY s.seat)
+         FROM seven_desk_team_seats s WHERE s.team_id=t.id
+           AND (s.accepted_at IS NOT NULL OR s.invite_expires_at>now())
+       ),'[]'::jsonb) ELSE '[]'::jsonb END AS technicians
+       FROM seven_desk_teams t JOIN seven_users u ON u.id=$1 AND u."emailVerified" IS TRUE
+       WHERE t.owner_user_id=$1 OR EXISTS (
+          SELECT 1 FROM seven_desk_team_seats s WHERE s.team_id=t.id AND s.technician_user_id=$1
+          AND s.accepted_at IS NOT NULL AND s.seat<=CASE t.plan WHEN 'business' THEN 3 WHEN 'enterprise' THEN 10 ELSE 0 END)
+       ORDER BY t.created_at,t.id`,[userId]);
+  return result.rows.map(row=>({id:row.id,plan:row.plan,paidThrough:row.paid_through,
+    isOwner:row.is_owner,seatLimit:teamPlan(row.plan).seats,technicians:row.technicians}));
+}
+
+module.exports={listWorkspaces,TEAM_PLANS,teamPlan,normalizeEmail,inviteTechnician,acceptTechnicianInvite,revokeTechnician,getTeamMembership};
