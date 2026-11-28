@@ -240,15 +240,15 @@ async function loadTeamWorkspaces(){
         teamElement('p','ID: '+team.id),
         teamElement('p',team.isOwner?'Administrador · '+team.seatLimit+' vagas':'Técnico integrante'));
       if(data.activationAvailable===true&&Number.isInteger(team.ownSeat)){
-        const activate=teamElement('button','Gerar códigos de ativação');
+        const activate=teamElement('button','Gerar chave de ativação');
         activate.type='button';activate.className='account-submit';
         activate.addEventListener('click',async()=>{
-          if(!window.confirm('Gerar novos códigos revoga a ativação anterior desta vaga. Continuar?'))return;
+          if(!window.confirm('Gerar uma nova chave revoga a ativação anterior desta vaga. Continuar?'))return;
           activate.disabled=true;
           try{
             const pair=await teamApi('POST',{action:'activate',teamId:team.id},session);
-            if(session===accountSession)el('account-team-notice').textContent='Código de ativação: '+pair.token+' · Código do técnico: '+pair.technicianCode+' · Guarde-os em privado. Não serão exibidos novamente.';
-          }catch{if(session===accountSession)el('account-team-notice').textContent='Não foi possível gerar os códigos da equipe.';}
+            if(session===accountSession)el('account-team-notice').textContent='Chave de ativação: '+pair.token+' · Guarde-a em privado. Não será exibida novamente.';
+          }catch{if(session===accountSession)el('account-team-notice').textContent='Não foi possível gerar a chave da equipe.';}
           finally{activate.disabled=false;}
         });
         card.append(activate);
@@ -355,8 +355,8 @@ function createTechnicianCard(slot, device) {
   badge.dataset.status = savedName ? 'registered' : 'available';
   badge.textContent = savedName ? 'Cadastrado' : 'Vaga livre';
   find('.technician-card-description').textContent = savedName
-    ? 'Gere os códigos desta vaga em Ativação do sistema, na Visão geral.'
-    : 'Cadastre o técnico para liberar a emissão dos códigos desta vaga.';
+    ? 'Gere a chave desta vaga em Ativação do sistema, na Visão geral.'
+    : 'Cadastre o técnico para liberar a emissão da chave desta vaga.';
   let localPhotoUrl = '';
   const remotePhotoUrl = trustedTechnicianImage(device?.technician_image,slot);
   function setPhoto(url) {
@@ -402,8 +402,7 @@ function createActivationCodes(pair) {
   const codes = document.createElement('div');
   codes.className = 'activation-secret';
   for (const [labelText, value] of [
-    ['Código de ativação do sistema', pair.token],
-    ['Código do técnico', pair.technicianCode],
+    ['Chave de ativação', pair.token],
   ]) {
     const row = document.createElement('div');
     row.className = 'activation-code-row';
@@ -437,7 +436,7 @@ function createActivationCodes(pair) {
     codes.append(row);
   }
   const hint = document.createElement('small');
-  hint.textContent = 'Copie os dois códigos antes de recarregar ou fechar a página.';
+  hint.textContent = 'Copie a chave antes de recarregar ou fechar a página.';
   codes.append(hint);
   return codes;
 }
@@ -464,7 +463,7 @@ function createActivationCard(slot, device) {
   technician.className = 'activation-technician';
   technician.textContent = hasTechnician
     ? 'Técnico: ' + device.technician_name
-    : 'Cadastre um técnico para gerar os dois códigos.';
+    : 'Cadastre um técnico para gerar a chave.';
 
   const nameLabel = document.createElement('label');
   nameLabel.textContent = 'Nome do computador';
@@ -481,7 +480,7 @@ function createActivationCard(slot, device) {
   const generate = document.createElement('button');
   generate.type = 'button';
   generate.textContent = hasTechnician
-    ? (device?.activated ? 'Gerar novos códigos' : 'Gerar os dois códigos')
+    ? (device?.activated ? 'Gerar nova chave' : 'Gerar chave')
     : 'Cadastrar técnico';
   if (hasTechnician) generate.dataset.activationChange = '';
   generate.disabled = hasTechnician && activationUpdatesInFlight.has(slot);
@@ -492,7 +491,7 @@ function createActivationCard(slot, device) {
       return;
     }
     if (device?.activated && !window.confirm(
-      'Gerar novos códigos invalida os anteriores. Você precisará ativar o computador desta vaga novamente. Continuar?'
+      'Gerar nova chave invalida a anterior. Você precisará ativar o computador desta vaga novamente. Continuar?'
     )) return;
     updateAppDevice(slot, name.value, false, device);
   });
@@ -593,7 +592,7 @@ async function updateTechnicianProfile(slot, value, file, button) {
       if (!uploaded.ok) throw new Error('Unable to save technician photo');
     }
     await loadAppAccess();
-    notice.textContent = `Perfil da vaga ${slot} salvo. Gere os códigos em Ativação do sistema, na Visão geral.`;
+    notice.textContent = `Perfil da vaga ${slot} salvo. Gere a chave em Ativação do sistema, na Visão geral.`;
   } catch {
     notice.textContent = 'Não foi possível concluir o perfil. Confira os dados e tente novamente.';
   } finally {
@@ -623,7 +622,7 @@ async function updateAppDevice(slot, label, revoke, device) {
     const response = await fetch('/api/app-token', {
       method: revoke ? 'DELETE' : 'POST', cache:'no-store',
       headers: {'Content-Type':'application/json', Authorization:authorization},
-      body: JSON.stringify(revoke ? {slot} : {slot, label:name, issuePair:true}),
+      body: JSON.stringify(revoke ? {slot} : {slot, label:name}),
     });
     if (session !== accountSession) return;
     if (response.status === 409) {
@@ -636,18 +635,17 @@ async function updateAppDevice(slot, label, revoke, device) {
     if (revoke) {
       revealedCodePairs.delete(slot);
     } else {
-      if (typeof result.token !== 'string' || !/^sd(?:2)?_[A-Za-z0-9_-]{43}$/.test(result.token) ||
-          typeof result.technicianCode !== 'string' || !/^tec_[A-Za-z0-9_-]{32}$/.test(result.technicianCode)) {
-        throw new Error('Invalid activation pair');
+      if (typeof result.token !== 'string' || !/^sd(?:2)?_[A-Za-z0-9_-]{43}$/.test(result.token)) {
+        throw new Error('Invalid activation key');
       }
-      revealedCodePairs.set(slot, {token:result.token, technicianCode:result.technicianCode});
+      revealedCodePairs.set(slot, {token:result.token});
     }
     findCard()?.replaceWith(createActivationCard(slot, {
-      ...device, label:revoke ? undefined : name, activated:!revoke, technician_verified:false,
+      ...device, label:revoke ? undefined : name, activated:!revoke, technician_verified:!revoke,
     }));
     notice.textContent = revoke
       ? `Ativação da vaga ${slot} revogada.`
-      : `Códigos da vaga ${slot} gerados. Cole os dois nos campos correspondentes do aplicativo.`;
+      : `Chave da vaga ${slot} gerada. Cole-a no aplicativo; o técnico será reconhecido automaticamente.`;
     await loadAppAccess();
   } catch {
     if (session === accountSession) {

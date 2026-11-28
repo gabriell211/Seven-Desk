@@ -2,9 +2,9 @@
 
 const {pool}=require('../lib/db-pool');
 const {authenticatedUser}=require('../lib/server-auth');
-const {makeTechnicianCode,technicianCodeHash,getMaxSlots}=require('../lib/technicians');
+const {getMaxSlots}=require('../lib/technicians');
 
-function createTechnicianProfileHandler({authenticate=authenticatedUser,db=pool,randomCode=makeTechnicianCode}={}){
+function createTechnicianProfileHandler({authenticate=authenticatedUser,db=pool}={}){
   return async(req,res)=>{
     res.setHeader('Cache-Control','no-store');
     res.setHeader('Vary','Authorization');
@@ -23,25 +23,20 @@ function createTechnicianProfileHandler({authenticate=authenticatedUser,db=pool,
       const connection=db();
       if(slot>await getMaxSlots(connection,userId))
         return res.status(400).json({error:'Vaga de técnico indisponível'});
-      const code=randomCode();
-      const digest=technicianCodeHash(code);
-      if(!digest)throw new Error('Invalid generated code');
       const result=await connection.query(
         `INSERT INTO seven_desk_technicians
           (user_id,slot,technician_name,code_hash)
-         SELECT id,$2,$3,$4 FROM seven_users
+         SELECT id,$2,$3,NULL FROM seven_users
           WHERE id=$1 AND "emailVerified" IS TRUE
          ON CONFLICT (user_id,slot) DO UPDATE SET
            technician_name=EXCLUDED.technician_name,updated_at=now()
-         RETURNING technician_name,technician_image,code_hash`,
-        [userId,slot,name,digest],
+         RETURNING technician_name,technician_image`,
+        [userId,slot,name],
       );
       if(!result.rows.length)return res.status(403).json({error:'Confirme seu e-mail'});
       const row=result.rows[0];
-      const created=row.code_hash===digest;
       return res.status(200).json({
         name:row.technician_name,image:row.technician_image,
-        ...(created?{technicianCode:code}:{}),
       });
     }catch{
       return res.status(503).json({error:'Não foi possível salvar o técnico'});

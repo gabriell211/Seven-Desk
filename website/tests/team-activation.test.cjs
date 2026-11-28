@@ -19,13 +19,14 @@ test('team license is disabled unless every required flag is enabled',()=>{
 test('only accepted verified member can rotate one device credential; raw secrets are never stored',async()=>{
   const db=fixture([{seat:1}]);
   const pair=await issueTeamActivation(db,{teamId,userId},()=>Buffer.alloc(32,1),()=>code);
-  assert.deepEqual(pair,{token,technicianCode:code});
+  assert.deepEqual(pair,{token});
   const {sql,args}=db.calls[0];
-  assert.deepEqual(args,[teamId,userId,hash(token),hash(code)]);
+  assert.deepEqual(args,[teamId,userId,hash(token)]);
   assert.match(sql,/s.technician_user_id=\$2/);
   assert.match(sql,/FOR UPDATE OF s/);
   assert.match(sql,/ON CONFLICT \(team_id,seat\)/);
   assert.match(sql,/device_hash=NULL/);
+  assert.match(sql,/technician_hash=NULL,technician_verified=true/);
   assert.equal(await issueTeamActivation(fixture(),{teamId,userId},()=>Buffer.alloc(32,1),()=>code),null);
 });
 test('claim and license enforce active verified seat and device binding',async()=>{

@@ -1,7 +1,7 @@
 'use strict';
 const {createHash,randomBytes}=require('node:crypto');
 const {allowedActivation,newTokenPrefix}=require('./activation-policy');
-const {makeTechnicianCode,technicianCodeHash}=require('./technicians');
+const {technicianCodeHash}=require('./technicians');
 const hash=value=>createHash('sha256').update(value).digest('hex');
 const UUID=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const validId=x=>typeof x==='string'&&UUID.test(x);
@@ -16,12 +16,10 @@ const activeMembership=`s.accepted_at IS NOT NULL AND t.paid_through>now()
 const joinedActivation=`a.team_id=s.team_id AND a.seat=s.seat
  AND t.id=s.team_id AND u.id=s.technician_user_id AND ${activeMembership}`;
 
-async function issueTeamActivation(db,{teamId,userId},random=randomBytes,randomCode=makeTechnicianCode){
+async function issueTeamActivation(db,{teamId,userId},random=randomBytes){
   if(!validId(teamId)||!validId(userId))return null;
   const token=newTokenPrefix()+random(32).toString('base64url');
-  const technicianCode=randomCode();
-  const digest=technicianCodeHash(technicianCode);
-  if(!allowedActivation(token)||!digest)throw new Error('Invalid generated credential');
+  if(!allowedActivation(token))throw new Error('Invalid generated credential');
   const result=await db.query(
     `WITH member AS (
       SELECT s.team_id,s.seat FROM seven_desk_team_seats s
@@ -30,12 +28,12 @@ async function issueTeamActivation(db,{teamId,userId},random=randomBytes,randomC
       WHERE s.team_id=$1 AND s.technician_user_id=$2 AND ${activeMembership}
       FOR UPDATE OF s
     )
-    INSERT INTO seven_desk_team_activations (team_id,seat,token_hash,technician_hash)
-    SELECT team_id,seat,$3,$4 FROM member
+    INSERT INTO seven_desk_team_activations (team_id,seat,token_hash,technician_hash,technician_verified)
+    SELECT team_id,seat,$3,NULL,true FROM member
     ON CONFLICT (team_id,seat) DO UPDATE SET token_hash=EXCLUDED.token_hash,
-      technician_hash=EXCLUDED.technician_hash,technician_verified=false,device_hash=NULL,created_at=now()
-    RETURNING seat`,[teamId,userId,hash(token),digest]);
-  return result.rows.length===1?{token,technicianCode}:null;
+      technician_hash=NULL,technician_verified=true,device_hash=NULL,created_at=now()
+    RETURNING seat`,[teamId,userId,hash(token)]);
+  return result.rows.length===1?{token}:null;
 }
 
 async function claimTeamDevice(db,token,code){

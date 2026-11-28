@@ -36,7 +36,7 @@ A ausência de manifest.json é BLOCKED, nunca PASS. A presença do manifesto ex
 | ANDROID_CONSENT | Balão recebe foto/nome/empresa e aceita/recusa; UAC indisponível |
 | ACCOUNT_PF_PJ | Teste em staging: CPF/CNPJ válido, inválido e repetido; verificação e-mail |
 | ACCOUNT_FIVE_SLOTS | Primeiro mês grátis, cinco dispositivos, sexto recusado pelo servidor |
-| ACCOUNT_TECH_CLAIM | Tec_ e sd_ vinculados à mesma conta/slot; revogação efetiva |
+| ACCOUNT_TECH_CLAIM | Chave única sd_/sd2_ identifica técnico da mesma conta/vaga; revogação e vinculação ao dispositivo efetivas |
 | PAYMENT_SANDBOX | Pagamento de teste, webhook assinado, duplicação, reembolso/expiração |
 | IDENTITY_AUTH | Identidade não pode ser falsificada via metadado remoto; sessão autenticada |
 

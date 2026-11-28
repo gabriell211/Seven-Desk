@@ -40,22 +40,22 @@ class FakeElement {
 function fakeDocument() {
   return {createElement: tag => new FakeElement(tag)};
 }
-test('both activation codes live in overview with a link from the technician area', () => {
+test('single activation key lives in overview with a link from the technician area', () => {
   const overview = between(html, '<section id="account-panel-overview"', '<section id="account-panel-devices"');
   const technicians = between(html, '<section id="account-panel-devices"', '<section id="account-panel-profile"');
   assert.match(overview, /id="account-activation-list"/);
-  assert.match(overview, /dois códigos do mesmo cartão/);
+  assert.match(overview, /uma única chave de ativação/);
   assert.match(technicians, /Ir para Visão geral/);
   assert.doesNotMatch(overview + technicians, /sd2_|tec_|account-app-token|account-tech-code/);
 });
 
-test('each card copies only the activation and technician codes issued to its own slot', async () => {
+test('each card copies only its own activation key', async () => {
   const view = between(source, 'function createActivationCodes(', 'async function loadAppAccess()');
   const copied = [];
   const notice = new FakeElement('p');
   const pairs = new Map([
-    [2, {token:'activation-slot-2', technicianCode:'technician-slot-2'}],
-    [3, {token:'activation-slot-3', technicianCode:'technician-slot-3'}],
+    [2, {token:'activation-slot-2'}],
+    [3, {token:'activation-slot-3'}],
   ]);
   const updates = [];
   let confirmed = false;
@@ -79,12 +79,12 @@ test('each card copies only the activation and technician codes issued to its ow
   const third = sandbox.createActivationCard(3, {technician_name:'João', activated:true});
   assert.equal(third.children[0].children[1].textContent, 'Aguardando vínculo');
   for (const card of [second, third]) {
-    for (const row of card.children[4].children.slice(0, 2)) {
+    for (const row of card.children[4].children.slice(0, 1)) {
       await row.children[1].events.get('click')();
     }
   }
   assert.deepEqual(copied, [
-    'activation-slot-2', 'technician-slot-2', 'activation-slot-3', 'technician-slot-3',
+    'activation-slot-2', 'activation-slot-3',
   ]);
   assert.equal(sandbox.createActivationCard(1, null).children.length, 4);
   const regenerate = second.children[3].children[0].events.get('click');
