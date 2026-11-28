@@ -709,13 +709,25 @@ const checkoutDisabledMessage =
   'Pagamentos indisponíveis: é necessário habilitar o Checkout Integrado na conta InfinitePay. Contate o suporte Seven Desk.';
 async function loadCheckoutAvailability() {
   const notice = el('account-checkout-notice');
-  for (const button of paymentButtons) button.disabled = true;
+  for (const button of paymentButtons) {
+    button.disabled = true;
+    if (['business','enterprise'].includes(button.dataset.plan)) button.hidden=true;
+  }
+  el('account-team-billing-note').hidden=true;
   notice.textContent = checkoutProviderDisabled ? checkoutDisabledMessage : 'Pagamentos temporariamente indisponíveis.';
   if (checkoutProviderDisabled) return;
   try {
     const response = await fetch('/api/billing-status', {cache:'no-store'});
-    if (!response.ok || (await response.json()).checkoutAvailable !== true) return;
-    for (const button of paymentButtons) button.disabled = false;
+    if (!response.ok) return;
+    const availability=await response.json();
+    if (availability.checkoutAvailable !== true) return;
+    for (const button of paymentButtons) {
+      const team=['business','enterprise'].includes(button.dataset.plan);
+      const available=!team||availability.teamCheckoutAvailable===true;
+      button.disabled=!available;
+      if(team)button.hidden=!available;
+    }
+    el('account-team-billing-note').hidden=availability.teamCheckoutAvailable!==true;
     notice.textContent = 'Escolha seu plano para continuar para o checkout seguro.';
   } catch { /* Fail closed: no unchecked payments. */ }
 }

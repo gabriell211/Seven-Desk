@@ -1,9 +1,13 @@
 'use strict';
 
+const {TEAM_PLANS}=require('./team-workspaces');
+
 // Prices are selected on the server, never accepted from the browser.
 const PLANS = Object.freeze({
   monthly: Object.freeze({ amount: 1990, description: 'Seven Desk - 1 usuario - 1 mes' }),
   yearly: Object.freeze({ amount: 19990, description: 'Seven Desk - 1 usuario - 1 ano' }),
+  business: Object.freeze({ amount: TEAM_PLANS.business.amount, description: 'Seven Desk Business - 3 tecnicos - 1 mes' }),
+  enterprise: Object.freeze({ amount: TEAM_PLANS.enterprise.amount, description: 'Seven Desk Enterprise - 10 tecnicos - 1 mes' }),
   extra_slot: Object.freeze({ amount: 700, description: 'Seven Desk - slot adicional - 1 computador' }),
 });
 const API = 'https://api.checkout.infinitepay.io';

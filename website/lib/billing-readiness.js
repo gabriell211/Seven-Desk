@@ -19,4 +19,9 @@ function isCheckoutReady(env = process.env) {
   }
 }
 
-module.exports = { isCheckoutReady };
+// Separate explicit approval: enabling individual checkout never opens team sales.
+function isTeamCheckoutReady(env=process.env){
+  return isCheckoutReady(env) && env.SEVEN_TEAM_WORKSPACES_ENABLED==='1' &&
+    env.SEVEN_TEAM_REMOTE_ACCESS_HOMOLOGATED==='1' && env.SEVEN_TEAM_SALES_APPROVED==='1';
+}
+module.exports = { isCheckoutReady, isTeamCheckoutReady };

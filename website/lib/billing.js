@@ -77,7 +77,19 @@ async function reconcilePayment(pool, event, { handle, apiKey, fetchImpl } = {})
     }
     const account = await client.query('SELECT "createdAt" AS created_at FROM seven_users WHERE id = $1 AND "emailVerified" IS TRUE', [locked.user_id]);
     if (!account.rows[0]) throw new Error('Account unavailable');
-    if (locked.plan === 'extra_slot') {
+    if (locked.plan === 'business' || locked.plan === 'enterprise') {
+      // One independently billed workspace per owner and tier. The unique
+      // index serializes concurrent purchases, without replacing other plans.
+      const team = await client.query(
+        `INSERT INTO seven_desk_teams (id, owner_user_id, plan, paid_through)
+         VALUES ($1, $2, $3, now() + interval '1 month')
+         ON CONFLICT (owner_user_id, plan) DO UPDATE SET
+           paid_through = GREATEST(seven_desk_teams.paid_through, now()) + interval '1 month'
+         RETURNING id`, [randomUUID(), locked.user_id, locked.plan]);
+      if (!team.rows[0]?.id) throw new Error('Team provisioning failed');
+      await client.query('UPDATE seven_desk_payment_orders SET team_id = $2 WHERE order_id = $1',
+        [orderId, team.rows[0].id]);
+    } else if (locked.plan === 'extra_slot') {
       await client.query(
         `INSERT INTO seven_desk_subscriptions (user_id, paid_through, extra_slots)
          VALUES ($1, GREATEST(now(), $2::timestamptz + interval '1 month'), 1)

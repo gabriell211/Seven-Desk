@@ -95,3 +95,32 @@ test('trial is one calendar month tied to the same account and includes five slo
   assert.equal(await getMaxSlots(db,userId),5);
   assert.equal(queries.filter(q=>q.includes("interval '1 month'")).length,2);
 });
+
+test('confirmed team payment provisions or renews only its own workspace once',async()=>{
+  for(const [plan,amount] of [['business',4990],['enterprise',14990]]){
+    const teamId='23dca358-ffb9-42b2-9d43-4df7631ec761';
+    const order={user_id:userId,plan,amount_cents:amount,state:'pending',transaction_nsu:null,invoice_slug:null};
+    const calls=[];
+    const query=async(sql,args)=>{
+      calls.push({sql,args});
+      if(sql.startsWith('SELECT user_id'))return {rows:[order]};
+      if(sql.startsWith('SELECT "createdAt"'))return {rows:[{created_at:'2026-11-01T00:00:00Z'}]};
+      if(sql.includes('INSERT INTO seven_desk_teams'))return {rows:[{id:teamId}]};
+      if(sql.includes("SET state = 'paid'")){order.state='paid';order.transaction_nsu=args[1];order.invoice_slug=args[2];}
+      return {rows:[]};
+    };
+    const db={query,connect:async()=>({query,release(){}})};
+    const event={orderId,transactionId:'tx-1',slug:'invoice-1'};
+    const options={handle:'merchant',apiKey:'test',fetchImpl:async()=>({ok:true,json:async()=>({success:true,paid:true,amount})})};
+    assert.equal(await reconcilePayment(db,event,options),true);
+    assert.equal(await reconcilePayment(db,event,options),true);
+    const credit=calls.filter(c=>c.sql.includes('INSERT INTO seven_desk_teams'));
+    assert.equal(credit.length,1);
+    assert.deepEqual(credit[0].args.slice(1),[userId,plan]);
+    assert.match(credit[0].sql,/ON CONFLICT \(owner_user_id, plan\)/);
+    assert.match(credit[0].sql,/GREATEST\(seven_desk_teams.paid_through, now\(\)\)/);
+    assert.deepEqual(calls.find(c=>c.sql.includes('SET team_id')).args,[orderId,teamId]);
+    assert.equal(calls.some(c=>c.sql.includes('INSERT INTO seven_desk_subscriptions')),false);
+    assert.equal(calls.filter(c=>c.sql==='COMMIT').length,1);
+  }
+});

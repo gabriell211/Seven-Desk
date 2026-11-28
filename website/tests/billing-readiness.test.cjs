@@ -1,7 +1,7 @@
 'use strict';
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { isCheckoutReady } = require('../lib/billing-readiness');
+const { isCheckoutReady, isTeamCheckoutReady } = require('../lib/billing-readiness');
 
 const ready = {
   SEVEN_BILLING_ENABLED: '1',
@@ -25,4 +25,11 @@ test('sales stay disabled unless every production prerequisite is explicitly set
   assert.equal(isCheckoutReady({ ...ready, SEVEN_SITE_URL: 'http://unsafe.test' }), false);
   assert.equal(isCheckoutReady({ ...ready, SEVEN_SITE_URL: 'https://example.com/other' }), false);
   assert.equal(isCheckoutReady({ ...ready, SEVEN_SITE_URL: 'https://example.com/?redirect=https://evil.test' }), false);
+});
+
+test('team sales require individual readiness plus explicit team approvals',()=>{
+  assert.equal(isTeamCheckoutReady(ready),false);
+  const team={...ready,SEVEN_TEAM_WORKSPACES_ENABLED:'1',SEVEN_TEAM_REMOTE_ACCESS_HOMOLOGATED:'1',SEVEN_TEAM_SALES_APPROVED:'1'};
+  assert.equal(isTeamCheckoutReady(team),true);
+  for(const key of ['SEVEN_BILLING_ENABLED','SEVEN_TEAM_WORKSPACES_ENABLED','SEVEN_TEAM_REMOTE_ACCESS_HOMOLOGATED','SEVEN_TEAM_SALES_APPROVED'])assert.equal(isTeamCheckoutReady({...team,[key]:'0'}),false,key);
 });

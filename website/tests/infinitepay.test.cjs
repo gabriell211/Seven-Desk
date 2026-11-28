@@ -7,6 +7,8 @@ test('checkout prices are fixed by the selected plan on the server', () => {
   const common = { handle: '$merchant', orderId: 'order-1', siteUrl: 'https://example.com' };
   assert.equal(payment.checkoutPayload({ ...common, plan: 'monthly', amount: 1 }).items[0].price, 1990);
   assert.equal(payment.checkoutPayload({ ...common, plan: 'yearly', amount: 1 }).items[0].price, 19990);
+  assert.equal(payment.checkoutPayload({ ...common, plan: 'business', amount: 1 }).items[0].price, 4990);
+  assert.equal(payment.checkoutPayload({ ...common, plan: 'enterprise', amount: 1 }).items[0].price, 14990);
   const checkout = payment.checkoutPayload({ ...common, plan: 'monthly' });
   assert.equal(checkout.options.single_payment, true);
   const lifetime = Date.parse(checkout.options.valid_until) - Date.now();
@@ -119,5 +121,7 @@ test('legacy orders reconcile only their original amount; new orders cannot use 
   assert.equal(await payment.verifyPayment({...input,orderAmount:3990},{fetchImpl:fake(1990)}),false);
   assert.equal(await payment.verifyPayment(input,{fetchImpl:fake(3990)}),false);
   assert.equal(await payment.verifyPayment({...input,orderAmount:1},{fetchImpl:fake(1)}),false);
-  for(const plan of ['personal','business','enterprise']) assert.throws(()=>payment.planFor(plan));
+  assert.throws(()=>payment.planFor('personal'));
+  assert.equal(payment.planFor('business').amount,4990);
+  assert.equal(payment.planFor('enterprise').amount,14990);
 });
