@@ -128,11 +128,25 @@ test('the account renders billing information with text-only assignments and no 
   }
   assert.match(html,/Minha assinatura/);
   assert.match(html,/sem cobrança ou renovação automática/);
-  assert.match(js,/presentSubscription\(await response\.json\(\)\)/);
+  assert.match(js,/presentSubscription\(subscription\)/);
   assert.match(js,/\['account-payment-plan',view\.paymentName\]/);
   assert.match(js,/el\(id\)\.textContent = value/);
   assert.match(js,/resetSubscriptionDetails\(\)/);
   assert.match(html,/href="\/portal\.css\?v=\d+"/);
   const css=fs.readFileSync(path.join(__dirname,'../portal.css'),'utf8');
   assert.match(css,/\.client-subscription-payment\[hidden\]/);
+});
+
+test('displays new professional payment amounts without altering legacy receipts', async () => {
+  const now=Date.parse('2026-11-19T12:00:00Z');
+  const monthly=await render({...paid,lastPaymentAmountCents:1990},now);
+  assert.equal(monthly.paymentAmount,'R$\u00a019,90');
+  const annual=await render({...paid,paidPlan:'yearly',lastPaymentAmountCents:19990},now);
+  assert.equal(annual.paymentAmount,'R$\u00a0199,90');
+});
+
+test('Personal is visibly free, has one slot and no fixed expiry',async()=>{
+  const data=await render({...trial,status:'personal',personalEnrolled:true,accessEndsAt:null},Date.parse('2027-01-05T12:00:00Z'));
+  assert.equal(data.badge,'Personal gratuito');assert.equal(data.slots,'1 vaga Personal');assert.equal(data.endValue,'Sem prazo fixo');assert.equal(data.showPayment,false);
+  await assert.rejects(render({...trial,status:'personal',personalEnrolled:false,accessEndsAt:null}),/Invalid/);
 });

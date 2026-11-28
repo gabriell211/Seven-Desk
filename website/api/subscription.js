@@ -14,9 +14,11 @@ module.exports = async (req, res) => {
     if (!subscription) return res.status(404).json({ error: 'Conta não encontrada' });
     return res.status(200).json({
       status: subscription.status,
+      personalEligible:subscription.personal_eligible===true,
+      personalEnrolled:subscription.personal_enrolled===true,
       trialStartedAt: subscription.trial_started_at,
       trialEndsAt: subscription.trial_ends_at,
-      accessEndsAt: subscription.access_ends_at,
+      accessEndsAt: subscription.status==='personal'?null:subscription.access_ends_at,
       paidThrough: subscription.paid_through ?? null,
       paidPlan: subscription.paid_plan ?? null,
       lastPaymentAt: subscription.last_paid_at ?? null,

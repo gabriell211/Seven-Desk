@@ -122,7 +122,6 @@ class _SevenDeskActivationDialog extends StatefulWidget {
 class _SevenDeskActivationDialogState
     extends State<_SevenDeskActivationDialog> {
   late final TextEditingController _controller;
-  late final TextEditingController _technicianController;
   bool _showToken = false;
   bool _saving = false;
   String _error = '';
@@ -132,13 +131,11 @@ class _SevenDeskActivationDialogState
     super.initState();
     _controller =
         TextEditingController(text: bind.mainGetLocalOption(key: _optionKey));
-    _technicianController = TextEditingController();
   }
 
   @override
   void dispose() {
     _controller.dispose();
-    _technicianController.dispose();
     super.dispose();
   }
 
@@ -172,31 +169,10 @@ class _SevenDeskActivationDialogState
     });
     try {
       if (token.isNotEmpty) {
-        var profileStatus = await checkSevenDeskAccount(token);
+        final profileStatus = await checkSevenDeskAccount(token);
         if (profileStatus == SevenDeskValidationStatus.rejected) {
-          final technicianCode = _technicianController.text.trim();
-          if (!isSevenDeskTechnicianCode(technicianCode)) {
-            _fail('Copie o código do técnico da mesma vaga na sua conta.');
-            return;
-          }
-          final claimStatus =
-              await checkSevenDeskTechnicianClaim(token, technicianCode);
-          if (claimStatus != SevenDeskValidationStatus.verified) {
-            _fail(switch (claimStatus) {
-              SevenDeskValidationStatus.invalidCode =>
-                'Código de ativação não aceito. Gere um novo código na sua conta.',
-              SevenDeskValidationStatus.rejected =>
-                'Os códigos não correspondem à mesma vaga ou o e-mail da conta não foi confirmado.',
-              _ => _serviceError(claimStatus),
-            });
-            return;
-          }
-          profileStatus = await checkSevenDeskAccount(token);
-          if (profileStatus == SevenDeskValidationStatus.rejected) {
-            _fail(
-                'O vínculo não foi confirmado. Confira os códigos da mesma vaga na sua conta.');
-            return;
-          }
+          _fail('Chave inválida ou revogada. Gere uma nova chave na sua conta.');
+          return;
         }
         if (profileStatus != SevenDeskValidationStatus.verified) {
           _fail(_serviceError(profileStatus));
@@ -239,10 +215,9 @@ class _SevenDeskActivationDialogState
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Na sua conta Seven Desk, copie o código de ativação do '
-                'computador e o código do técnico da mesma vaga. Ambos são '
-                'necessários no primeiro vínculo. Quem recebe suporte não '
-                'precisa entrar.'),
+            const Text('Na sua conta Seven Desk, copie a chave de ativação da '
+                'vaga. O técnico será identificado automaticamente. Quem '
+                'recebe suporte não precisa entrar.'),
             const SizedBox(height: 14),
             TextField(
               controller: _controller,
@@ -251,26 +226,13 @@ class _SevenDeskActivationDialogState
               autocorrect: false,
               enableSuggestions: false,
               decoration: InputDecoration(
-                labelText: 'Código de ativação do sistema',
+                labelText: 'Chave de ativação',
                 suffixIcon: IconButton(
                   tooltip: _showToken ? 'Ocultar código' : 'Mostrar código',
                   onPressed: () => setState(() => _showToken = !_showToken),
                   icon: Icon(
                       _showToken ? Icons.visibility_off : Icons.visibility),
                 ),
-              ),
-            ),
-            const SizedBox(height: 6),
-            TextField(
-              controller: _technicianController,
-              maxLength: 36,
-              obscureText: !_showToken,
-              autocorrect: false,
-              enableSuggestions: false,
-              decoration: const InputDecoration(
-                labelText: 'Código do técnico',
-                helperText:
-                    'Usado uma vez para vincular o técnico. Não fica salvo.',
               ),
             ),
             TextButton(

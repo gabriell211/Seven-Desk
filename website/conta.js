@@ -108,6 +108,7 @@ const revealedCodePairs = new Map();
 let revealedOwner = null;
 let appAccessRequest = 0;
 let accountSession = 0;
+let teamRequest = 0;
 const activationUpdatesInFlight = new Set();
 
 let activeClientView = 'overview';
@@ -139,6 +140,14 @@ function displaySession(session) {
     accountSession++;
     appAccessRequest++;
     revealedCodePairs.clear();
+    el('account-personal-panel').hidden=true;
+    el('account-personal-form').reset();
+    el('account-personal-notice').textContent='';
+    teamRequest++;
+    el('account-team-workspace').hidden=true;
+    el('account-team-list').replaceChildren();
+    el('account-team-notice').textContent='';
+    el('account-team-accept').reset();
     el('account-app-notice').textContent = '';
     activationUpdatesInFlight.clear();
     el('account-activation-notice').textContent = '';
@@ -192,7 +201,7 @@ async function refresh() {
   const {data, error} = await auth.getSession();
   if (error) throw error;
   displaySession(data);
-  if (data?.user?.emailVerified === true) await Promise.all([loadSubscription(), loadCheckoutAvailability(), loadAppAccess()]);
+  if (data?.user?.emailVerified === true) await Promise.all([loadSubscription(), loadCheckoutAvailability(), loadAppAccess(), loadTeamWorkspaces()]);
 }
 async function appAuthorization() {
   const {data,error}=await auth.token();
@@ -201,6 +210,108 @@ async function appAuthorization() {
     throw new Error('Authentication required');
   return 'Bearer '+token;
 }
+
+async function teamApi(method='GET',body,session=accountSession){
+  const authorization=await appAuthorization();
+  if(session!==accountSession)throw new Error('Session changed');
+  const response=await fetch('/api/team-workspaces',{
+    method,cache:'no-store',headers:{Authorization:authorization,'Content-Type':'application/json'},
+    ...(body?{body:JSON.stringify(body)}:{}),
+  });
+  if(!response.ok)throw new Error('Team request unavailable');
+  return response.json();
+}
+function teamElement(tag,text){
+  const node=document.createElement(tag);
+  node.textContent=text;
+  return node;
+}
+async function loadTeamWorkspaces(){
+  const session=accountSession,request=++teamRequest;
+  const target=el('account-team-workspace'),list=el('account-team-list');
+  try{
+    const data=await teamApi('GET',undefined,session);
+    if(session!==accountSession||request!==teamRequest)return;
+    if(!Array.isArray(data.teams))throw new Error('Invalid teams');
+    list.replaceChildren();
+    target.hidden=false;
+    if(!data.teams.length)list.append(teamElement('p','Nenhuma equipe vinculada.'));
+    for(const team of data.teams){
+      const card=document.createElement('article');
+      card.className='client-surface';
+      card.append(teamElement('h3',team.plan==='business'?'Business':'Enterprise'),
+        teamElement('p','ID: '+team.id),
+        teamElement('p',team.isOwner?'Administrador · '+team.seatLimit+' vagas':'Técnico integrante'));
+      if(data.activationAvailable===true&&Number.isInteger(team.ownSeat)){
+        const activate=teamElement('button','Gerar chave de ativação');
+        activate.type='button';activate.className='account-submit';
+        activate.addEventListener('click',async()=>{
+          if(!window.confirm('Gerar uma nova chave revoga a ativação anterior desta vaga. Continuar?'))return;
+          activate.disabled=true;
+          try{
+            const pair=await teamApi('POST',{action:'activate',teamId:team.id},session);
+            if(session===accountSession)el('account-team-notice').textContent='Chave de ativação: '+pair.token+' · Guarde-a em privado. Não será exibida novamente.';
+          }catch{if(session===accountSession)el('account-team-notice').textContent='Não foi possível gerar a chave da equipe.';}
+          finally{activate.disabled=false;}
+        });
+        card.append(activate);
+      }
+      if(team.isOwner){
+        for(const technician of team.technicians){
+          const row=document.createElement('p');
+          row.append(teamElement('span',technician.email+' — '+(technician.accepted?'Ativo':'Convite pendente')+' '));
+          const revoke=teamElement('button','Revogar');
+          revoke.type='button';revoke.className='client-text-action';
+          revoke.addEventListener('click',async()=>{
+            if(!window.confirm('Revogar esta vaga?'))return;
+            revoke.disabled=true;
+            try{
+              await teamApi('DELETE',{teamId:team.id,seat:technician.seat},session);
+              if(session===accountSession){await loadTeamWorkspaces();el('account-team-notice').textContent='Vaga revogada.';}
+            }catch{if(session===accountSession)el('account-team-notice').textContent='Não foi possível revogar a vaga.';}
+            finally{revoke.disabled=false;}
+          });
+          row.append(revoke);card.append(row);
+        }
+        const form=document.createElement('form');
+        const label=teamElement('label','E-mail do técnico ');
+        const email=document.createElement('input');
+        email.type='email';email.required=true;email.maxLength=254;
+        label.append(email);
+        const button=teamElement('button','Gerar convite');
+        button.type='submit';button.className='account-submit';
+        form.append(label,button);
+        form.addEventListener('submit',async event=>{
+          event.preventDefault();button.disabled=true;
+          try{
+            const invitation=await teamApi('POST',{action:'invite',teamId:team.id,email:email.value},session);
+            if(session!==accountSession)return;
+            await loadTeamWorkspaces();
+            if(session===accountSession)el('account-team-notice').textContent='Compartilhe em privado com o técnico: equipe '+team.id+' · código '+invitation.token+'. O código é exibido apenas agora.';
+          }catch{if(session===accountSession)el('account-team-notice').textContent='Não foi possível gerar o convite. Confira as vagas e a validade da equipe.';}
+          finally{button.disabled=false;}
+        });
+        card.append(form);
+      }
+      list.append(card);
+    }
+  }catch{
+    if(session===accountSession&&request===teamRequest){target.hidden=true;list.replaceChildren();}
+  }
+}
+el('account-team-accept').addEventListener('submit',async event=>{
+  event.preventDefault();
+  const session=accountSession,button=event.currentTarget.querySelector('button');
+  button.disabled=true;
+  try{
+    await teamApi('POST',{action:'accept',teamId:el('account-team-id').value.trim(),token:el('account-team-code').value.trim()},session);
+    if(session!==accountSession)return;
+    el('account-team-accept').reset();
+    await loadTeamWorkspaces();
+    if(session===accountSession)el('account-team-notice').textContent='Convite aceito.';
+  }catch{if(session===accountSession)el('account-team-notice').textContent='Convite inválido, expirado ou não destinado à sua conta.';}
+  finally{button.disabled=false;}
+});
 
 function trustedTechnicianImage(value, slot) {
   if (typeof value !== 'string') return '';
@@ -247,8 +358,8 @@ function createTechnicianCard(slot, device) {
   badge.dataset.status = savedName ? 'registered' : 'available';
   badge.textContent = savedName ? 'Cadastrado' : 'Vaga livre';
   find('.technician-card-description').textContent = savedName
-    ? 'Gere os códigos desta vaga em Ativação do sistema, na Visão geral.'
-    : 'Cadastre o técnico para liberar a emissão dos códigos desta vaga.';
+    ? 'Gere a chave desta vaga em Ativação do sistema, na Visão geral.'
+    : 'Cadastre o técnico para liberar a emissão da chave desta vaga.';
   let localPhotoUrl = '';
   const remotePhotoUrl = trustedTechnicianImage(device?.technician_image,slot);
   function setPhoto(url) {
@@ -294,8 +405,7 @@ function createActivationCodes(pair) {
   const codes = document.createElement('div');
   codes.className = 'activation-secret';
   for (const [labelText, value] of [
-    ['Código de ativação do sistema', pair.token],
-    ['Código do técnico', pair.technicianCode],
+    ['Chave de ativação', pair.token],
   ]) {
     const row = document.createElement('div');
     row.className = 'activation-code-row';
@@ -329,7 +439,7 @@ function createActivationCodes(pair) {
     codes.append(row);
   }
   const hint = document.createElement('small');
-  hint.textContent = 'Copie os dois códigos antes de recarregar ou fechar a página.';
+  hint.textContent = 'Copie a chave antes de recarregar ou fechar a página.';
   codes.append(hint);
   return codes;
 }
@@ -356,7 +466,7 @@ function createActivationCard(slot, device) {
   technician.className = 'activation-technician';
   technician.textContent = hasTechnician
     ? 'Técnico: ' + device.technician_name
-    : 'Cadastre um técnico para gerar os dois códigos.';
+    : 'Cadastre um técnico para gerar a chave.';
 
   const nameLabel = document.createElement('label');
   nameLabel.textContent = 'Nome do computador';
@@ -373,7 +483,7 @@ function createActivationCard(slot, device) {
   const generate = document.createElement('button');
   generate.type = 'button';
   generate.textContent = hasTechnician
-    ? (device?.activated ? 'Gerar novos códigos' : 'Gerar os dois códigos')
+    ? (device?.activated ? 'Gerar nova chave' : 'Gerar chave')
     : 'Cadastrar técnico';
   if (hasTechnician) generate.dataset.activationChange = '';
   generate.disabled = hasTechnician && activationUpdatesInFlight.has(slot);
@@ -384,7 +494,7 @@ function createActivationCard(slot, device) {
       return;
     }
     if (device?.activated && !window.confirm(
-      'Gerar novos códigos invalida os anteriores. Você precisará ativar o computador desta vaga novamente. Continuar?'
+      'Gerar nova chave invalida a anterior. Você precisará ativar o computador desta vaga novamente. Continuar?'
     )) return;
     updateAppDevice(slot, name.value, false, device);
   });
@@ -485,7 +595,7 @@ async function updateTechnicianProfile(slot, value, file, button) {
       if (!uploaded.ok) throw new Error('Unable to save technician photo');
     }
     await loadAppAccess();
-    notice.textContent = `Perfil da vaga ${slot} salvo. Gere os códigos em Ativação do sistema, na Visão geral.`;
+    notice.textContent = `Perfil da vaga ${slot} salvo. Gere a chave em Ativação do sistema, na Visão geral.`;
   } catch {
     notice.textContent = 'Não foi possível concluir o perfil. Confira os dados e tente novamente.';
   } finally {
@@ -515,7 +625,7 @@ async function updateAppDevice(slot, label, revoke, device) {
     const response = await fetch('/api/app-token', {
       method: revoke ? 'DELETE' : 'POST', cache:'no-store',
       headers: {'Content-Type':'application/json', Authorization:authorization},
-      body: JSON.stringify(revoke ? {slot} : {slot, label:name, issuePair:true}),
+      body: JSON.stringify(revoke ? {slot} : {slot, label:name}),
     });
     if (session !== accountSession) return;
     if (response.status === 409) {
@@ -528,18 +638,17 @@ async function updateAppDevice(slot, label, revoke, device) {
     if (revoke) {
       revealedCodePairs.delete(slot);
     } else {
-      if (typeof result.token !== 'string' || !/^sd(?:2)?_[A-Za-z0-9_-]{43}$/.test(result.token) ||
-          typeof result.technicianCode !== 'string' || !/^tec_[A-Za-z0-9_-]{32}$/.test(result.technicianCode)) {
-        throw new Error('Invalid activation pair');
+      if (typeof result.token !== 'string' || !/^sd(?:2)?_[A-Za-z0-9_-]{43}$/.test(result.token)) {
+        throw new Error('Invalid activation key');
       }
-      revealedCodePairs.set(slot, {token:result.token, technicianCode:result.technicianCode});
+      revealedCodePairs.set(slot, {token:result.token});
     }
     findCard()?.replaceWith(createActivationCard(slot, {
-      ...device, label:revoke ? undefined : name, activated:!revoke, technician_verified:false,
+      ...device, label:revoke ? undefined : name, activated:!revoke, technician_verified:!revoke,
     }));
     notice.textContent = revoke
       ? `Ativação da vaga ${slot} revogada.`
-      : `Códigos da vaga ${slot} gerados. Cole os dois nos campos correspondentes do aplicativo.`;
+      : `Chave da vaga ${slot} gerada. Cole-a no aplicativo; o técnico será reconhecido automaticamente.`;
     await loadAppAccess();
   } catch {
     if (session === accountSession) {
@@ -562,6 +671,8 @@ function resetSubscriptionDetails() {
 }
 
 async function loadSubscription() {
+  const session=accountSession;
+  el('account-personal-panel').hidden=true;
   const target = el('account-subscription');
   const summary = el('account-summary-subscription');
   resetSubscriptionDetails();
@@ -572,7 +683,13 @@ async function loadSubscription() {
       headers:{Authorization:await appAuthorization()}, cache:'no-store'
     });
     if (!response.ok) throw new Error('Unavailable');
-    const view = presentSubscription(await response.json());
+    const subscription=await response.json();
+    if(session!==accountSession)return;
+    const view = presentSubscription(subscription);
+    el('account-personal-panel').hidden=subscription.personalEligible!==true;
+    el('account-personal-form').hidden=subscription.personalEnrolled===true;
+    el('account-personal-disable').hidden=subscription.personalEnrolled!==true;
+    el('account-personal-terms').checked=false;
     el('account-subscription-badge').dataset.state = view.state;
     el('account-subscription-badge').textContent = view.badge;
     el('account-subscription-title').textContent = view.headline;
@@ -601,6 +718,7 @@ async function loadSubscription() {
     el('account-subscription-payment').hidden = !view.showPayment;
     el('account-subscription-details').hidden = false;
   } catch {
+    if(session!==accountSession)return;
     resetSubscriptionDetails();
     target.textContent = 'Não foi possível consultar sua assinatura agora. Tente novamente mais tarde.';
     summary.textContent = 'O status da assinatura está temporariamente indisponível.';
@@ -610,18 +728,55 @@ async function loadSubscription() {
     el('account-summary-status').textContent = 'Indisponível';
   }
 }
+async function updatePersonal(enroll){
+  const session=accountSession,notice=el('account-personal-notice');
+  const button=enroll?el('account-personal-form').querySelector('button'):el('account-personal-disable');
+  button.disabled=true;
+  try{
+    const authorization=await appAuthorization();
+    if(session!==accountSession)return;
+    const response=await fetch('/api/personal-plan',{method:enroll?'POST':'DELETE',cache:'no-store',
+      headers:{Authorization:authorization,'Content-Type':'application/json'},
+      ...(enroll?{body:JSON.stringify({acceptNonCommercial:true,termsVersion:'personal-v1'})}:{})});
+    if(!response.ok)throw new Error('Personal unavailable');
+    if(session!==accountSession)return;
+    await Promise.all([loadSubscription(),loadAppAccess()]);
+    if(session===accountSession)notice.textContent=enroll?'Personal habilitado.':'Personal desativado.';
+  }catch{if(session===accountSession)notice.textContent='Não foi possível atualizar o Personal.';}
+  finally{button.disabled=false;}
+}
+el('account-personal-form').addEventListener('submit',event=>{
+  event.preventDefault();
+  if(el('account-personal-terms').checked)updatePersonal(true);
+});
+el('account-personal-disable').addEventListener('click',()=>{
+  if(window.confirm('Desativar o acesso gratuito Personal?'))updatePersonal(false);
+});
+
 let checkoutProviderDisabled = false;
 const checkoutDisabledMessage =
   'Pagamentos indisponíveis: é necessário habilitar o Checkout Integrado na conta InfinitePay. Contate o suporte Seven Desk.';
 async function loadCheckoutAvailability() {
   const notice = el('account-checkout-notice');
-  for (const button of paymentButtons) button.disabled = true;
+  for (const button of paymentButtons) {
+    button.disabled = true;
+    if (['business','enterprise'].includes(button.dataset.plan)) button.hidden=true;
+  }
+  el('account-team-billing-note').hidden=true;
   notice.textContent = checkoutProviderDisabled ? checkoutDisabledMessage : 'Pagamentos temporariamente indisponíveis.';
   if (checkoutProviderDisabled) return;
   try {
     const response = await fetch('/api/billing-status', {cache:'no-store'});
-    if (!response.ok || (await response.json()).checkoutAvailable !== true) return;
-    for (const button of paymentButtons) button.disabled = false;
+    if (!response.ok) return;
+    const availability=await response.json();
+    if (availability.checkoutAvailable !== true) return;
+    for (const button of paymentButtons) {
+      const team=['business','enterprise'].includes(button.dataset.plan);
+      const available=!team||availability.teamCheckoutAvailable===true;
+      button.disabled=!available;
+      if(team)button.hidden=!available;
+    }
+    el('account-team-billing-note').hidden=availability.teamCheckoutAvailable!==true;
     notice.textContent = 'Escolha seu plano para continuar para o checkout seguro.';
   } catch { /* Fail closed: no unchecked payments. */ }
 }

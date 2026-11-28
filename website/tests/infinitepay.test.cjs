@@ -5,8 +5,10 @@ const payment = require('../lib/infinitepay');
 
 test('checkout prices are fixed by the selected plan on the server', () => {
   const common = { handle: '$merchant', orderId: 'order-1', siteUrl: 'https://example.com' };
-  assert.equal(payment.checkoutPayload({ ...common, plan: 'monthly', amount: 1 }).items[0].price, 3990);
-  assert.equal(payment.checkoutPayload({ ...common, plan: 'yearly', amount: 1 }).items[0].price, 40000);
+  assert.equal(payment.checkoutPayload({ ...common, plan: 'monthly', amount: 1 }).items[0].price, 1990);
+  assert.equal(payment.checkoutPayload({ ...common, plan: 'yearly', amount: 1 }).items[0].price, 19990);
+  assert.equal(payment.checkoutPayload({ ...common, plan: 'business', amount: 1 }).items[0].price, 4990);
+  assert.equal(payment.checkoutPayload({ ...common, plan: 'enterprise', amount: 1 }).items[0].price, 14990);
   const checkout = payment.checkoutPayload({ ...common, plan: 'monthly' });
   assert.equal(checkout.options.single_payment, true);
   const lifetime = Date.parse(checkout.options.valid_until) - Date.now();
@@ -29,9 +31,9 @@ test('rejects checkout links outside the payment provider', async () => {
 test('confirms a paid order using the provider and the stored plan amount', async () => {
   const input = { handle: 'merchant', orderId: 'order-1', transactionId: 'tx-1', slug: 'invoice', plan: 'monthly' };
   const fake = result => async () => ({ ok: true, json: async () => result });
-  assert.equal(await payment.verifyPayment(input, { fetchImpl: fake({ success: true, paid: true, amount: 3990 }) }), true);
+  assert.equal(await payment.verifyPayment(input, { fetchImpl: fake({ success: true, paid: true, amount: 1990 }) }), true);
   assert.equal(await payment.verifyPayment(input, { fetchImpl: fake({ success: true, paid: true, amount: 1 }) }), false);
-  assert.equal(await payment.verifyPayment(input, { fetchImpl: fake({ success: true, paid: false, amount: 3990 }) }), false);
+  assert.equal(await payment.verifyPayment(input, { fetchImpl: fake({ success: true, paid: false, amount: 1990 }) }), false);
 });
 
 
@@ -110,4 +112,16 @@ test('the website explains provider-disabled billing without exposing provider s
   assert.match(source,/if \(checkoutProviderDisabled\) return/);
   assert.match(source,/checkoutDisabledMessage/);
   assert.doesNotMatch(source,/https:\/\/checkout\.infinitepay\.io\/gabriel_/);
+});
+
+test('legacy orders reconcile only their original amount; new orders cannot use legacy prices', async () => {
+  const input={handle:'merchant',orderId:'order-1',transactionId:'tx-1',slug:'invoice',plan:'monthly'};
+  const fake=amount=>async()=>({ok:true,json:async()=>({success:true,paid:true,amount})});
+  assert.equal(await payment.verifyPayment({...input,orderAmount:3990},{fetchImpl:fake(3990)}),true);
+  assert.equal(await payment.verifyPayment({...input,orderAmount:3990},{fetchImpl:fake(1990)}),false);
+  assert.equal(await payment.verifyPayment(input,{fetchImpl:fake(3990)}),false);
+  assert.equal(await payment.verifyPayment({...input,orderAmount:1},{fetchImpl:fake(1)}),false);
+  assert.throws(()=>payment.planFor('personal'));
+  assert.equal(payment.planFor('business').amount,4990);
+  assert.equal(payment.planFor('enterprise').amount,14990);
 });

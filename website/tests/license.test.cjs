@@ -38,3 +38,10 @@ test('trial and paid only authorize until a future expiry',async()=>{
     const a=res();await handler({entitlement})(req(),a);assert.equal(a.code,403);assert.equal(a.body.allowed,false);
   }
 });
+
+test('Personal grants access only with an active enrollment, without inventing an expiry',async()=>{
+  const good=res();await handler({entitlement:{status:'personal',personal_enrolled:true}})(req(),good);
+  assert.equal(good.code,200);assert.equal(good.body.status,'personal');assert.equal(good.body.accessEndsAt,null);
+  const bad=res();await handler({entitlement:{status:'personal',personal_enrolled:false}})(req(),bad);
+  assert.equal(bad.code,403);
+});

@@ -17,7 +17,7 @@ const db={
     if(sql.includes('INSERT INTO seven_desk_technicians')){
       if(params[0]!==userId||params[1]!==1)return {rows:[],rowCount:0};
       if(!person)person={slot:1,technician_name:params[2],technician_image:'',
-        code_hash:params[3],label:'Notebook do suporte'};
+        code_hash:null,label:'Notebook do suporte'};
       else person.technician_name=params[2];
       return {rows:[{...person}],rowCount:1};
     }
@@ -92,9 +92,8 @@ test('only a signed-in account can create a technician within its 5 free slots',
   await technician(request('POST'),created);
   assert.equal(created.code,200);
   assert.equal(created.body.name,'Beatriz Lima');
-  assert.match(created.body.technicianCode,/^tec_[A-Za-z0-9_-]{32}$/);
-  assert.notEqual(created.body.technicianCode,token);
-  assert.equal(person.code_hash,technicianCodeHash(created.body.technicianCode));
+  assert.equal('technicianCode' in created.body,false);
+  assert.equal(person.code_hash,null);
 });
 test('editing a technician does not rotate or re-expose its one-time code',async()=>{
   const before=person.code_hash;
@@ -105,19 +104,12 @@ test('editing a technician does not rotate or re-expose its one-time code',async
   assert.equal('technicianCode' in edited.body,false);
   assert.equal(person.code_hash,before);
 });
-test('owner can rotate technician code without altering device activation',async()=>{
+test('secondary credential issuance is retired without invalidating an existing key',async()=>{
   const previous=person.code_hash;
-  const denied=response();
-  await code(request('POST',''),denied);
-  assert.equal(denied.code,401);
-  const rotated=response();
-  await code(request('POST'),rotated);
-  assert.equal(rotated.code,200);
-  assert.match(rotated.body.technicianCode,/^tec_[A-Za-z0-9_-]{32}$/);
-  assert.notEqual(person.code_hash,previous);
-  const missing=response();
-  await code(request('POST',undefined,{body:{slot:2}}),missing);
-  assert.equal(missing.code,404);
+  const denied=response();await code(request('POST',''),denied);assert.equal(denied.code,401);
+  const retired=response();await code(request('POST'),retired);assert.equal(retired.code,410);
+  assert.equal('technicianCode' in retired.body,false);
+  assert.equal(person.code_hash,previous);
 });
 test('activation resolves the technician profile separately from the company',async()=>{
   const accepted=response();

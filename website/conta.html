@@ -15,7 +15,7 @@
   <link rel="stylesheet" href="/conta.css?v=3" />
   <link rel="stylesheet" href="/theme.css?v=20261118b" />
   <link rel="stylesheet" href="/portal.css?v=6" />
-  <script defer src="/conta.bundle.js?v=6"></script>
+  <script defer src="/conta.bundle.js?v=11"></script>
 </head>
 <body class="account-page">
   <a class="skip-link" href="#conteudo">Ir para o conteúdo</a>
@@ -176,7 +176,7 @@
                 <h2 id="account-activation-heading">Ativação do sistema</h2>
                 <span>COMPUTADORES</span>
               </div>
-              <p>Cadastre um técnico para a vaga. Depois, gere e copie os dois códigos do mesmo cartão e cole cada um no campo correspondente do aplicativo Seven Desk.</p>
+              <p>Cadastre um técnico para a vaga. Depois, gere uma única chave de ativação e cole-a no aplicativo Seven Desk. O técnico será reconhecido automaticamente.</p>
               <p id="account-activation-unavailable" class="client-availability" role="status">Verificando disponibilidade dos computadores...</p>
               <p id="account-activation-notice" class="technician-board-notice" role="status" aria-live="polite"></p>
               <div id="account-activation-list" class="activation-card-grid" aria-label="Ativação por vaga"></div>
@@ -199,6 +199,18 @@
           </section>
           <section id="account-panel-devices" class="client-panel" data-account-panel="devices" aria-label="Computadores e técnicos" hidden>
             <!-- The page header already identifies this view. -->
+            <section id="account-team-workspace" class="client-surface" aria-labelledby="account-team-title" hidden>
+              <h2 id="account-team-title">Equipes Business e Enterprise</h2>
+              <p>Gerencie convites e técnicos da sua equipe. A ativação de acesso remoto será disponibilizada quando o serviço estiver homologado.</p>
+              <p id="account-team-notice" role="status" aria-live="polite"></p>
+              <div id="account-team-list"></div>
+              <form id="account-team-accept">
+                <h3>Aceitar convite</h3>
+                <label>ID da equipe <input id="account-team-id" required maxlength="36" autocomplete="off"></label>
+                <label>Código de convite <input id="account-team-code" required maxlength="47" autocomplete="off" spellcheck="false"></label>
+                <button class="account-submit" type="submit">Aceitar convite</button>
+              </form>
+            </section>
             <p id="account-device-unavailable" class="client-surface client-availability" role="status">Verificando disponibilidade dos dispositivos...</p>
             <div id="account-app-access" class="account-plan-actions" hidden>
           <div class="technician-board-heading">
@@ -210,7 +222,7 @@
           </div>
           <p id="account-app-notice" class="technician-board-notice" role="status" aria-live="polite"></p>
           <div id="account-device-list" class="technician-card-grid"></div>
-          <p class="technician-board-footnote">Os dois códigos de cada vaga ficam em Ativação do sistema, na Visão geral.</p>
+          <p class="technician-board-footnote">A chave de cada vaga fica em Ativação do sistema, na Visão geral.</p>
           <button type="button" class="client-text-action" data-account-view="overview">Ir para Visão geral <span aria-hidden="true">→</span></button>
         </div>
           </section>
@@ -260,13 +272,26 @@
                 <p class="client-subscription-footnote">O primeiro mês é gratuito. Um plano comprado durante o teste começa somente depois do término do período gratuito. Os planos são compras avulsas, sem cobrança ou renovação automática.</p>
               </div>
             </section>
+            <section id="account-personal-panel" class="client-surface" hidden aria-labelledby="account-personal-title">
+              <h2 id="account-personal-title">Personal gratuito</h2>
+              <p>Uma vaga para uso pessoal não comercial. O período de teste e as compras vigentes continuam válidos; após o término, a primeira vaga fica disponível pelo Personal. Para suporte profissional, contrate um plano pago.</p>
+              <form id="account-personal-form">
+                <label><input type="checkbox" id="account-personal-terms" required> Declaro que utilizarei o plano exclusivamente para fins pessoais, sem finalidade comercial.</label>
+                <button type="submit" class="account-submit">Ativar Personal gratuito</button>
+              </form>
+              <button id="account-personal-disable" type="button" class="client-text-action" hidden>Desativar Personal</button>
+              <p id="account-personal-notice" role="status" aria-live="polite"></p>
+            </section>
             <div id="account-plan-actions" class="account-plan-actions" hidden>
               <h2>Planos e computadores</h2>
               <p class="client-plan-explainer">Você pode contratar antes do término do teste: todo o período comprado será adicionado após o mês gratuito. Compras adicionais prolongam a validade existente.</p>
               <p id="account-checkout-notice" class="account-intro" aria-live="polite">Verificando disponibilidade...</p>
-              <button type="button" class="account-submit" data-plan="monthly" disabled>1 mês de acesso — R$ 39,90</button>
-              <button type="button" class="account-submit" data-plan="yearly" disabled>1 ano de acesso — R$ 400,00</button>
+              <button type="button" class="account-submit" data-plan="monthly" disabled>1 mês de acesso — R$ 19,90</button>
+              <button type="button" class="account-submit" data-plan="yearly" disabled>1 ano de acesso — R$ 199,90</button>
               <button type="button" class="account-submit" data-plan="extra_slot" disabled>1 computador adicional — R$ 7,00</button>
+              <button type="button" class="account-submit" data-plan="business" disabled hidden>Business · 3 técnicos — R$ 49,90/mês</button>
+              <button type="button" class="account-submit" data-plan="enterprise" disabled hidden>Enterprise · 10 técnicos — R$ 149,90/mês</button>
+              <p id="account-team-billing-note" hidden>Os planos de equipe têm validade independente da assinatura individual, começam após a confirmação e renovam a mesma equipe do plano escolhido.</p>
             </div>
           </section>
           <section id="account-panel-settings" class="client-panel" data-account-panel="settings" aria-label="Configurações" hidden>

@@ -30,6 +30,8 @@ test('a technician can pair only with device activation from matching account an
   assert.equal(ok.code,200);
   assert.deepEqual(ok.body,{verified:true});
   assert.match(calls[0].sql,/t\.slot=a\.slot/);
+  assert.ok(calls[0].sql.includes('a.slot BETWEEN 1 AND (5 + COALESCE'));
+  assert.ok(calls[0].sql.includes('WHERE user_id = a.user_id'));
   assert.match(calls[0].sql,/t\.user_id=a\.user_id/);
   assert.match(calls[0].sql,/"emailVerified" IS TRUE/);
   assert.equal(calls[0].params[0],tokenHash(device));
@@ -89,13 +91,14 @@ test('license and profile lookups require prior technician verification',async()
   assert.equal(queries,2);
 });
 
-test('server code changes invalidate pairing and never reuse device token',async()=>{
+test('new keys rotate device binding and secondary code issuance is retired',async()=>{
   const fs=require('node:fs');
   const path=require('node:path');
   const tokens=fs.readFileSync(path.join(__dirname,'..','lib','app-tokens.js'),'utf8');
   const code=fs.readFileSync(path.join(__dirname,'..','api','technician-code.js'),'utf8');
   const migration=fs.readFileSync(path.join(__dirname,'..','db','008_technician_claim.sql'),'utf8');
-  assert.match(tokens,/technician_verified = false/);
-  assert.match(code,/technician_verified=false/);
+  assert.match(tokens,/technician_verified = true/);
+  assert.match(tokens,/device_hash = NULL/);
+  assert.match(code,/status\(410\)/);
   assert.match(migration,/technician_verified boolean NOT NULL DEFAULT false/);
 });

@@ -54,3 +54,12 @@ test('webhook grants no success before provider verification', async () => {
   const off = response(); await disabled.handlers.webhook(req, off);
   assert.equal(off.code, 503); assert.equal(disabled.calls.length, 0);
 });
+
+test('team checkout remains separately gated and ignores client amount',async()=>{
+  const req={method:'POST',headers:{authorization:'Bearer valid'},body:{plan:'business',amount:1}};
+  const off=setup();const blocked=response();await off.handlers.checkout(req,blocked);
+  assert.equal(blocked.code,503);assert.deepEqual(off.calls,[]);
+  const on=setup({teamCheckoutEnabled:()=>true});const allowed=response();await on.handlers.checkout(req,allowed);
+  assert.equal(allowed.code,200);assert.deepEqual(on.calls[0],['order','verified-user','business']);
+  assert.equal(on.calls[1][1].amount,undefined);
+});

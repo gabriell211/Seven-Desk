@@ -2,7 +2,7 @@
 const { planFor } = require('./infinitepay');
 
 // Keep the gate off until server-side remote-access authorization and refunds are ready.
-function createBillingHandlers({ checkoutEnabled, webhookEnabled, authenticate, pool, createOrder, createCheckout, reconcilePayment, config }) {
+function createBillingHandlers({ checkoutEnabled, webhookEnabled, teamCheckoutEnabled = () => false, authenticate, pool, createOrder, createCheckout, reconcilePayment, config }) {
   const send = (res, code, body) => res.status(code).json(body);
   return {
     async checkout(req, res) {
@@ -14,6 +14,8 @@ function createBillingHandlers({ checkoutEnabled, webhookEnabled, authenticate, 
         if (!userId) return send(res, 401, { error: 'Entre na sua conta' });
         const plan = req.body?.plan;
         try { planFor(plan); } catch { return send(res, 400, { error: 'Plano inválido' }); }
+        if (['business','enterprise'].includes(plan) && !teamCheckoutEnabled())
+          return send(res, 503, { error: 'Planos de equipe ainda indisponíveis' });
         const settings = config();
         if (!settings.handle || !settings.apiKey || !settings.siteUrl) throw new Error('Billing configuration incomplete');
         const db = pool();

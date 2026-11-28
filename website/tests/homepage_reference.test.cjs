@@ -65,9 +65,9 @@ test('the entire landing page uses one reference-led visual system', () => {
 
 test('pricing terms and protected download behavior remain truthful', () => {
   const html = read('index.html');
-  assert.match(html, /R\$<\/span> 39,90/);
-  assert.match(html, /R\$<\/span> 400/);
-  assert.match(html, /ECONOMIZE R\$ 78,80/);
+  assert.match(html, /R\$<\/span> 19,90/);
+  assert.match(html, /R\$<\/span> 199,90/);
+  assert.match(html, /ECONOMIZE R\$ 38,90/);
   assert.match(html, /não há cobrança automática/);
   assert.equal((html.match(/\bdata-auto-download\b/g) || []).length, 1);
   assert.match(html, /href="\/licencas\.html"/);
