@@ -5,6 +5,7 @@ const {technicianCodeHash,quotaSql}=require('../lib/technicians');
 const {tokenHash}=require('../lib/app-tokens');
 
 const {allowedActivation}=require('../lib/activation-policy');
+const {teamLicenseEnabled,claimTeamDevice}=require('../lib/team-activation');
 function createTechnicianClaimHandler({db=pool}={}){
   return async(req,res)=>{
     res.setHeader('Cache-Control','no-store');
@@ -30,7 +31,7 @@ function createTechnicianClaimHandler({db=pool}={}){
           RETURNING a.user_id`,
         [tokenHash(activation),technicianCodeHash(technician)],
       );
-      if(!result.rows.length)
+      if(!result.rows.length && !(teamLicenseEnabled() && await claimTeamDevice(db(),activation,technician)))
         return res.status(401).json({error:'Códigos não correspondem ao mesmo técnico'});
       return res.status(200).json({verified:true});
     }catch{

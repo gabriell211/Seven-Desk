@@ -29,7 +29,7 @@ test('sales stay disabled unless every production prerequisite is explicitly set
 
 test('team sales require individual readiness plus explicit team approvals',()=>{
   assert.equal(isTeamCheckoutReady(ready),false);
-  const team={...ready,SEVEN_TEAM_WORKSPACES_ENABLED:'1',SEVEN_TEAM_REMOTE_ACCESS_HOMOLOGATED:'1',SEVEN_TEAM_SALES_APPROVED:'1'};
+  const team={...ready,SEVEN_TEAM_WORKSPACES_ENABLED:'1',SEVEN_TEAM_LICENSE_ENABLED:'1',SEVEN_TEAM_REMOTE_ACCESS_HOMOLOGATED:'1',SEVEN_TEAM_SALES_APPROVED:'1'};
   assert.equal(isTeamCheckoutReady(team),true);
-  for(const key of ['SEVEN_BILLING_ENABLED','SEVEN_TEAM_WORKSPACES_ENABLED','SEVEN_TEAM_REMOTE_ACCESS_HOMOLOGATED','SEVEN_TEAM_SALES_APPROVED'])assert.equal(isTeamCheckoutReady({...team,[key]:'0'}),false,key);
+  for(const key of ['SEVEN_BILLING_ENABLED','SEVEN_TEAM_WORKSPACES_ENABLED','SEVEN_TEAM_LICENSE_ENABLED','SEVEN_TEAM_REMOTE_ACCESS_HOMOLOGATED','SEVEN_TEAM_SALES_APPROVED'])assert.equal(isTeamCheckoutReady({...team,[key]:'0'}),false,key);
 });

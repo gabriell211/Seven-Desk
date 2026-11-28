@@ -239,6 +239,20 @@ async function loadTeamWorkspaces(){
       card.append(teamElement('h3',team.plan==='business'?'Business':'Enterprise'),
         teamElement('p','ID: '+team.id),
         teamElement('p',team.isOwner?'Administrador · '+team.seatLimit+' vagas':'Técnico integrante'));
+      if(data.activationAvailable===true&&Number.isInteger(team.ownSeat)){
+        const activate=teamElement('button','Gerar códigos de ativação');
+        activate.type='button';activate.className='account-submit';
+        activate.addEventListener('click',async()=>{
+          if(!window.confirm('Gerar novos códigos revoga a ativação anterior desta vaga. Continuar?'))return;
+          activate.disabled=true;
+          try{
+            const pair=await teamApi('POST',{action:'activate',teamId:team.id},session);
+            if(session===accountSession)el('account-team-notice').textContent='Código de ativação: '+pair.token+' · Código do técnico: '+pair.technicianCode+' · Guarde-os em privado. Não serão exibidos novamente.';
+          }catch{if(session===accountSession)el('account-team-notice').textContent='Não foi possível gerar os códigos da equipe.';}
+          finally{activate.disabled=false;}
+        });
+        card.append(activate);
+      }
       if(team.isOwner){
         for(const technician of team.technicians){
           const row=document.createElement('p');

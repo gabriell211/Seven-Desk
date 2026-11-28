@@ -116,6 +116,8 @@ async function listWorkspaces(db,userId){
   if(!validId(userId))return [];
   const result=await db.query(
     `SELECT t.id,t.plan,t.paid_through,t.owner_user_id=$1 AS is_owner,
+       (SELECT s.seat FROM seven_desk_team_seats s WHERE s.team_id=t.id AND s.technician_user_id=$1
+          AND s.accepted_at IS NOT NULL AND s.seat<=CASE t.plan WHEN 'business' THEN 3 WHEN 'enterprise' THEN 10 ELSE 0 END) AS own_seat,
        CASE WHEN t.owner_user_id=$1 THEN COALESCE((
          SELECT jsonb_agg(jsonb_build_object('seat',s.seat,'email',s.invited_email,
            'accepted',s.accepted_at IS NOT NULL,'expiresAt',s.invite_expires_at) ORDER BY s.seat)
@@ -128,7 +130,7 @@ async function listWorkspaces(db,userId){
           AND s.accepted_at IS NOT NULL AND s.seat<=CASE t.plan WHEN 'business' THEN 3 WHEN 'enterprise' THEN 10 ELSE 0 END)
        ORDER BY t.created_at,t.id`,[userId]);
   return result.rows.map(row=>({id:row.id,plan:row.plan,paidThrough:row.paid_through,
-    isOwner:row.is_owner,seatLimit:teamPlan(row.plan).seats,technicians:row.technicians}));
+    isOwner:row.is_owner,ownSeat:row.own_seat??null,seatLimit:teamPlan(row.plan).seats,technicians:row.technicians}));
 }
 
 module.exports={listWorkspaces,TEAM_PLANS,teamPlan,normalizeEmail,inviteTechnician,acceptTechnicianInvite,revokeTechnician,getTeamMembership};
