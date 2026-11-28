@@ -26,7 +26,7 @@ async function getMaxSlots(db,userId){
     [userId],
   );
   const slots=Number(result.rows[0]?.max_slots);
-  if(!Number.isSafeInteger(slots)||slots<5||slots>32767)
+  if(!Number.isSafeInteger(slots)||slots<1||slots>32767)
     throw new Error('Invalid entitlement quota');
   return slots;
 }

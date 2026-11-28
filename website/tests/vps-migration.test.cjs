@@ -33,5 +33,7 @@ test('paid extra slots use a schema limit compatible with the entitlement quota'
   assert.match(runner,/'008_technician_claim\.sql','009_expand_activation_slots\.sql'/);
   assert.match(schema,/DROP CONSTRAINT IF EXISTS seven_desk_app_tokens_slot_check/);
   assert.match(schema,/ADD CONSTRAINT seven_desk_app_tokens_slot_check\s+CHECK \(slot BETWEEN 1 AND 32767\)/);
-  assert.match(entitlement,/SELECT 5 \+ COALESCE/);
+  const {quotaSql}=require('../lib/technicians');
+  assert.match(quotaSql('$1'),/^5 \+ COALESCE/);
+  assert.throws(()=>quotaSql('untrusted expression'));
 });
