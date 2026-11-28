@@ -1,7 +1,7 @@
 'use strict';
 const {pool}=require('../lib/db-pool');
 const {authenticatedUser}=require('../lib/server-auth');
-const {makeTechnicianCode,technicianCodeHash}=require('../lib/technicians');
+const {makeTechnicianCode,technicianCodeHash,quotaSql}=require('../lib/technicians');
 
 function createTechnicianCodeHandler({authenticate=authenticatedUser,db=pool,randomCode=makeTechnicianCode}={}){
   return async(req,res)=>{
@@ -28,6 +28,7 @@ function createTechnicianCodeHandler({authenticate=authenticatedUser,db=pool,ran
               FROM seven_users u
              WHERE t.user_id=$1 AND t.slot=$2 AND u.id=t.user_id
                AND u."emailVerified" IS TRUE
+               AND t.slot BETWEEN 1 AND (${quotaSql("t.user_id")})
              RETURNING t.user_id,t.slot
           ), invalidated AS (
             UPDATE seven_desk_app_tokens a SET technician_verified=false

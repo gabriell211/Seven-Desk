@@ -1,7 +1,7 @@
 'use strict';
 
 const { createHash, randomBytes } = require('node:crypto');
-const {getMaxSlots, makeTechnicianCode, technicianCodeHash}=require('./technicians');
+const {getMaxSlots, makeTechnicianCode, technicianCodeHash, quotaSql}=require('./technicians');
 
 const { allowedActivation, newTokenPrefix } = require('./activation-policy');
 const DEVICE_RE = /^[0-9a-f]{64}$/;
@@ -22,13 +22,15 @@ async function appTokenUser(pool, header, bindDevice = false) {
       `UPDATE seven_desk_app_tokens t SET device_hash = COALESCE(t.device_hash, $2)
          FROM seven_users u WHERE t.token_hash = $1 AND u.id = t.user_id
           AND u."emailVerified" IS TRUE AND t.technician_verified IS TRUE
+          AND t.slot BETWEEN 1 AND (${quotaSql("t.user_id")})
           AND (t.device_hash IS NULL OR t.device_hash = $2)
         RETURNING t.user_id`, [tokenHash(token), deviceHash])
     : await pool.query(
       `SELECT t.user_id FROM seven_desk_app_tokens t
          JOIN seven_users u ON u.id = t.user_id
         WHERE t.token_hash = $1 AND u."emailVerified" IS TRUE
-          AND t.technician_verified IS TRUE`, [tokenHash(token)]);
+          AND t.technician_verified IS TRUE
+          AND t.slot BETWEEN 1 AND (${quotaSql("t.user_id")})`, [tokenHash(token)]);
   return result.rows[0]?.user_id || null;
 }
 
@@ -61,7 +63,7 @@ function createAppTokenHandler({ enabled, authenticate, pool, random = randomByt
         });
       }
       const slot = Number(req.body?.slot);
-      if (!Number.isInteger(slot) || slot < 1 || slot > maxSlots) return res.status(400).json({ error: 'Computador inválido' });
+      if (!Number.isInteger(slot) || slot < 1 || slot > 32767 || (req.method !== 'DELETE' && slot > maxSlots)) return res.status(400).json({ error: 'Computador inválido' });
       if (req.method === 'DELETE') {
         await db.query('DELETE FROM seven_desk_app_tokens WHERE user_id = $1 AND slot = $2', [userId, slot]);
         return res.status(200).json({ active: false, slot });

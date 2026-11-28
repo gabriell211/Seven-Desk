@@ -30,6 +30,8 @@ test('a technician can pair only with device activation from matching account an
   assert.equal(ok.code,200);
   assert.deepEqual(ok.body,{verified:true});
   assert.match(calls[0].sql,/t\.slot=a\.slot/);
+  assert.ok(calls[0].sql.includes('a.slot BETWEEN 1 AND (5 + COALESCE'));
+  assert.ok(calls[0].sql.includes('WHERE user_id = a.user_id'));
   assert.match(calls[0].sql,/t\.user_id=a\.user_id/);
   assert.match(calls[0].sql,/"emailVerified" IS TRUE/);
   assert.equal(calls[0].params[0],tokenHash(device));

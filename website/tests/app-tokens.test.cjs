@@ -16,9 +16,10 @@ function fixture({ enabled = true, verified = true } = {}) {
   const storedHashes = new Map();
   const boundDevices = new Map();
   let count = 0;
+  let quota = 5;
   const db = {
     async query(sql, params) {
-      if (sql.startsWith('SELECT 5 +')) return {rows:[{max_slots:5}]};
+      if (sql.startsWith('SELECT 5 +')) return {rows:[{max_slots:quota}]};
       if (sql.includes('seven_desk_technicians')) return {rows:[]};
       if (sql.includes('INSERT INTO seven_desk_app_tokens')) {
         if (!verified) return { rows: [] };
@@ -28,12 +29,13 @@ function fixture({ enabled = true, verified = true } = {}) {
       }
       if (sql.startsWith('UPDATE seven_desk_app_tokens')) {
         const slot = [...storedHashes].find(([, hash]) => hash === params[0])?.[0];
-        if (!verified || !slot || (boundDevices.has(slot) && boundDevices.get(slot) !== params[1])) return {rows:[]};
+        if (!verified || !slot || slot > quota || (boundDevices.has(slot) && boundDevices.get(slot) !== params[1])) return {rows:[]};
         boundDevices.set(slot, params[1]);
         return {rows:[{user_id:userId}]};
       }
       if (sql.includes('JOIN seven_users')) {
-        return { rows: verified && [...storedHashes.values()].includes(params[0]) ? [{ user_id: userId }] : [] };
+        const slot = [...storedHashes].find(([,hash])=>hash===params[0])?.[0];
+        return { rows: verified && slot && slot <= quota ? [{ user_id: userId }] : [] };
       }
       if (sql.startsWith('DELETE')) {
         storedHashes.delete(params[1]);
@@ -50,7 +52,7 @@ function fixture({ enabled = true, verified = true } = {}) {
     pool: () => db,
     random: () => Buffer.alloc(32, ++count),
   });
-  return { db, handler };
+  return { db, handler, setQuota: value => { quota = value; } };
 }
 function request(method, authorization = 'Bearer session', slot = 1) {
   return { method, headers: { authorization }, body: {slot, label:`Técnico ${slot}`} };
@@ -196,4 +198,38 @@ test('issuing a pair writes both hashes for one account and slot and requires a 
   await handler(missing, rejected);
   assert.equal(rejected.code, 409);
   assert.deepEqual(Object.keys(rejected.body), ['error']);
+});
+
+ test('a reduced quota rejects an existing token and still permits revocation', async () => {
+  const {db,handler,setQuota}=fixture();
+  const issued=response();
+  await handler(request('POST','Bearer session',5),issued);
+  assert.equal(issued.code,200);
+  const header='Bearer '+issued.body.token;
+  assert.equal(await appTokenUser(db,header),userId);
+  assert.equal(await appTokenUser(db,header+':'+ 'a'.repeat(64),true),userId);
+  setQuota(3);
+  assert.equal(await appTokenUser(db,header),null);
+  assert.equal(await appTokenUser(db,header+':'+ 'a'.repeat(64),true),null);
+  const denied=response();
+  await handler(request('POST','Bearer session',5),denied);
+  assert.equal(denied.code,400);
+  const revoked=response();
+  await handler(request('DELETE','Bearer session',5),revoked);
+  assert.equal(revoked.code,200);
+  setQuota(5);
+  assert.equal(await appTokenUser(db,header),null);
+});
+
+test('both credential authorization queries enforce quota inside SQL', async () => {
+  const queries=[];
+  const db={query:async(sql)=>{queries.push(sql);return {rows:[]};}};
+  const header='Bearer sd_'+ 'a'.repeat(43);
+  await appTokenUser(db,header);
+  await appTokenUser(db,header+':'+ 'a'.repeat(64),true);
+  assert.equal(queries.length,2);
+  for(const sql of queries){
+    assert.ok(sql.includes('t.slot BETWEEN 1 AND (5 + COALESCE'));
+    assert.ok(sql.includes('WHERE user_id = t.user_id'));
+  }
 });

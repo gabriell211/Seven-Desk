@@ -1,7 +1,7 @@
 'use strict';
 
 const {pool}=require('../lib/db-pool');
-const {technicianCodeHash}=require('../lib/technicians');
+const {technicianCodeHash,quotaSql}=require('../lib/technicians');
 const {tokenHash}=require('../lib/app-tokens');
 
 const {allowedActivation}=require('../lib/activation-policy');
@@ -26,6 +26,7 @@ function createTechnicianClaimHandler({db=pool}={}){
           WHERE a.token_hash=$1 AND t.code_hash=$2
             AND t.user_id=a.user_id AND t.slot=a.slot
             AND u.id=a.user_id AND u."emailVerified" IS TRUE
+            AND a.slot BETWEEN 1 AND (${quotaSql('a.user_id')})
           RETURNING a.user_id`,
         [tokenHash(activation),technicianCodeHash(technician)],
       );
