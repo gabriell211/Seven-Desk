@@ -1,11 +1,14 @@
 'use strict';
 
 const { randomUUID } = require('node:crypto');
+const {personalEnabled,personalMembershipSql}=require('./personal-plan');
 const { planFor, validOrderAmount, verifyPayment } = require('./infinitepay');
 
 // The caller must obtain userId from a verified server-side session, never a request body.
 async function createOrder(pool, userId, plan) {
   const selected = planFor(plan);
+  if(plan==='extra_slot' && personalEnabled() && (await getEntitlement(pool,userId))?.status==='personal')
+    throw new Error('Professional subscription required for extra slots');
   const orderId = randomUUID();
   const verified = await pool.query('SELECT 1 FROM seven_users WHERE id = $1 AND "emailVerified" IS TRUE', [userId]);
   if (verified.rows.length !== 1) throw new Error('Verified account required');
@@ -20,17 +23,23 @@ async function createOrder(pool, userId, plan) {
 // Trial starts when the identity is created, even if the user never signs in.
 // No write is needed, so logging in repeatedly cannot restart the free month.
 async function getEntitlement(pool, userId) {
+  const enabled=personalEnabled();
+  const personal=enabled?personalMembershipSql('u.id'):'FALSE';
+  const eligible=enabled?`u."accountType"='PF' AND u."taxIdHash" IS NOT NULL`:'FALSE';
   const result = await pool.query(
     `SELECT u."createdAt" AS trial_started_at,
             u."createdAt" + interval '1 month' AS trial_ends_at,
             GREATEST(u."createdAt" + interval '1 month', COALESCE(s.paid_through, u."createdAt" + interval '1 month')) AS access_ends_at,
             s.paid_through,
             COALESCE(s.extra_slots, 0) AS extra_slots,
+            (${eligible}) AS personal_eligible,
+            (${personal}) AS personal_enrolled,
             latest_payment.plan AS paid_plan,
             latest_payment.paid_at AS last_paid_at,
             latest_payment.amount_cents AS last_paid_amount_cents,
             CASE WHEN now() < u."createdAt" + interval '1 month' THEN 'trial'
-                 WHEN s.paid_through > now() THEN 'paid' ELSE 'expired' END AS status
+                 WHEN s.paid_through > now() THEN 'paid'
+                 WHEN (${personal}) THEN 'personal' ELSE 'expired' END AS status
        FROM seven_users u LEFT JOIN seven_desk_subscriptions s ON s.user_id = u.id
        LEFT JOIN LATERAL (
            SELECT o.plan, o.paid_at, o.amount_cents

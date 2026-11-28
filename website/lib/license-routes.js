@@ -20,6 +20,8 @@ function createLicenseHandler({ enabled, authenticate, pool, getEntitlement, tea
       }
       const subscription = await getEntitlement(pool(), userId);
       if (!subscription) return res.status(403).json({ allowed: false, reason: 'account_unverified_or_missing' });
+      if(subscription.status==='personal' && subscription.personal_enrolled===true)
+        return res.status(200).json({allowed:true,status:'personal',accountId:userId,accessEndsAt:null});
       const until = Date.parse(subscription.access_ends_at);
       const allowed = (subscription.status === 'trial' || subscription.status === 'paid') &&
         Number.isFinite(until) && until > now();

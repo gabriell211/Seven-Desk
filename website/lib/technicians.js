@@ -1,6 +1,7 @@
 'use strict';
 
 const {createHash,randomBytes}=require('node:crypto');
+const {personalEnabled,personalMembershipSql}=require('./personal-plan');
 const TECH_CODE_RE=/^tec_[A-Za-z0-9_-]{32}$/;
 
 function makeTechnicianCode(random=randomBytes){
@@ -18,7 +19,14 @@ function quotaSql(accountExpression) {
   if (!['$1', 't.user_id', 'a.user_id'].includes(accountExpression)) {
     throw new Error('Invalid quota expression');
   }
-  return `5 + COALESCE((SELECT extra_slots FROM seven_desk_subscriptions WHERE user_id = ${accountExpression}),0)`;
+  const existing=`5 + COALESCE((SELECT extra_slots FROM seven_desk_subscriptions WHERE user_id = ${accountExpression}),0)`;
+  if(!personalEnabled())return existing;
+  return `CASE WHEN ${personalMembershipSql(accountExpression)}
+    AND NOT EXISTS (SELECT 1 FROM seven_users trial_user WHERE trial_user.id=${accountExpression}
+      AND trial_user."createdAt" + interval '1 month'>now())
+    AND NOT EXISTS (SELECT 1 FROM seven_desk_subscriptions paid WHERE paid.user_id=${accountExpression}
+      AND paid.paid_through>now())
+    THEN 1 ELSE ${existing} END`;
 }
 async function getMaxSlots(db,userId){
   const result=await db.query(

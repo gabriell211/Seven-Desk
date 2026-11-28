@@ -87,3 +87,7 @@ As migrações 013 e 014 vinculam uma chave única de ativação e um dispositiv
 ### Chave única
 
 A emissão individual exige um perfil de técnico na vaga. Novas chaves são emitidas já vinculadas a esse perfil; não existe segundo código a copiar. Chaves antigas já vinculadas continuam válidas conforme a geração configurada; pares antigos ainda não vinculados podem ser concluídos pelo cliente legado ou substituídos por uma nova chave. A rota legada de emissão de código secundário responde 410. O aplicativo atualizado utiliza apenas a chave; o servidor continua vinculando o primeiro dispositivo e rejeitando outros. A publicação requer migração 014, deploy do backend antes dos instaladores e homologação real.
+
+### Personal gratuito
+
+Migração 015: inscrição voluntária com aceite versionado de uso não comercial, exclusiva a conta PF com e-mail verificado e hash de documento cadastrado. O plano tem uma vaga (slot 1), sem prazo fixo e sem checkout. Teste vigente e assinaturas individuais pagas têm prioridade; após o término, apenas quem aceitou o Personal recebe acesso gratuito. Vagas adicionais adquiridas são preservadas no banco e voltam a valer quando houver acesso pago; nunca aumentam a cota Personal. A desativação encerra apenas o direito gratuito, sem apagar pagamentos. O uso comercial é proibido pelos termos; o sistema não consegue inferir a finalidade de uma sessão com certeza. SEVEN_PERSONAL_ENABLED=1 exige as flags de conta e licença e permanece desligada até homologação. O plano continua anunciado como em preparação.

@@ -140,6 +140,9 @@ function displaySession(session) {
     accountSession++;
     appAccessRequest++;
     revealedCodePairs.clear();
+    el('account-personal-panel').hidden=true;
+    el('account-personal-form').reset();
+    el('account-personal-notice').textContent='';
     teamRequest++;
     el('account-team-workspace').hidden=true;
     el('account-team-list').replaceChildren();
@@ -668,6 +671,8 @@ function resetSubscriptionDetails() {
 }
 
 async function loadSubscription() {
+  const session=accountSession;
+  el('account-personal-panel').hidden=true;
   const target = el('account-subscription');
   const summary = el('account-summary-subscription');
   resetSubscriptionDetails();
@@ -678,7 +683,13 @@ async function loadSubscription() {
       headers:{Authorization:await appAuthorization()}, cache:'no-store'
     });
     if (!response.ok) throw new Error('Unavailable');
-    const view = presentSubscription(await response.json());
+    const subscription=await response.json();
+    if(session!==accountSession)return;
+    const view = presentSubscription(subscription);
+    el('account-personal-panel').hidden=subscription.personalEligible!==true;
+    el('account-personal-form').hidden=subscription.personalEnrolled===true;
+    el('account-personal-disable').hidden=subscription.personalEnrolled!==true;
+    el('account-personal-terms').checked=false;
     el('account-subscription-badge').dataset.state = view.state;
     el('account-subscription-badge').textContent = view.badge;
     el('account-subscription-title').textContent = view.headline;
@@ -707,6 +718,7 @@ async function loadSubscription() {
     el('account-subscription-payment').hidden = !view.showPayment;
     el('account-subscription-details').hidden = false;
   } catch {
+    if(session!==accountSession)return;
     resetSubscriptionDetails();
     target.textContent = 'Não foi possível consultar sua assinatura agora. Tente novamente mais tarde.';
     summary.textContent = 'O status da assinatura está temporariamente indisponível.';
@@ -716,6 +728,31 @@ async function loadSubscription() {
     el('account-summary-status').textContent = 'Indisponível';
   }
 }
+async function updatePersonal(enroll){
+  const session=accountSession,notice=el('account-personal-notice');
+  const button=enroll?el('account-personal-form').querySelector('button'):el('account-personal-disable');
+  button.disabled=true;
+  try{
+    const authorization=await appAuthorization();
+    if(session!==accountSession)return;
+    const response=await fetch('/api/personal-plan',{method:enroll?'POST':'DELETE',cache:'no-store',
+      headers:{Authorization:authorization,'Content-Type':'application/json'},
+      ...(enroll?{body:JSON.stringify({acceptNonCommercial:true,termsVersion:'personal-v1'})}:{})});
+    if(!response.ok)throw new Error('Personal unavailable');
+    if(session!==accountSession)return;
+    await Promise.all([loadSubscription(),loadAppAccess()]);
+    if(session===accountSession)notice.textContent=enroll?'Personal habilitado.':'Personal desativado.';
+  }catch{if(session===accountSession)notice.textContent='Não foi possível atualizar o Personal.';}
+  finally{button.disabled=false;}
+}
+el('account-personal-form').addEventListener('submit',event=>{
+  event.preventDefault();
+  if(el('account-personal-terms').checked)updatePersonal(true);
+});
+el('account-personal-disable').addEventListener('click',()=>{
+  if(window.confirm('Desativar o acesso gratuito Personal?'))updatePersonal(false);
+});
+
 let checkoutProviderDisabled = false;
 const checkoutDisabledMessage =
   'Pagamentos indisponíveis: é necessário habilitar o Checkout Integrado na conta InfinitePay. Contate o suporte Seven Desk.';

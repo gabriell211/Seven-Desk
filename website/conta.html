@@ -15,7 +15,7 @@
   <link rel="stylesheet" href="/conta.css?v=3" />
   <link rel="stylesheet" href="/theme.css?v=20261118b" />
   <link rel="stylesheet" href="/portal.css?v=6" />
-  <script defer src="/conta.bundle.js?v=10"></script>
+  <script defer src="/conta.bundle.js?v=11"></script>
 </head>
 <body class="account-page">
   <a class="skip-link" href="#conteudo">Ir para o conteúdo</a>
@@ -271,6 +271,16 @@
                 </section>
                 <p class="client-subscription-footnote">O primeiro mês é gratuito. Um plano comprado durante o teste começa somente depois do término do período gratuito. Os planos são compras avulsas, sem cobrança ou renovação automática.</p>
               </div>
+            </section>
+            <section id="account-personal-panel" class="client-surface" hidden aria-labelledby="account-personal-title">
+              <h2 id="account-personal-title">Personal gratuito</h2>
+              <p>Uma vaga para uso pessoal não comercial. O período de teste e as compras vigentes continuam válidos; após o término, a primeira vaga fica disponível pelo Personal. Para suporte profissional, contrate um plano pago.</p>
+              <form id="account-personal-form">
+                <label><input type="checkbox" id="account-personal-terms" required> Declaro que utilizarei o plano exclusivamente para fins pessoais, sem finalidade comercial.</label>
+                <button type="submit" class="account-submit">Ativar Personal gratuito</button>
+              </form>
+              <button id="account-personal-disable" type="button" class="client-text-action" hidden>Desativar Personal</button>
+              <p id="account-personal-notice" role="status" aria-live="polite"></p>
             </section>
             <div id="account-plan-actions" class="account-plan-actions" hidden>
               <h2>Planos e computadores</h2>

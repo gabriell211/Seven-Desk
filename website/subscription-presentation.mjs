@@ -29,12 +29,25 @@ function validatePayment(data) {
 }
 
 export function presentSubscription(data, now = Date.now()) {
-  if (!data || !['trial', 'paid', 'expired'].includes(data.status)
+  if (!data || !['trial', 'paid', 'expired','personal'].includes(data.status)
       || typeof now !== 'number' || !Number.isFinite(now)) {
     throw new Error('Invalid subscription status');
   }
   const trialStart = readDate(data.trialStartedAt);
   const trialEnd = readDate(data.trialEndsAt);
+  if(data.status==='personal'){
+    if(data.personalEnrolled!==true || data.accessEndsAt!==null || trialEnd<=trialStart)
+      throw new Error('Invalid Personal entitlement');
+    const payment=validatePayment(data);
+    return {state:'personal',badge:'Personal gratuito',headline:'Seu plano Personal está ativo.',
+      explanation:'Uso pessoal, sem finalidade comercial. Uma vaga de ativação, sem mensalidade.',
+      summary:'Personal · 1 vaga · gratuito',overviewStatus:'Personal',trialDate:asDate(trialEnd),
+      trialHint:'Período inicial da conta',startLabel:'Situação do plano',startValue:'Ativo',
+      startHint:'Uso pessoal não comercial',endLabel:'Validade do acesso',endValue:'Sem prazo fixo',
+      endHint:'Sujeito às condições do plano',showTrialProgress:false,trialDays:'—',trialProgress:0,
+      showPayment:Boolean(payment),paymentName:payment?.name??'—',paymentAmount:payment?.amount??'—',
+      paymentDate:payment?.date??'—',paymentMessage:'Último pagamento confirmado.',slots:'1 vaga Personal'};
+  }
   const accessEnd = readDate(data.accessEndsAt);
   if (trialEnd <= trialStart || accessEnd < trialEnd) throw new Error('Invalid subscription period');
   const payment = validatePayment(data);
