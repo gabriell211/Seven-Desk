@@ -71,3 +71,7 @@ O visual do website acompanha o aplicativo Seven Desk. Componentes de terceiros 
 ### Catálogo comercial aprovado
 
 Professional: R$ 19,90/mês ou R$ 199,90/ano. A migração `010_professional_pricing.sql` deve ser aplicada antes da disponibilização do novo checkout; pedidos anteriores mantêm os valores originais. Personal gratuito, Business (até 3 técnicos, R$ 49,90/mês) e Enterprise (até 10 técnicos, R$ 149,90/mês) são planos anunciados como em preparação: não possuem checkout nem autorização de acesso próprios até a homologação dos direitos de uso pessoal e das equipes. As flags existentes permanecem inalteradas.
+
+### Equipes (camada privada, não comercial)
+
+A migração 011 cria espaços de equipe isolados por proprietário, sem reutilizar as cinco ativações individuais. Business permite três assentos e Enterprise dez; o administrador não consome assento até ser convidado como técnico. O módulo privado `lib/team-workspaces.js` reserva vagas com convite de uso único, exige identidade verificada e e-mail correspondente na aceitação, e revoga o vínculo por proprietário. Não existe rota pública para provisionar a equipe, conceder acesso remoto ou cobrar por ela nesta etapa. A criação de equipes depende de futura conciliação de pedidos Business/Enterprise; nenhum pagamento ou direito de produção é simulado.
