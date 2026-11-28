@@ -1,7 +1,7 @@
 'use strict';
 
 const { randomUUID } = require('node:crypto');
-const { planFor, verifyPayment } = require('./infinitepay');
+const { planFor, validOrderAmount, verifyPayment } = require('./infinitepay');
 
 // The caller must obtain userId from a verified server-side session, never a request body.
 async function createOrder(pool, userId, plan) {
@@ -55,9 +55,9 @@ async function reconcilePayment(pool, event, { handle, apiKey, fetchImpl } = {})
     [orderId],
   );
   const order = initial.rows[0];
-  if (!order || planFor(order.plan).amount !== order.amount_cents) return false;
+  if (!order || !validOrderAmount(order.plan, order.amount_cents)) return false;
   if (order.state === 'paid') return order.transaction_nsu === transactionId && order.invoice_slug === slug;
-  if (!await verifyPayment({ handle, orderId, transactionId, slug, plan: order.plan }, { apiKey, fetchImpl })) return false;
+  if (!await verifyPayment({ handle, orderId, transactionId, slug, plan: order.plan, orderAmount: order.amount_cents }, { apiKey, fetchImpl })) return false;
 
   const client = await pool.connect();
   try {

@@ -136,3 +136,11 @@ test('the account renders billing information with text-only assignments and no 
   const css=fs.readFileSync(path.join(__dirname,'../portal.css'),'utf8');
   assert.match(css,/\.client-subscription-payment\[hidden\]/);
 });
+
+test('displays new professional payment amounts without altering legacy receipts', async () => {
+  const now=Date.parse('2026-11-19T12:00:00Z');
+  const monthly=await render({...paid,lastPaymentAmountCents:1990},now);
+  assert.equal(monthly.paymentAmount,'R$\u00a019,90');
+  const annual=await render({...paid,paidPlan:'yearly',lastPaymentAmountCents:19990},now);
+  assert.equal(annual.paymentAmount,'R$\u00a0199,90');
+});

@@ -18,8 +18,9 @@ function validatePayment(data) {
   const plan = data.paidPlan ?? null;
   if (plan === null) return null;
   if (!['monthly', 'yearly'].includes(plan)) throw new Error('Invalid subscription plan');
-  const expectedAmount = plan === 'monthly' ? 3990 : 40000;
-  if (data.lastPaymentAmountCents !== expectedAmount) throw new Error('Invalid subscription amount');
+  const expectedAmount = data.lastPaymentAmountCents;
+  const validAmounts = plan === 'monthly' ? [1990, 3990] : [19990, 40000];
+  if (!validAmounts.includes(expectedAmount)) throw new Error('Invalid subscription amount');
   const paidAt = readDate(data.lastPaymentAt);
   const paidThrough = readDate(data.paidThrough);
   return {name: plan === 'monthly' ? 'Mensal — 1 mês' : 'Anual — 1 ano',

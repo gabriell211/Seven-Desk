@@ -2,8 +2,8 @@
 
 // Prices are selected on the server, never accepted from the browser.
 const PLANS = Object.freeze({
-  monthly: Object.freeze({ amount: 3990, description: 'Seven Desk - 1 usuario - 1 mes' }),
-  yearly: Object.freeze({ amount: 40000, description: 'Seven Desk - 1 usuario - 1 ano' }),
+  monthly: Object.freeze({ amount: 1990, description: 'Seven Desk - 1 usuario - 1 mes' }),
+  yearly: Object.freeze({ amount: 19990, description: 'Seven Desk - 1 usuario - 1 ano' }),
   extra_slot: Object.freeze({ amount: 700, description: 'Seven Desk - slot adicional - 1 computador' }),
 });
 const API = 'https://api.checkout.infinitepay.io';
@@ -19,6 +19,14 @@ function requiredText(value, name) {
 function planFor(code) {
   if (!Object.hasOwn(PLANS, code)) throw new Error('Invalid plan');
   return PLANS[code];
+}
+
+// Existing orders keep their original agreed price; never accept a browser-supplied amount.
+function validOrderAmount(plan, amount) {
+  if (!Object.hasOwn(PLANS, plan) || !Number.isSafeInteger(amount)) return false;
+  return amount === PLANS[plan].amount ||
+    (plan === 'monthly' && amount === 3990) ||
+    (plan === 'yearly' && amount === 40000);
 }
 
 function checkoutPayload({ handle, orderId, plan, siteUrl }) {
@@ -70,15 +78,16 @@ async function createCheckout(input, options) {
   return url.href;
 }
 
-async function verifyPayment({ handle, orderId, transactionId, slug, plan }, options) {
-  const selected = planFor(plan);
+async function verifyPayment({ handle, orderId, transactionId, slug, plan, orderAmount }, options) {
+  const expected = orderAmount === undefined ? planFor(plan).amount : orderAmount;
+  if (!validOrderAmount(plan, expected)) return false;
   const result = await postJson('/payment_check', {
     handle: requiredText(requiredText(handle, 'handle').replace(/^\\$/, ''), 'handle'),
     order_nsu: requiredText(orderId, 'order'),
     transaction_nsu: requiredText(transactionId, 'transaction'),
     slug: requiredText(slug, 'invoice'),
   }, options);
-  return result.success === true && result.paid === true && result.amount === selected.amount;
+  return result.success === true && result.paid === true && result.amount === expected;
 }
 
-module.exports = { PLANS, planFor, checkoutPayload, createCheckout, verifyPayment };
+module.exports = { PLANS, planFor, validOrderAmount, checkoutPayload, createCheckout, verifyPayment };

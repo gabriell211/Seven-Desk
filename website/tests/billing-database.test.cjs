@@ -28,7 +28,7 @@ test('checkout only creates orders for email-verified identities', async()=>{
   const last=db.calls.at(-1);
   assert.match(last[0],/INSERT INTO seven_desk_payment_orders/);
   assert.equal(last[1][1],userId);
-  assert.equal(last[1][3],40000);
+  assert.equal(last[1][3],19990);
 });
 
 test('payment verification credits exactly once without locking restricted Better Auth user rows',async()=>{
