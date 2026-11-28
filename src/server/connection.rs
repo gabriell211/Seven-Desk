@@ -523,6 +523,31 @@ fn drm_can_serve_login_screen() -> bool {
     false
 }
 
+// A local operator clicking Reject/Disconnect in the CM is distinct from
+// losing the network connection, a timed-out request or a normal hangup.
+fn cm_manual_close_reason(authorized: bool) -> &'static str {
+    if authorized {
+        ""
+    } else {
+        "Cancelled by the client"
+    }
+}
+
+#[cfg(test)]
+mod cm_manual_close_reason_tests {
+    use super::cm_manual_close_reason;
+
+    #[test]
+    fn refusal_before_authorization_has_an_explicit_reason() {
+        assert_eq!(cm_manual_close_reason(false), "Cancelled by the client");
+    }
+
+    #[test]
+    fn authorized_session_keeps_the_original_manual_close_reason() {
+        assert_eq!(cm_manual_close_reason(true), "");
+    }
+}
+
 impl Connection {
     pub async fn start(
         addr: SocketAddr,
@@ -766,7 +791,10 @@ impl Connection {
                         ipc::Data::Close => {
                             conn.chat_unanswered = false; // seen
                             conn.file_transferred = false; //seen
-                            conn.send_close_reason_no_retry("").await;
+                            // Explicit local refusal before approval must not be
+                            // confused with a normal disconnection after approval.
+                            let close_reason = cm_manual_close_reason(conn.authorized);
+                            conn.send_close_reason_no_retry(close_reason).await;
                             conn.on_close("connection manager", true).await;
                             break;
                         }
@@ -987,8 +1015,19 @@ impl Connection {
                         }
                         #[cfg(windows)]
                         ipc::Data::DataPortableService(ipc::DataPortableService::RequestStart) => {
-                            if let Err(e) = portable_client::start_portable_service(portable_client::StartPara::Direct) {
+                            if !conn.keyboard {
+                                // Local consent cannot grant administrative control
+                                // when the session has no keyboard permission.
+                                conn.send_to_cm(ipc::Data::DataPortableService(
+                                    ipc::DataPortableService::CmShowElevation(true),
+                                ));
+                            } else if let Err(e) = portable_client::start_portable_service(portable_client::StartPara::Direct) {
                                 log::error!("Failed to start portable service from cm: {:?}", e);
+                                // Keep the elevation action available for a local retry.
+                                // A failed UAC/service startup is not an elevated session.
+                                conn.send_to_cm(ipc::Data::DataPortableService(
+                                    ipc::DataPortableService::CmShowElevation(true),
+                                ));
                             }
                         }
                         #[cfg(feature = "flutter")]

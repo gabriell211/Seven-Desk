@@ -57,6 +57,71 @@ bool acceptsConnectionUriScheme(String url, String currentPrefix,
     url.startsWith(currentPrefix) ||
     (onMacOS && url.startsWith('rustdesk://'));
 
+// Use only the explicit protocol reason from a locally refused request.
+// A network drop, timeout or normal post-approval disconnect is not a refusal.
+bool isSevenDeskClientCancellationMessage(
+  Object? type,
+  Object? title,
+  Object? message,
+) =>
+    type == 'error' &&
+    title == 'Connection Error' &&
+    message == 'Cancelled by the client';
+
+// Only terminal connectivity failures from the native core are shown in the
+// pending support overlay. Keep authentication, offline/reconnect and ordinary
+// session errors on their existing routes.
+SevenDeskWaitingFailure? classifySevenDeskConnectionFailure(
+  Object? type,
+  Object? title,
+  Object? message,
+) {
+  if (isSevenDeskClientCancellationMessage(type, title, message)) {
+    return SevenDeskWaitingFailure.clientCancelled;
+  }
+  if (type != 'error' ||
+      (title != 'Connection Error' && title != 'Error') ||
+      message is! String) {
+    return null;
+  }
+
+  final reason = message.trim().toLowerCase();
+  if (reason.contains('timeout') ||
+      reason.contains('timed out') ||
+      reason.contains('time out') ||
+      reason.contains('deadline')) {
+    return SevenDeskWaitingFailure.timeout;
+  }
+
+  const networkReasons = [
+    'failed to connect',
+    'unable to connect',
+    'could not connect',
+    'network error',
+    'network connection lost',
+    'no internet',
+    'reset by the peer',
+    'connection reset',
+    'connection refused',
+    'network is unreachable',
+    'no route to host',
+    'host is unreachable',
+    'connection aborted',
+    'broken pipe',
+    'name or service not known',
+    'failed to resolve',
+    'could not resolve host',
+    'dns lookup',
+    'socketexception',
+    'network unreachable',
+    'connection closed',
+  ];
+  if (networkReasons.any(reason.contains)) {
+    return SevenDeskWaitingFailure.network;
+  }
+  return null;
+}
+
 typedef HandleMsgBox = Function(Map<String, dynamic> evt, String id);
 typedef ReconnectHandle = Function(OverlayDialogManager, SessionID, bool);
 final _constSessionId = Uuid().v4obj();
@@ -935,6 +1000,44 @@ class FfiModel with ChangeNotifier {
       return;
     }
 
+    final waitingFailure =
+        classifySevenDeskConnectionFailure(type, title, text);
+    final isClientRefusal =
+        waitingFailure == SevenDeskWaitingFailure.clientCancelled;
+    if (isClientRefusal ||
+        (isDesktop &&
+            !isWeb &&
+            waitingFailure != null &&
+            hasSevenDeskSessionProgress(dialogManager, sessionId))) {
+      _timer?.cancel();
+      _timer = null;
+      _reconnects = 1;
+      _offlineReconnectStartTime = null;
+      resetRestartReconnectState();
+      if (isDesktop && !isWeb) {
+        showSevenDeskWaitingFailureDialog(
+          dialogManager,
+          sessionId,
+          waitingFailure!,
+          () {
+            dialogManager.dismissAll();
+            closeConnection(id: peerId);
+          },
+        );
+      } else {
+        showMsgBox(
+          sessionId,
+          'error',
+          'Connection Error',
+          'Cancelado pelo cliente',
+          '',
+          false,
+          dialogManager,
+        );
+      }
+      return;
+    }
+
     if (type == 're-input-password') {
       wrongPasswordDialog(sessionId, dialogManager, type, title, text);
     } else if (type == 'input-2fa') {
@@ -1210,13 +1313,19 @@ class FfiModel with ChangeNotifier {
 
     if (waitForFirstImage.isFalse) return;
     dialogManager.show(
-      (setState, close, context) => CustomAlertDialog(
-          title: null,
-          content: SelectionArea(child: msgboxContent(type, title, text)),
-          actions: [
-            dialogButton("Cancel", onPressed: onClose, isOutline: true)
-          ],
-          onCancel: onClose),
+      (setState, close, context) => isDesktop && !isWeb
+          ? SevenDeskSessionProgressCard(
+              title: 'Cliente conectado',
+              description: 'Autorização concluída. Preparando a transmissão da tela remota.',
+              onCancel: onClose,
+            )
+          : CustomAlertDialog(
+              title: null,
+              content: SelectionArea(child: msgboxContent(type, title, text)),
+              actions: [
+                dialogButton("Cancel", onPressed: onClose, isOutline: true)
+              ],
+              onCancel: onClose),
       tag: '$sessionId-waiting-for-image',
     );
     waitForImageDialogShow.value = true;

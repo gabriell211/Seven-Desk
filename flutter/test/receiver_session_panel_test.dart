@@ -20,6 +20,7 @@ void main() {
     required VoidCallback onMinimize,
     required VoidCallback onRestore,
     VoidCallback? onNextSession,
+    VoidCallback? onFullScreen,
   }) {
     return MaterialApp(
       home: Scaffold(
@@ -34,6 +35,7 @@ void main() {
               onMinimize: onMinimize,
               onRestore: onRestore,
               onNextSession: onNextSession,
+              onToggleFullScreen: onFullScreen,
               onChat: onChat,
               onTransfers: onFiles,
               onNextMonitor: onScreen,
@@ -71,6 +73,47 @@ void main() {
     expect([chat,files,monitor,disconnect,minimize], [1,1,1,1,1]);
   });
 
+  testWidgets('five actions include a working fullscreen callback', (tester) async {
+    var expanded = 0;
+    await tester.pumpWidget(app(
+      compact: false,
+      view: ReceiverPanelView.chat,
+      onChat: () {},
+      onFiles: () {},
+      onScreen: () {},
+      onDisconnect: () {},
+      onMinimize: () {},
+      onRestore: () {},
+      onFullScreen: () => expanded++,
+    ));
+
+    expect(find.text('Chat com o técnico'), findsOneWidget);
+    expect(find.text('Arquivos'), findsOneWidget);
+    expect(find.text('Opções'), findsOneWidget);
+    await tester.tap(find.byTooltip('Alternar tela cheia do painel'));
+    expect(expanded, 1);
+  });
+
+  testWidgets('options remain inside the floating panel without disconnecting',
+      (tester) async {
+    var disconnected = 0;
+    await tester.pumpWidget(app(
+      compact: false,
+      view: ReceiverPanelView.controls,
+      onChat: () {},
+      onFiles: () {},
+      onScreen: () {},
+      onDisconnect: () => disconnected++,
+      onMinimize: () {},
+      onRestore: () {},
+    ));
+    expect(find.text('Opções da sessão'), findsOneWidget);
+    expect(find.text('Detalhes de sessão'), findsOneWidget);
+    expect(find.byTooltip('Opções'), findsOneWidget);
+    expect(find.byTooltip('Chat'), findsOneWidget);
+    expect(disconnected, 0);
+  });
+
   testWidgets('compact mode retains disconnect and restore', (tester) async {
     var restore=0,disconnect=0;
     await tester.pumpWidget(app(
@@ -83,6 +126,8 @@ void main() {
     ));
     expect(find.text('Conectado'),findsOneWidget);
     expect(find.text('Empresa Modelo'),findsNothing);
+    // Minimized sessions expose a single restore action in the header.
+    expect(find.byTooltip('Restaurar painel'), findsOneWidget);
     await tester.tap(find.byTooltip('Restaurar painel'));
     await tester.tap(find.text('Desconectar'));
     expect(restore,1);

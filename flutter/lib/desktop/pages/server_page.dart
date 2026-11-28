@@ -12,6 +12,7 @@ import 'package:flutter_hbb/desktop/widgets/tabbar_widget.dart';
 import 'package:flutter_hbb/models/chat_model.dart';
 import 'package:flutter_hbb/models/cm_file_model.dart';
 import 'package:flutter_hbb/desktop/widgets/receiver_session_panel.dart';
+import 'package:flutter_hbb/desktop/services/administrator_approval.dart';
 import 'package:flutter_hbb/desktop/widgets/windows_cm_window_position.dart';
 import 'package:flutter_hbb/utils/platform_channel.dart';
 import 'package:get/get.dart';
@@ -137,7 +138,7 @@ class ConnectionManagerState extends State<ConnectionManager>
     with WidgetsBindingObserver {
   final RxBool _controlPageBlock = false.obs;
   final RxBool _sidePageBlock = false.obs;
-  ReceiverPanelView _panelView = ReceiverPanelView.none;
+  ReceiverPanelView _panelView = ReceiverPanelView.chat;
   bool _panelMinimized = false;
   String _lastWindowLayout = '';
   int? _panelClientId;
@@ -193,17 +194,25 @@ class ConnectionManagerState extends State<ConnectionManager>
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    gFFI.chatModel.receiverPanelActive = false;
+    gFFI.chatModel.receiverChatVisible = false;
+    gFFI.chatModel.receiverVisibleClientId = null;
     super.dispose();
   }
 
-  void _resizeFloatingWindow({required bool floating}) {
+  void _resizeFloatingWindow({
+    required bool floating,
+    bool focusedRequest = false,
+  }) {
     final size = floating
         ? _panelMinimized
-            ? const Size(315, 130)
+            ? const Size(345, 180)
             : _panelView == ReceiverPanelView.none
-                ? const Size(430, 196)
-                : const Size(520, 520)
-        : kConnectionManagerWindowSizeClosedChat;
+                ? const Size(540, 335)
+                : const Size(560, 610)
+        : focusedRequest
+            ? const Size(840, 650)
+            : kConnectionManagerWindowSizeClosedChat;
     final signature = '${floating ? 'floating' : 'pending'}:${size.width}x${size.height}';
     if (_lastWindowLayout == signature) return;
     _lastWindowLayout = signature;
@@ -217,10 +226,13 @@ class ConnectionManagerState extends State<ConnectionManager>
           await windowManager.setAlwaysOnTop(true);
         }
         if (isWindows) {
-          await setWindowsCmWindowBounds(size, bottomRight: floating);
+          await setWindowsCmWindowBounds(size,
+              bottomRight: floating, centered: focusedRequest);
         } else {
           await windowManager.setSizeAlignment(
-            size, floating ? Alignment.bottomRight : Alignment.topRight);
+            size, floating
+                ? Alignment.bottomRight
+                : focusedRequest ? Alignment.center : Alignment.topRight);
         }
         if (floating) {
           await windowManager.show();
@@ -247,16 +259,61 @@ class ConnectionManagerState extends State<ConnectionManager>
     });
   }
 
+  Widget _receiverOptionGroup({
+    required String title,
+    required IconData icon,
+    required String description,
+    required bool expanded,
+    required Widget child,
+  }) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      decoration: BoxDecoration(
+        border: Border.all(color: const Color(0xFF513C69)),
+        color: const Color(0xFF241934),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: ExpansionTile(
+        initiallyExpanded: expanded,
+        backgroundColor: Colors.transparent,
+        collapsedBackgroundColor: Colors.transparent,
+        iconColor: const Color(0xFFB83CF7),
+        collapsedIconColor: const Color(0xFFCEC2DC),
+        leading: Icon(icon, color: const Color(0xFFB83CF7)),
+        title: Text(title, style: const TextStyle(
+          color: Colors.white, fontWeight: FontWeight.w700, fontSize: 13)),
+        subtitle: Text(description, style: const TextStyle(
+          color: Color(0xFFCBBEDB), fontSize: 11)),
+        childrenPadding: const EdgeInsets.fromLTRB(7, 0, 7, 9),
+        children: [child],
+      ),
+    );
+  }
+
   Widget _buildConnectedPanel(Client client, List<Client> active) {
     final content = switch (_panelView) {
-      ReceiverPanelView.chat => ChatPage(type: ChatPageType.desktopCM),
+      ReceiverPanelView.chat => ChatPage(
+          type: ChatPageType.desktopCM, sevenBubbleStyle: true),
       ReceiverPanelView.transfers => _FileTransferLogPage(),
-      ReceiverPanelView.controls => SingleChildScrollView(
-          child: Column(children: [
+      ReceiverPanelView.controls => ListView(
+          padding: const EdgeInsets.all(10),
+          children: [
             if (client.type_() == ClientType.remote)
-              _PrivilegeBoard(client: client),
-            _CmControlPanel(client: client),
-          ]),
+              _receiverOptionGroup(
+                title: 'Permissões de acesso',
+                icon: Icons.admin_panel_settings_outlined,
+                description: 'Teclado, mouse, áudio e captura permitidos.',
+                expanded: true,
+                child: _PrivilegeBoard(client: client),
+              ),
+            _receiverOptionGroup(
+              title: 'Controles da sessão',
+              icon: Icons.tune_rounded,
+              description: 'Chamada, privilégios e encerramento.',
+              expanded: client.type_() != ClientType.remote,
+              child: _CmControlPanel(client: client),
+            ),
+          ],
         ),
       ReceiverPanelView.none => const SizedBox.shrink(),
     };
@@ -275,10 +332,17 @@ class ConnectionManagerState extends State<ConnectionManager>
         _panelMinimized = true;
         _panelView = ReceiverPanelView.none;
       }),
-      onRestore: () => setState(() => _panelMinimized = false),
+      onRestore: () => setState(() {
+        _panelMinimized = false;
+        _panelView = ReceiverPanelView.chat;
+      }),
       onChat: () => _changePanelView(ReceiverPanelView.chat, client),
       onTransfers: () => _changePanelView(ReceiverPanelView.transfers, client),
       onControls: () => _changePanelView(ReceiverPanelView.controls, client),
+      onToggleFullScreen: () async {
+        final fullScreen = await windowManager.isFullScreen();
+        await windowManager.setFullScreen(!fullScreen);
+      },
       onCloseDetails: () => setState(() => _panelView = ReceiverPanelView.none),
       onNextSession: active.length < 2 ? null : () {
         final current = active.indexWhere((item) => item.id == client.id);
@@ -305,6 +369,68 @@ class ConnectionManagerState extends State<ConnectionManager>
     final pending = clients.any((c) => !c.authorized && !c.disconnected);
     final floating = active.isNotEmpty && !pending;
     gFFI.chatModel.receiverPanelActive = floating;
+    gFFI.chatModel.receiverChatVisible = false;
+    gFFI.chatModel.receiverVisibleClientId = null;
+
+    // A single incoming request gets its own centered consent dialog.
+    // Multi-session management retains the existing tab workflow.
+    final pendingClients =
+        clients.where((c) => !c.authorized && !c.disconnected).toList();
+    if (active.isEmpty && pendingClients.length == 1) {
+      _resizeFloatingWindow(floating: false, focusedRequest: true);
+      final consentScreen = Container(
+        color: const Color(0xFF110B20),
+        child: Column(
+          children: [
+            Container(
+              height: 52,
+              padding: const EdgeInsets.symmetric(horizontal: 17),
+              color: const Color(0xFF1E1630),
+              child: Row(children: [
+                loadIcon(29),
+                const SizedBox(width: 10),
+                const Text('Seven Desk', style: TextStyle(
+                    color: Colors.white, fontSize: 19,
+                    fontWeight: FontWeight.w700)),
+                Expanded(child: GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onPanStart: (_) => windowManager.startDragging(),
+                )),
+                IconButton(
+                  tooltip: 'Minimizar janela',
+                  onPressed: () => windowManager.minimize(),
+                  icon: const Icon(Icons.remove_rounded, color: Colors.white),
+                ),
+                IconButton(
+                  tooltip: 'Fechar janela',
+                  onPressed: () => handleWindowCloseButton(),
+                  icon: const Icon(Icons.close_rounded, color: Colors.white),
+                ),
+              ]),
+            ),
+            Expanded(
+              child: Center(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 14, vertical: 6),
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 760),
+                    child: _CmControlPanel(client: pendingClients.first),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+      return allowRemoteCMModification()
+          ? consentScreen
+          : buildRemoteBlock(
+              child: _buildKeyEventBlock(consentScreen),
+              block: _controlPageBlock,
+              mask: false,
+            );
+    }
     if (floating) {
       final key = serverModel.tabController.state.value.selectedTabInfo.key;
       final selected = active.firstWhereOrNull((c) => c.id.toString() == key)
@@ -312,7 +438,7 @@ class ConnectionManagerState extends State<ConnectionManager>
       if (_panelClientId != selected.id) {
         _panelClientId = selected.id;
         _panelMinimized = false;
-        _panelView = ReceiverPanelView.none;
+        _panelView = ReceiverPanelView.chat;
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (mounted) {
             gFFI.chatModel.changeCurrentKey(
@@ -321,6 +447,9 @@ class ConnectionManagerState extends State<ConnectionManager>
           }
         });
       }
+      gFFI.chatModel.receiverVisibleClientId = selected.id;
+      gFFI.chatModel.receiverChatVisible =
+          !_panelMinimized && _panelView == ReceiverPanelView.chat;
       _resizeFloatingWindow(floating: true);
       final panel = _buildConnectedPanel(selected, active);
       // Retain the existing protection against remote-injected clicks/keys
@@ -1240,6 +1369,7 @@ class _CmControlPanel extends StatelessWidget {
       canElevate: bind.cmCanElevate(),
       showElevation: model.showElevation,
       isRemoteDesktop: client.type_() == ClientType.remote,
+      keyboardAllowed: client.keyboard,
       policyAllowsElevation: bind.mainGetBuildinOption(
             key: kOptionHideElevateButtonInAcceptWindow,
           ) !=
@@ -1254,10 +1384,13 @@ class _CmControlPanel extends StatelessWidget {
       requesterId: client.peerId,
       onAcceptAsAdministrator: canAcceptAsAdmin
           ? () => checkClickTime(client.id, () {
-                // Uses the existing portable Windows service/UAC request.
-                // Does not bypass local Windows approval or security policy.
-                handleAccept(context);
-                handleElevate(context);
+                // Match the native Windows consent flow: request the
+                // portable service/UAC before authorizing the peer.
+                // This is a request, not proof that elevation succeeded.
+                acceptRemoteSessionAsAdministrator(
+                  requestElevation: () => handleElevate(context),
+                  authorizeConnection: () => handleAccept(context),
+                );
               })
           : null,
       onAccept: canAccept

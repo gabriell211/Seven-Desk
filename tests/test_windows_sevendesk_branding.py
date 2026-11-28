@@ -26,6 +26,12 @@ class WindowsBrandingTests(unittest.TestCase):
         self.assertIn('python preprocess.py --arp -d ../../rustdesk --app-name SevenDesk --display-name "Seven Desk"', workflow)
         self.assertIn("SignOutput/sevendesk-", workflow)
         self.assertIn("python3 ./generate.py -f ../../rustdesk/ -o . -e ../../rustdesk/SevenDesk.exe", workflow)
+        self.assertIn('expected SevenDesk.exe only.', workflow)
+        self.assertIn('(Test-Path -LiteralPath ./rustdesk/rustdesk.exe)', workflow)
+        portable_win = (ROOT / "src/platform/windows.rs").read_text(encoding="utf-8")
+        self.assertIn('let dst = dir.join("SevenDesk.exe");', portable_win)
+        self.assertNotIn('let dst = dir.join("rustdesk.exe");', portable_win)
+
         wix = (ROOT / "res/msi/Package/Package.wxs").read_text(encoding="utf-8")
         self.assertIn('Name="$(var.ProductDisplayName)"', wix)
 

@@ -15,12 +15,13 @@ void main() {
     VoidCallback? onAccept,
     required VoidCallback onReject,
     String? disabledReason,
+    double width = 300,
   }) {
     return MaterialApp(
       home: Scaffold(
         body: Center(
           child: SizedBox(
-            width: 300,
+            width: width,
             child: IncomingSupportRequestBubble(
               identity: identity,
               requesterId: '123-456-789',
@@ -47,6 +48,20 @@ void main() {
     expect(find.text('Recusar'), findsOneWidget);
   });
 
+  testWidgets('wide receiver request keeps the three approval actions', (tester) async {
+    await tester.pumpWidget(screen(
+      width: 720,
+      onReject: () {},
+      onAccept: () {},
+      onAdmin: () {},
+    ));
+    expect(find.text('Solicitação de acesso remoto'), findsOneWidget);
+    expect(find.text('ID: 123-456-789'), findsOneWidget);
+    expect(find.text('Aceitar'), findsOneWidget);
+    expect(find.text('Aceitar como administrador'), findsOneWidget);
+    expect(find.text('Recusar'), findsOneWidget);
+  });
+
   testWidgets('three distinct actions dispatch only on explicit tap',
       (tester) async {
     var admins = 0;
@@ -59,14 +74,17 @@ void main() {
     ));
     expect([admins, accepted, rejected], [0, 0, 0]);
 
+    await tester.ensureVisible(find.text('Aceitar como administrador'));
     await tester.tap(find.text('Aceitar como administrador'));
     await tester.pump();
     expect([admins, accepted, rejected], [1, 0, 0]);
 
+    await tester.ensureVisible(find.text('Aceitar'));
     await tester.tap(find.text('Aceitar'));
     await tester.pump();
     expect([admins, accepted, rejected], [1, 1, 0]);
 
+    await tester.ensureVisible(find.text('Recusar'));
     await tester.tap(find.text('Recusar'));
     await tester.pump();
     expect([admins, accepted, rejected], [1, 1, 1]);
@@ -89,6 +107,7 @@ void main() {
     expect(buttons, hasLength(2));
     expect(buttons.every((button) => button.onPressed == null), isTrue);
     expect(find.text('Somente autenticação por senha.'), findsOneWidget);
+    await tester.ensureVisible(find.text('Recusar'));
     await tester.tap(find.text('Recusar'));
     expect(rejected, 1);
   });

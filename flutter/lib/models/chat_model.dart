@@ -54,6 +54,23 @@ class MessageBody {
   }
 }
 
+/// A native desktop remote session uses the inline Seven Desk chat balloon.
+/// The connection manager has its own receiver balloon and continues to own
+/// its distinct chat layout.
+bool useInlineSevenDeskRemoteChat({
+  required bool desktop,
+  required bool web,
+  required bool connectionManager,
+}) => desktop && !web && !connectionManager;
+
+/// Count unread messages only when the intended receiver chat is not on
+/// screen. The connection manager must not switch peers just for a message.
+bool shouldCountSevenDeskReceiverUnread({
+  required bool panelVisible,
+  required int? visibleClientId,
+  required int incomingClientId,
+}) => !panelVisible || visibleClientId != incomingClientId;
+
 class ChatModel with ChangeNotifier {
   static final clientModeID = -1;
 
@@ -63,6 +80,15 @@ class ChatModel with ChangeNotifier {
   bool isConnManager = false;
   // When active, the CM owns its compact floating chat and window bounds.
   bool receiverPanelActive = false;
+  // Whether the connected client's chat panel is visible and selected.
+  // Messages arriving while it is minimized or showing options stay unread.
+  bool receiverChatVisible = false;
+  int? receiverVisibleClientId;
+
+  /// A native remote-session shortcut requests the inline Seven Desk chat.
+  /// The remote toolbar consumes this counter via ChangeNotifier instead of
+  /// launching a second draggable chat window.
+  int inlineChatToggleSerial = 0;
 
   RxBool isWindowFocus = true.obs;
   BlockableOverlayState _blockableOverlayState = BlockableOverlayState();
@@ -261,6 +287,15 @@ class ChatModel with ChangeNotifier {
           chatWindowOverlayEntry == null);
 
   toggleChatOverlay({Offset? chatInitPos, bool requestSoftKeyboard = true}) {
+    if (useInlineSevenDeskRemoteChat(
+      desktop: isDesktop,
+      web: isWeb,
+      connectionManager: isConnManager,
+    )) {
+      inlineChatToggleSerial += 1;
+      notifyListeners();
+      return;
+    }
     if (_isChatOverlayHide()) {
       if (!isMobile) gFFI.invokeMethod("enable_soft_keyboard", true);
       if (!(isDesktop || isWebDesktop)) {
@@ -282,8 +317,27 @@ class ChatModel with ChangeNotifier {
   }
 
   showChatPage(MessageKey key) async {
+    // Incoming native-session messages belong in RemoteToolbar's embedded
+    // ChatPage. The legacy draggable chat window would duplicate the UI.
+    // Keep the same ChatModel, message key and transport in use.
+    if (useInlineSevenDeskRemoteChat(
+      desktop: isDesktop,
+      web: isWeb,
+      connectionManager: isConnManager,
+    )) {
+      if (_currentKey != key) {
+        changeCurrentKey(key);
+      }
+      return;
+    }
     if (isDesktop) {
       if (isConnManager) {
+        if (receiverPanelActive) {
+          // The receiver balloon owns its selected client. An incoming
+          // message from another peer must not replace the visible chat.
+          // The arrival is recorded below and counted as unread instead.
+          return;
+        }
         if (!_isShowCMSidePage) {
           await toggleCMChatPage(key);
         }
@@ -387,7 +441,7 @@ class ChatModel with ChangeNotifier {
       return;
     }
     if (text.isEmpty) return;
-    if (desktopType == DesktopType.cm) {
+    if (desktopType == DesktopType.cm && !receiverPanelActive) {
       await showCmWindow();
     }
     String? peerId;
@@ -448,14 +502,25 @@ class ChatModel with ChangeNotifier {
         return;
       }
       if (isDesktop) {
-        windowOnTop(null);
-        // disable auto jumpTo other tab when hasFocus, and mark unread message
-        final currentSelectedTab =
-            session.serverModel.tabController.state.value.selectedTabInfo;
-        if (currentSelectedTab.key != id.toString() && inputNode.hasFocus) {
-          client.unreadChatMessageCount.value += 1;
+        // The connected receiver already has a floating Seven Desk panel.
+        // Do not activate or redock a legacy window on incoming messages.
+        if (receiverPanelActive) {
+          if (shouldCountSevenDeskReceiverUnread(
+            panelVisible: receiverChatVisible,
+            visibleClientId: receiverVisibleClientId,
+            incomingClientId: id,
+          )) {
+            client.unreadChatMessageCount.value += 1;
+          }
         } else {
-          parent.target?.serverModel.jumpTo(id);
+          windowOnTop(null);
+          final currentSelectedTab =
+              session.serverModel.tabController.state.value.selectedTabInfo;
+          if (currentSelectedTab.key != id.toString() && inputNode.hasFocus) {
+            client.unreadChatMessageCount.value += 1;
+          } else {
+            parent.target?.serverModel.jumpTo(id);
+          }
         }
       } else {
         if (HomePage.homeKey.currentState?.isChatPageCurrentTab != true ||

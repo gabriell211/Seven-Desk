@@ -70,6 +70,7 @@ bool canAcceptRemoteAsAdministrator({
   required bool canElevate,
   required bool showElevation,
   required bool isRemoteDesktop,
+  required bool keyboardAllowed,
   required bool policyAllowsElevation,
   required bool clickApprovalAllowed,
 }) {
@@ -77,6 +78,7 @@ bool canAcceptRemoteAsAdministrator({
       canElevate &&
       showElevation &&
       isRemoteDesktop &&
+      keyboardAllowed &&
       policyAllowsElevation &&
       clickApprovalAllowed;
 }

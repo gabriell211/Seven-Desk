@@ -15,7 +15,7 @@ import 'package:get/get.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:flutter_hbb/utils/http_service.dart' as http;
 
-import '../../common.dart';
+import '../../common.dart' hide Dialog;
 import '../../models/model.dart';
 import '../../models/platform_model.dart';
 import 'address_book.dart';
@@ -1393,23 +1393,409 @@ void showElevationError(SessionID sessionId, String type, String title,
   });
 }
 
-void showWaitAcceptDialog(SessionID sessionId, String type, String title,
-    String text, OverlayDialogManager dialogManager) {
+
+const _sevenProgressBackground = Color(0xFF140E25);
+const _sevenProgressPurple = Color(0xFFAE36FA);
+const _sevenProgressMuted = Color(0xFFC9BEDD);
+
+// Exact session outcomes; the UI never infers failure types from icon colors.
+enum SevenDeskWaitingFailure { clientCancelled, timeout, network }
+
+String sevenDeskWaitingFailureTitle(SevenDeskWaitingFailure failure) =>
+    switch (failure) {
+      SevenDeskWaitingFailure.clientCancelled => 'Cancelado pelo cliente',
+      SevenDeskWaitingFailure.timeout => 'Tempo limite esgotado',
+      SevenDeskWaitingFailure.network => 'Problema de rede',
+    };
+
+String sevenDeskWaitingFailureDescription(SevenDeskWaitingFailure failure) =>
+    switch (failure) {
+      SevenDeskWaitingFailure.clientCancelled =>
+        'O cliente recusou ou cancelou a solicitação de suporte remoto.',
+      SevenDeskWaitingFailure.timeout =>
+        'O tempo para estabelecer a conexão terminou. Verifique se o cliente está disponível e tente novamente.',
+      SevenDeskWaitingFailure.network =>
+        'Não foi possível estabelecer a conexão. Verifique a internet e o servidor de conexão antes de tentar novamente.',
+    };
+
+/// Waiting states for outgoing desktop support sessions. This widget never
+/// accepts a connection remotely; only the client can approve that request.
+class SevenDeskSessionProgressCard extends StatelessWidget {
+  const SevenDeskSessionProgressCard({
+    super.key,
+    required this.title,
+    required this.description,
+    required this.onCancel,
+    this.waitingForApproval = false,
+    this.cancelledByClient = false,
+    this.failure,
+  });
+
+  final String title;
+  final String description;
+  final VoidCallback onCancel;
+  final bool waitingForApproval;
+  final bool cancelledByClient;
+  final SevenDeskWaitingFailure? failure;
+
+  @override
+  Widget build(BuildContext context) {
+    final failureKind = cancelledByClient
+        ? SevenDeskWaitingFailure.clientCancelled
+        : failure;
+    final hasFailed = failureKind != null;
+    final failureColor = failureKind == SevenDeskWaitingFailure.timeout
+        ? const Color(0xFFF3AF52)
+        : const Color(0xFFFF6A81);
+    final failureIcon = switch (failureKind) {
+      SevenDeskWaitingFailure.timeout => Icons.access_time_rounded,
+      SevenDeskWaitingFailure.network => Icons.wifi_off_rounded,
+      _ => Icons.cancel_outlined,
+    };
+    return CallbackShortcuts(
+      bindings: <ShortcutActivator, VoidCallback>{
+        const SingleActivator(LogicalKeyboardKey.escape): onCancel,
+      },
+      child: Focus(
+        autofocus: true,
+        child: Dialog(
+          backgroundColor: Colors.transparent,
+          insetPadding:
+              const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+          child: SingleChildScrollView(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 440),
+              child: Container(
+                padding: const EdgeInsets.fromLTRB(23, 21, 23, 19),
+                decoration: BoxDecoration(
+                  color: _sevenProgressBackground,
+                  borderRadius: BorderRadius.circular(21),
+                  border:
+                      Border.all(color: _sevenProgressPurple, width: 1.5),
+                  boxShadow: const [
+                    BoxShadow(
+                      color: Color(0x66000000),
+                      blurRadius: 24,
+                      offset: Offset(0, 7),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Row(
+                      children: [
+                        loadIcon(34),
+                        const SizedBox(width: 10),
+                        const Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Seven Desk',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 19,
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              ),
+                              Text(
+                                'Suporte remoto',
+                                style: TextStyle(
+                                  color: _sevenProgressMuted,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const Icon(
+                          Icons.shield_outlined,
+                          color: _sevenProgressPurple,
+                          size: 23,
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 18),
+                    Center(
+                      child: Container(
+                        height: 76,
+                        width: 76,
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          color: hasFailed
+                              ? const Color(0xFF3B1D34)
+                              : const Color(0xFF2A1B42),
+                          shape: BoxShape.circle,
+                        ),
+                        child: hasFailed
+                            ? Icon(
+                                failureIcon,
+                                color: failureColor,
+                                size: 43,
+                              )
+                            : const SizedBox(
+                                width: 41,
+                                height: 41,
+                                child: CircularProgressIndicator(
+                                  color: _sevenProgressPurple,
+                                  strokeWidth: 3.2,
+                                ),
+                              ),
+                      ),
+                    ),
+                    const SizedBox(height: 17),
+                    Text(
+                      title,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 21,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      description,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        color: _sevenProgressMuted,
+                        fontSize: 13,
+                        height: 1.4,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF251A38),
+                        borderRadius: BorderRadius.circular(11),
+                        border: Border.all(
+                          color: const Color(0xFF4B3867),
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            hasFailed
+                                ? Icons.info_outline_rounded
+                                : waitingForApproval
+                                    ? Icons.verified_user_outlined
+                                    : Icons.lock_outline_rounded,
+                            size: 19,
+                            color: _sevenProgressPurple,
+                          ),
+                          const SizedBox(width: 9),
+                          Expanded(
+                            child: Text(
+                              hasFailed
+                                  ? 'A conexão não foi iniciada.'
+                                  : waitingForApproval
+                                      ? 'O acesso depende da aprovação do cliente.'
+                                      : 'Estabelecendo uma conexão protegida.',
+                              style: const TextStyle(
+                                color: _sevenProgressMuted,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+                    OutlinedButton.icon(
+                      key: const ValueKey('seven-progress-cancel'),
+                      onPressed: onCancel,
+                      icon: const Icon(Icons.close_rounded, size: 19),
+                      label: Text(
+                        hasFailed ? 'Fechar' : 'Cancelar conexão',
+                      ),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: Colors.white,
+                        minimumSize: const Size.fromHeight(44),
+                        side: const BorderSide(
+                          color: Color(0xFF6A557F),
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// The progress entry belongs to a single outgoing session, not a global
+// banner. Update the StatefulBuilder of the existing overlay on failure.
+final Expando<_SevenDeskPendingApproval> _sevenDeskPendingApprovals =
+    Expando<_SevenDeskPendingApproval>();
+
+class _SevenDeskPendingApproval {
+  _SevenDeskPendingApproval(this.tag);
+
+  final String tag;
+  StateSetter? refresh;
+  SevenDeskWaitingFailure? failure;
+  VoidCallback? onClosed;
+}
+
+bool hasSevenDeskSessionProgress(
+    OverlayDialogManager dialogManager, SessionID sessionId) {
+  final pending = _sevenDeskPendingApprovals[dialogManager];
+  return pending != null &&
+      (pending.tag == '$sessionId-seven-desk-approval' ||
+          pending.tag == '$sessionId-seven-desk-connecting') &&
+      pending.refresh != null &&
+      dialogManager.existing(pending.tag);
+}
+
+void _showSevenDeskSessionProgress({
+  required OverlayDialogManager dialogManager,
+  required SessionID sessionId,
+  required String tagSuffix,
+  required String title,
+  required String description,
+  required bool waitingForApproval,
+  required VoidCallback onCancel,
+}) {
   dialogManager.dismissAll();
+  final pending = _SevenDeskPendingApproval(
+      '$sessionId-seven-desk-$tagSuffix');
+  _sevenDeskPendingApprovals[dialogManager] = pending;
   dialogManager.show((setState, close, context) {
-    onCancel() {
-      closeConnection();
+    pending.refresh = setState;
+    void closeProgress() {
+      if (pending.failure != null) {
+        dialogManager.dismissAll();
+        pending.onClosed?.call();
+      } else {
+        onCancel();
+      }
     }
 
-    return CustomAlertDialog(
-      title: null,
-      content: msgboxContent(type, title, text),
-      actions: [
-        dialogButton('Cancel', onPressed: onCancel, isOutline: true),
-      ],
-      onCancel: onCancel,
+    final failure = pending.failure;
+    return SevenDeskSessionProgressCard(
+      title: failure == null
+          ? title
+          : sevenDeskWaitingFailureTitle(failure),
+      description: failure == null
+          ? description
+          : sevenDeskWaitingFailureDescription(failure),
+      failure: failure,
+      onCancel: closeProgress,
+      waitingForApproval: waitingForApproval && failure == null,
     );
+  }, tag: pending.tag).whenComplete(() {
+    pending.refresh = null;
+    if (identical(_sevenDeskPendingApprovals[dialogManager], pending)) {
+      _sevenDeskPendingApprovals[dialogManager] = null;
+    }
   });
+}
+
+void showSevenDeskConnectingDialog(
+  OverlayDialogManager dialogManager,
+  SessionID sessionId,
+) {
+  // The initial post-frame callback can be later than the native
+  // authorization/error event. Never replace a newer status with loading.
+  if (hasSevenDeskSessionProgress(dialogManager, sessionId)) return;
+  _showSevenDeskSessionProgress(
+    dialogManager: dialogManager,
+    sessionId: sessionId,
+    tagSuffix: 'connecting',
+    title: 'Conectando ao cliente',
+    description: 'Preparando a solicitação de suporte remoto.',
+    waitingForApproval: false,
+    onCancel: () {
+      dialogManager.dismissAll();
+      closeConnection();
+    },
+  );
+}
+
+void showSevenDeskWaitingFailureDialog(
+  OverlayDialogManager dialogManager,
+  SessionID sessionId,
+  SevenDeskWaitingFailure failure,
+  VoidCallback onClose,
+) {
+  final pending = _sevenDeskPendingApprovals[dialogManager];
+  if (hasSevenDeskSessionProgress(dialogManager, sessionId)) {
+    // The first terminal result wins. A socket reset following a deliberate
+    // refusal must not replace "Cancelado pelo cliente" with a network error.
+    if (pending!.failure != null) return;
+    pending.refresh!(() {
+      pending.failure = failure;
+      pending.onClosed = onClose;
+    });
+    return;
+  }
+
+  // If the event raced the loading overlay's first frame, retain the same
+  // Seven Desk card layout rather than displaying a legacy alert.
+  dialogManager.dismissAll();
+  dialogManager.show(
+    (_, close, __) => SevenDeskSessionProgressCard(
+      title: sevenDeskWaitingFailureTitle(failure),
+      description: sevenDeskWaitingFailureDescription(failure),
+      failure: failure,
+      onCancel: onClose,
+    ),
+  );
+}
+
+void showSevenDeskClientCancelledDialog(
+  OverlayDialogManager dialogManager,
+  SessionID sessionId,
+  VoidCallback onClose,
+) =>
+    showSevenDeskWaitingFailureDialog(
+      dialogManager,
+      sessionId,
+      SevenDeskWaitingFailure.clientCancelled,
+      onClose,
+    );
+
+void showWaitAcceptDialog(SessionID sessionId, String type, String title,
+    String text, OverlayDialogManager dialogManager) {
+  if (isDesktop && !isWeb) {
+    final pending = _sevenDeskPendingApprovals[dialogManager];
+    if (hasSevenDeskSessionProgress(dialogManager, sessionId) &&
+        pending?.failure != null) {
+      // Do not resurrect the spinner after a terminal failure.
+      return;
+    }
+    _showSevenDeskSessionProgress(
+      dialogManager: dialogManager,
+      sessionId: sessionId,
+      tagSuffix: 'approval',
+      title: 'Aguardando o cliente',
+      description:
+          'Solicitação enviada. O cliente precisa aceitar o acesso no próprio computador.',
+      waitingForApproval: true,
+      onCancel: closeConnection,
+    );
+    return;
+  }
+  dialogManager.dismissAll();
+  dialogManager.show((setState, close, context) => CustomAlertDialog(
+    title: null,
+    content: msgboxContent(type, title, text),
+    actions: [
+      dialogButton('Cancel',
+          onPressed: closeConnection, isOutline: true),
+    ],
+    onCancel: closeConnection,
+  ));
 }
 
 void showRestartRemoteDevice(PeerInfo pi, String id, SessionID sessionId,

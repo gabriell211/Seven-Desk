@@ -79,3 +79,22 @@ if new not in source:
     path.write_text(source.replace(old, new, 1))
 print("Flutter Gradle dependency repositories prepared")
 PY
+
+# A Flutter plugin (desktop_drop) declares its own buildscript repositories.
+# The app's settings.gradle and allprojects.repositories cannot reorder those.
+# Install an init script *before* Gradle starts on this disposable CI runner,
+# so Maven Central's public mirror precedes the plugin's own mavenCentral().
+# Google Maven and Maven Central remain available for missing coordinates.
+gradle_user_home="${GRADLE_USER_HOME:-$HOME/.gradle}"
+mkdir -p "$gradle_user_home/init.d"
+cat > "$gradle_user_home/init.d/sevendesk-ci-central-mirror.gradle" <<'GRADLE_INIT'
+gradle.beforeProject { project ->
+    project.buildscript.repositories {
+        maven {
+            name = 'sevendeskCiCentralMirror'
+            url 'https://maven-central.storage-download.googleapis.com/maven2/'
+        }
+    }
+}
+GRADLE_INIT
+echo "Configured Maven Central mirror ahead of plugin buildscript repositories"

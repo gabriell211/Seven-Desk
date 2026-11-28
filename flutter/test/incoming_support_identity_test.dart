@@ -61,6 +61,7 @@ void main() {
       'canElevate': true,
       'showElevation': true,
       'isRemoteDesktop': true,
+      'keyboardAllowed': true,
       'policyAllowsElevation': true,
       'clickApprovalAllowed': true,
     };
@@ -70,6 +71,7 @@ void main() {
         canElevate: true,
         showElevation: true,
         isRemoteDesktop: true,
+        keyboardAllowed: true,
         policyAllowsElevation: true,
         clickApprovalAllowed: true,
       ),
@@ -83,6 +85,7 @@ void main() {
           canElevate: values['canElevate']!,
           showElevation: values['showElevation']!,
           isRemoteDesktop: values['isRemoteDesktop']!,
+          keyboardAllowed: values['keyboardAllowed']!,
           policyAllowsElevation: values['policyAllowsElevation']!,
           clickApprovalAllowed: values['clickApprovalAllowed']!,
         ),

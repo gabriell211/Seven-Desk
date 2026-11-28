@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:desktop_multi_window/desktop_multi_window.dart';
+import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/scheduler.dart';
@@ -32,6 +33,16 @@ final SimpleWrapper<bool> _firstEnterImage = SimpleWrapper(false);
 
 // Used to skip session close if "move to new window" is clicked.
 final Map<String, bool> closeSessionOnDispose = {};
+
+/// Only switch to a fullscreen support session once the client has
+/// authorized the connection and an actual remote image has arrived.
+@visibleForTesting
+bool shouldEnterSevenDeskRemoteFullscreen({
+  required bool nativeDesktop,
+  required bool firstFrameReady,
+  required bool alreadyEntered,
+}) =>
+    nativeDesktop && firstFrameReady && !alreadyEntered;
 
 class RemotePage extends StatefulWidget {
   RemotePage({
@@ -115,6 +126,7 @@ class _RemotePageState extends State<RemotePage>
   late RxBool _remoteCursorMoved;
   late RxBool _keyboardEnabled;
   final _uniqueKey = UniqueKey();
+  bool _enteredSevenDeskFullscreen = false;
 
   var _blockableOverlayState = BlockableOverlayState();
 
@@ -176,6 +188,21 @@ class _RemotePageState extends State<RemotePage>
             tabController: widget.tabController,
             toolbarState: widget.toolbarState);
         registerToolbarShortcuts(context, widget.id, _ffi);
+
+        // The client has approved the session and the first usable frame
+        // arrived. Do not enter fullscreen while still awaiting approval.
+        if (shouldEnterSevenDeskRemoteFullscreen(
+          nativeDesktop: isDesktop && !isWeb,
+          firstFrameReady: _ffi.ffiModel.waitForFirstImage.isFalse,
+          alreadyEntered: _enteredSevenDeskFullscreen,
+        )) {
+          _enteredSevenDeskFullscreen = true;
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted && stateGlobal.fullscreen.isFalse) {
+              stateGlobal.setFullscreen(true);
+            }
+          });
+        }
       }
     });
     _ffi.canvasModel.initializeEdgeScrollFallback(this);
@@ -192,8 +219,12 @@ class _RemotePageState extends State<RemotePage>
     );
     WidgetsBinding.instance.addPostFrameCallback((_) {
       SystemChrome.setEnabledSystemUIMode(SystemUiMode.manual, overlays: []);
-      _ffi.dialogManager
-          .showLoading(translate('Connecting...'), onCancel: closeConnection);
+      if (isDesktop && !isWeb) {
+        showSevenDeskConnectingDialog(_ffi.dialogManager, _ffi.sessionId);
+      } else {
+        _ffi.dialogManager.showLoading(
+            translate('Connecting...'), onCancel: closeConnection);
+      }
     });
     WakelockManager.enable(_uniqueKey);
 
@@ -760,6 +791,37 @@ class _RemotePageState extends State<RemotePage>
                   },
                   inputModel: _ffi.inputModel,
                   child: getBodyForDesktop(context))),
+          // Use Seven Desk's own workspace while the remote peer has not
+          // supplied its first display. Never cover a live remote frame.
+          if (isDesktop && !isWeb && _ffi.ffiModel.pi.isSet.isFalse)
+            Positioned.fill(
+              child: IgnorePointer(
+                child: DecoratedBox(
+                  decoration: const BoxDecoration(
+                    gradient: RadialGradient(
+                      center: Alignment(0, -0.65),
+                      radius: 1.2,
+                      colors: [Color(0xFF26143C), Color(0xFF0C091A)],
+                    ),
+                  ),
+                  child: const Align(
+                    alignment: Alignment.bottomCenter,
+                    child: Padding(
+                      padding: EdgeInsets.only(bottom: 24),
+                      child: Text(
+                        'SEVEN DESK  •  SUPORTE REMOTO',
+                        style: TextStyle(
+                          color: Color(0xFF6F5F8A),
+                          fontSize: 11,
+                          letterSpacing: 1.7,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
           Stack(
             children: [
               _ffi.ffiModel.pi.isSet.isTrue &&
@@ -782,16 +844,21 @@ class _RemotePageState extends State<RemotePage>
                             ));
                       }
                     }(),
-              // Use Overlay to enable rebuild every time on menu button click.
-              // Hide toolbar when relative mouse mode is active to prevent
-              // cursor from escaping to toolbar area.
-              Obx(() => _ffi.inputModel.relativeMouseMode.value
+              // Keep the native Seven Desk chat balloon available even
+              // while relative mouse mode is active: clicking the balloon
+              // safely releases pointer capture before entering chat.
+              // Only the legacy browser toolbar is hidden while captured.
+              Obx(() => (_ffi.inputModel.relativeMouseMode.value &&
+                          !shouldRenderSevenDeskSessionBubble(
+                            nativeDesktop: isDesktop,
+                            web: isWeb,
+                          )) ||
+                      _ffi.ffiModel.pi.isSet.isFalse ||
+                      _ffi.ffiModel.waitForFirstImage.isTrue
                   ? const Offstage()
-                  : _ffi.ffiModel.pi.isSet.isTrue
-                      ? Overlay(initialEntries: [
-                          OverlayEntry(builder: remoteToolbar)
-                        ])
-                      : remoteToolbar(context)),
+                  : Overlay(initialEntries: [
+                      OverlayEntry(builder: remoteToolbar)
+                    ])),
               _ffi.ffiModel.pi.isSet.isFalse ? emptyOverlay() : Offstage(),
             ],
           ),
